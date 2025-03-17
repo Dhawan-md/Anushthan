@@ -1,0 +1,62 @@
+import { Field, ObjectType } from "type-graphql";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+
+import { OtpStatus, OtpType } from "../utils/enums";
+import { User } from "./User";
+
+@ObjectType()
+@Entity()
+export class Otp {
+  @Field()
+  @PrimaryGeneratedColumn("uuid")
+  id!: number;
+
+  @Field()
+  @OneToOne(() => User, (user) => user.otp, { onDelete: "CASCADE" })
+  @JoinColumn()
+  user!: User;
+
+  @Field()
+  @Column({ name: "user_email" })
+  userEmail!: string;
+
+  @Field()
+  @Column({ name: "otp_code" })
+  otpCode!: string;
+
+  @Field()
+  @Column({ name: "user_secret" })
+  userSecret!: string;
+
+  @Field()
+  @Column({
+    name: "status",
+    type: "enum",
+    enum: OtpStatus,
+    default: OtpStatus.ACTIVE,
+  })
+  status!: OtpStatus;
+
+  @Field(() => OtpStatus)
+  @Column({
+    name: "otp_type",
+    type: "enum",
+    enum: OtpType,
+    default: OtpType.USER,
+  })
+  otpType!: OtpType;
+
+  @Field()
+  @Column({ name: "created_at" })
+  createdAt!: Date;
+
+  @Field()
+  @Column({ name: "expires_at" })
+  expiresAt!: Date;
+}

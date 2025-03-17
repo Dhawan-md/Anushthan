@@ -24,3 +24,22 @@ export const USER_REGISTERED = "User registered.";
 export const USER_FOUND = "User Found.";
 export const USER_LIST = "Users list.";
 export const USER_EMAIL_ALREADY_EXISTS = "User with this email already exist.";
+export const ERROR_FETCHING_USER_DATA =
+  "Error occured while fetching user data.";
+
+// OTP Messages
+export const VALID_OTP = "OTP is valid.";
+export const INVALID_OTP = "OTP is invalid.";
+export const EXPIRED_OTP = "OTP has expired";
+export const OTP_SENT = "OTP sent.";
+export const NO_OTP_FOUND = "Failed to find otp details";
+export const INVALID_OTP_TYPE = "Invalid Otp type provided";
+export const RESEND_OTP_SUCCESS = "OTP sent again.";
+
+// email messages
+export const EMAIL_SENT = "Email sent successfully.";
+export const FAILED_TO_SEND_EMAIL = "Failed to send email.";
+export const EMAIL_ERROR_OCCURED =
+  "Internal error occured while sending email.";
+export const FAILED_LOADING_TEMPLATE = "Failed to laod email template.";
+export const NO_TEMPLATE_FOUND = "No template found for this email type.";

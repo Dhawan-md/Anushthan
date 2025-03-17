@@ -1,10 +1,10 @@
 import { Repository } from "typeorm";
 
-import { User } from "../entities/User";
-import { RepositoryFactory } from "../factories/RepositoryFactory";
-import { logger } from "../utils/logger";
-import { MultipleUserResponse } from "../types/responses/UserResponse";
-import { USER_LIST } from "../utils/messages";
+import { User } from "../../entities/User";
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+import { logger } from "../../utils/logger";
+import { MultipleUserResponse } from "../../types/responses/UserResponse";
+import { USER_LIST } from "../../utils/messages";
 
 export class UserInfoProvider {
   private userInfoRepository: Repository<User>;
@@ -20,15 +20,15 @@ export class UserInfoProvider {
     logger.info(`✅ Retrieved ${userList.length} users from the database.`);
     return new MultipleUserResponse(true, USER_LIST, userList);
   }
-  
+
   async getUser(params: {
     username?: string;
-    email?: string;
+    userEmail?: string;
     userId?: string;
   }): Promise<User | null> {
     logger.info(
       `🔍 Searching for user with params: ${
-        params.username || params.userId || params.email
+        params.username || params.userId || params.userEmail
       }`
     );
     return await this.userInfoRepository.findOne({ where: params });

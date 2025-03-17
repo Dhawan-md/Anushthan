@@ -13,3 +13,21 @@ export class AccessToken {
     this.expiresIn = expiresIn;
   }
 }
+
+@ObjectType()
+export class OtpToken {
+  @Field()
+  otpCode: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  expiresAt: Date;
+
+  constructor(otpCode: string, createdAt: Date, expiresAt: Date) {
+    this.otpCode = otpCode;
+    this.createdAt = createdAt;
+    this.expiresAt = expiresAt;
+  }
+}

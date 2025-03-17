@@ -4,14 +4,19 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  JoinColumn,
+  OneToOne,
 } from "typeorm";
+import { UserRole } from "../utils/enums";
+import { Pandit } from "./Pandit";
+import { Otp } from "./Otp";
 
 @ObjectType()
 @Entity()
 export class User {
   @Field()
   @PrimaryGeneratedColumn("uuid", { name: "user_id" })
-  id!: number;
+  id!: string;
 
   @Field()
   @Column()
@@ -26,12 +31,34 @@ export class User {
   email!: string;
 
   @Field()
-  @Column({ unique: true, name:"phone_number" })
-  phoneNumber: string
+  @Column({ unique: true, name: "phone_number" })
+  phoneNumber: string;
 
   @Field()
   @Column()
   password!: string;
+
+  @Field()
+  @Column({
+    name: "user_role",
+    type: "enum",
+    enum: UserRole,
+    default: UserRole.CUSTOMER,
+  })
+  userRole: UserRole;
+
+  @Field()
+  @Column({ name: "profile_pic" })
+  profile_pic: string;
+
+  @Field()
+  @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
+  @JoinColumn()
+  pandit: Pandit;
+
+  @Field()
+  @OneToOne(() => Otp, (otp) => otp.user)
+  otp!: Otp;
 
   @Field()
   @Column({ default: false, name: "is_verified" })
