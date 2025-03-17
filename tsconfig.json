@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "./dist",
+    "skipLibCheck": true, 
+    "rootDir": "./src",
+    "allowSyntheticDefaultImports": true,
+    "importsNotUsedAsValues": "remove",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node"],
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false
+  },
+  "include": ["src/**/*.ts", "src/types/express.d.ts"],
+  "exclude": ["node_modules", "dist"],
+  "ts-node": {
+    "esm": true, // «———— enabling ESM for ts-node  
+    "require": ["tsconfig-paths/register"] 
+  },
+  "$schema": "https://json.schemastore.org/tsconfig",  
+  // "extends": "@tsconfig/node-lts-strictest-esm/tsconfig.json", 
+}

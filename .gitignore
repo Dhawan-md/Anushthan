@@ -1,0 +1,12 @@
+# Node.js dependencies
+node_modules/
+dist/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Ignore logs directory
+logs/
