@@ -35,6 +35,7 @@ export const OTP_SENT = "OTP sent.";
 export const NO_OTP_FOUND = "Failed to find otp details";
 export const INVALID_OTP_TYPE = "Invalid Otp type provided";
 export const RESEND_OTP_SUCCESS = "OTP sent again.";
+export const OTP_GENERATION_FAILED = "Failed to generate OTP.";
 
 // email messages
 export const EMAIL_SENT = "Email sent successfully.";

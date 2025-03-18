@@ -10,10 +10,14 @@ import { validatePassword } from "../../helpers/validatePassword";
 import { UserInfoProvider } from "./UserInfoProvider";
 import { CustomError } from "../../utils/custumError";
 import {
+  OTP_GENERATION_FAILED,
   USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
 } from "../../utils/messages";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { OtpProvider } from "../otp/OtpProvider";
+import { sendEmail } from "../../service/email/sendEmail";
+import { EmailType } from "../../utils/enums";
 
 @Service()
 export class UserSignInProvider {
@@ -21,7 +25,8 @@ export class UserSignInProvider {
 
   constructor(
     private repositoryFactory: RepositoryFactory,
-    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
+    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
+    @Inject(() => OtpProvider) private otpProvider: OtpProvider
   ) {
     this.userSignInRepository = this.repositoryFactory.getRepository(User);
   }
@@ -31,6 +36,7 @@ export class UserSignInProvider {
     username: string;
     userEmail: string;
     password: string;
+    phoneNumber: string;
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validatePassword(params.password);
@@ -47,8 +53,9 @@ export class UserSignInProvider {
     const newUser = this.userSignInRepository.create({
       name: params.name,
       username: params.username,
-      email: params.userEmail,
+      userEmail: params.userEmail,
       password: hashedPassword,
+      phoneNumber: params.phoneNumber,
     });
     const user = await this.userSignInRepository.save(newUser);
 
@@ -57,6 +64,21 @@ export class UserSignInProvider {
       isVerified: user.isVerified,
       userRole: user.userRole,
     });
+
+    const otpData = await this.otpProvider.saveOtp(user);
+
+    if (!otpData.data || !otpData.success) {
+      throw new CustomError(OTP_GENERATION_FAILED);
+    }
+
+    await sendEmail(
+      params.userEmail,
+      {
+        name: params.name,
+        otpCode: otpData.data?.otpCode,
+      },
+      EmailType.ACCOUNT_VERIFICATION
+    );
 
     logger.info(`✅ User ${user.id} registered successfully.`);
     return new SingleUserResponse(true, USER_REGISTERED, user, jwtToken);

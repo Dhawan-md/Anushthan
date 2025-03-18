@@ -17,6 +17,7 @@ import { CustomError } from "../../utils/custumError";
 import { OtpToken } from "../../types/globalTypes";
 import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../helpers/getEmailTypeByOtp";
+import { User } from "../../entities/User";
 
 @Service()
 export class OtpProvider {
@@ -26,8 +27,8 @@ export class OtpProvider {
     this.otpRepository = this.repositoryFactory.getRepository(Otp);
   }
 
-  async saveOtp(userId: string, userEmail: string) {
-    logger.info(`🔄 Generating OTP for user ${userId} (${userEmail})`);
+  async saveOtp(user: User) {
+    logger.info(`🔄 Generating OTP for user (${user.userEmail})`);
 
     const userSecret = generateUserSecret();
     const otpData = generateOtp(userSecret.base32);
@@ -37,7 +38,8 @@ export class OtpProvider {
     );
 
     const otp = this.otpRepository.create({
-      userEmail,
+      user,
+      userEmail:user.userEmail,
       otpCode: otpData.otpCode,
       userSecret: userSecret.base32,
       createdAt: otpData.createdAt,
@@ -45,7 +47,7 @@ export class OtpProvider {
     });
 
     await this.otpRepository.save(otp);
-    logger.info(`💾 OTP saved in the database for user ${userId}`);
+    logger.info(`💾 OTP saved in the database for user with email ${user.userEmail}`);
 
     return new OtpResponse(true, OTP_SENT, otpData);
   }
@@ -53,58 +55,52 @@ export class OtpProvider {
   async resendOtp(userEmail: string, otpType: OtpType): Promise<OtpResponse> {
     logger.info(`🔄 Resending ${otpType} OTP for ${userEmail}.`);
 
-    const isExistingOtp = await this.getOtpDetails({ userEmail });
+    const existingOtp = await this.getOtpDetails({ userEmail });
 
-    if (!isExistingOtp) {
+    if (!existingOtp) {
       throw new CustomError(NO_OTP_FOUND);
     }
 
-    let otpToSend: OtpToken = {
-      otpCode: isExistingOtp.otpCode,
-      createdAt: isExistingOtp.createdAt,
-      expiresAt: isExistingOtp.expiresAt,
-    };
+    const isOtpValid =
+      existingOtp.expiresAt > new Date() &&
+      existingOtp.status === OtpStatus.ACTIVE &&
+      existingOtp.otpType === otpType;
 
-    if (
-      isExistingOtp.expiresAt < new Date() ||
-      isExistingOtp.status === OtpStatus.INACTIVE ||
-      isExistingOtp.otpType !== otpType
-    ) {
-      logger.info(`🔄 Generating a new OTP for ${userEmail}`);
-      const newOtp = generateOtp(isExistingOtp.userSecret);
-
-      await this.otpRepository.update(
-        { id: isExistingOtp.id },
-        {
-          otpCode: newOtp.otpCode,
-          createdAt: newOtp.createdAt,
-          expiresAt: newOtp.expiresAt,
-          status: OtpStatus.ACTIVE,
-          otpType: otpType,
-        }
-      );
-      logger.info(
-        `✅ New OTP generated: ${newOtp.otpCode}, expires at ${newOtp.expiresAt}`
-      );
-
-      otpToSend = newOtp;
-    }
-
-    const emailType = getEmailTypeByOtpType(otpType);
+    const otpToSend = isOtpValid
+      ? existingOtp
+      : await this.generateAndSaveNewOtp(existingOtp, otpType);
 
     await sendEmail(
       userEmail,
       {
-        name: isExistingOtp.user.name,
+        name: existingOtp.user.name,
         otpCode: otpToSend.otpCode,
       },
-      emailType
+      getEmailTypeByOtpType(otpType)
     );
 
     return new OtpResponse(true, RESEND_OTP_SUCCESS, otpToSend);
   }
 
-  async getOtpDetails(params: {
+  private async generateAndSaveNewOtp(
+    existingOtp: Otp,
+    otpType
+  ): Promise<OtpToken> {
+    logger.info(`🔄 Generating a new OTP for ${existingOtp.userEmail}`);
+
+    const newOtp = generateOtp(existingOtp.userSecret);
+    await this.otpRepository.update(
+      { id: existingOtp.id },
+      { ...newOtp, status: OtpStatus.ACTIVE, otpType }
+    );
+
+    logger.info(
+      `✅ New OTP generated: ${newOtp.otpCode}, expires at ${newOtp.expiresAt}`
+    );
+    return newOtp;
+  }
+
+  private async getOtpDetails(params: {
     otpCode?: string;
     userEmail?: string;
     userId?: string;

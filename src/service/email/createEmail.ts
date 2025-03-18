@@ -2,6 +2,7 @@ import sgMail from "../../config/sendGrid";
 import { EmailType } from "../../utils/enums";
 import { CustomError } from "../../utils/custumError";
 import { loadEmailTemplate } from "./loadEmailTemplate";
+import { logger } from "../../utils/logger";
 
 export const createEmail = async (
   to: string,
@@ -19,7 +20,7 @@ export const createEmail = async (
     };
 
     await sgMail.send(msg);
-    console.log(`Email sent to ${to} successfully.`);
+    logger.info(`Email sent to ${to} successfully.`);
   } catch (error) {
     throw new CustomError(error);
   }

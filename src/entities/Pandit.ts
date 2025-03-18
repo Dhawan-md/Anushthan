@@ -4,7 +4,9 @@ import {
   Column,
   OneToOne,
   CreateDateColumn,
+  JoinColumn,
 } from "typeorm";
+
 import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
 
@@ -15,8 +17,9 @@ export class Pandit {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field()
+  @Field(()=>User)
   @OneToOne(() => User, (user) => user.pandit, { onDelete: "CASCADE" })
+  @JoinColumn()
   user!: User;
 
   @Field()

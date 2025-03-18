@@ -4,7 +4,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  JoinColumn,
   OneToOne,
 } from "typeorm";
 import { UserRole } from "../utils/enums";
@@ -28,7 +27,7 @@ export class User {
 
   @Field()
   @Column({ unique: true })
-  email!: string;
+  userEmail!: string;
 
   @Field()
   @Column({ unique: true, name: "phone_number" })
@@ -48,12 +47,11 @@ export class User {
   userRole: UserRole;
 
   @Field()
-  @Column({ name: "profile_pic" })
+  @Column({ name: "profile_pic", nullable: true })
   profile_pic: string;
 
   @Field()
   @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
-  @JoinColumn()
   pandit: Pandit;
 
   @Field()

@@ -17,9 +17,9 @@ export class Otp {
   @PrimaryGeneratedColumn("uuid")
   id!: number;
 
-  @Field()
+  @Field(() => User)
   @OneToOne(() => User, (user) => user.otp, { onDelete: "CASCADE" })
-  @JoinColumn()
+  @JoinColumn({name: "user_id"})
   user!: User;
 
   @Field()
@@ -34,7 +34,7 @@ export class Otp {
   @Column({ name: "user_secret" })
   userSecret!: string;
 
-  @Field()
+  @Field(() => OtpStatus)
   @Column({
     name: "status",
     type: "enum",
@@ -43,7 +43,7 @@ export class Otp {
   })
   status!: OtpStatus;
 
-  @Field(() => OtpStatus)
+  @Field(() => OtpType)
   @Column({
     name: "otp_type",
     type: "enum",

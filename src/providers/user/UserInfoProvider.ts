@@ -1,4 +1,5 @@
 import { Repository } from "typeorm";
+import { Service } from "typedi";
 
 import { User } from "../../entities/User";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
@@ -6,6 +7,7 @@ import { logger } from "../../utils/logger";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
 import { USER_LIST } from "../../utils/messages";
 
+@Service()
 export class UserInfoProvider {
   private userInfoRepository: Repository<User>;
 

@@ -1,3 +1,5 @@
+import { registerEnumType } from "type-graphql";
+
 export enum UserRole{
   CUSTOMER = "CUSTOMER",
   PANDIT = "PANDIT"
@@ -12,6 +14,16 @@ export enum OtpStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
+
+registerEnumType(OtpStatus, {
+  name: "OtpStatus", // ✅ GraphQL name
+  description: "Status of the OTP",
+});
+
+registerEnumType(OtpType, {
+  name: "OtpType",
+  description: "Type of OTP (User/Admin)",
+});
 
 export enum EmailType {
   ACCOUNT_VERIFICATION = "Please verify your account.",
