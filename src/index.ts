@@ -3,18 +3,22 @@ import Container from "typedi";
 import { buildSchema } from "type-graphql";
 import cors from "cors";
 import {
+  GraphQLUpload,
   // GraphQLUpload,
   graphqlUploadExpress,
+  Upload,
   // Upload,
 } from "graphql-upload-minimal";
 import { ApolloServer } from "apollo-server-express";
 
 import { intializeDatabase } from "./config/database";
-import { UserMutationResolver } from "./resolvers/User/UserMutationResolver";
+import { UserMutationResolver } from "./resolvers/user/UserMutationResolver";
 import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import { logger } from "./utils/logger";
-import { UserQueryresolver } from "./resolvers/User/UserQueryResolver";
+import { UserQueryresolver } from "./resolvers/user/UserQueryResolver";
+import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
+import { UploadScalar } from "./types/scalar/UploadScalar";
 
 const createApp = async () => {
   const app: Application = express();
@@ -22,13 +26,19 @@ const createApp = async () => {
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
 
   const schema = await buildSchema({
-    resolvers: [UserMutationResolver, UserQueryresolver],
+    resolvers: [UserMutationResolver, UserQueryresolver, OtpMutationResolver],
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
+    scalarsMap: [{ type: Upload, scalar: UploadScalar }],
   });
+
+  const resolvers = {
+    Upload: GraphQLUpload, // Make sure GraphQLUpload is registered
+  };
 
   const server = new ApolloServer({
     schema,
+    resolvers,
     logger,
   });
   await server.start();

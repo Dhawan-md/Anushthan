@@ -44,3 +44,14 @@ export const EMAIL_ERROR_OCCURED =
   "Internal error occured while sending email.";
 export const FAILED_LOADING_TEMPLATE = "Failed to laod email template.";
 export const NO_TEMPLATE_FOUND = "No template found for this email type.";
+
+// s3 messages
+export const S3_INITIALIZATION_FAILED =
+  "S3 client initialization failed. Please check AWS credentials.";
+
+// documents messages
+export const FILE_UPLOAD_FAIL = "Request timeout! Failed to upload files.";
+export const DOCUMENTS_NOT_FOUND = "No document found.";
+export const DOCUMENT_ALREADY_SUBMITTED =
+  "Documents already submitted. Please wait for further response.";
+export const FILENAME_MISSING = "File upload failed: filename is missing.";

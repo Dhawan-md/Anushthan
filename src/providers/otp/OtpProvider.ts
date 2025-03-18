@@ -39,7 +39,7 @@ export class OtpProvider {
 
     const otp = this.otpRepository.create({
       user,
-      userEmail:user.userEmail,
+      userEmail: user.userEmail,
       otpCode: otpData.otpCode,
       userSecret: userSecret.base32,
       createdAt: otpData.createdAt,
@@ -47,15 +47,20 @@ export class OtpProvider {
     });
 
     await this.otpRepository.save(otp);
-    logger.info(`💾 OTP saved in the database for user with email ${user.userEmail}`);
+    logger.info(
+      `💾 OTP saved in the database for user with email ${user.userEmail}`
+    );
 
     return new OtpResponse(true, OTP_SENT, otpData);
   }
 
-  async resendOtp(userEmail: string, otpType: OtpType): Promise<OtpResponse> {
+  async resendOtp(
+    userEmail: string,
+    otpType: OtpType = OtpType.USER
+  ): Promise<OtpResponse> {
     logger.info(`🔄 Resending ${otpType} OTP for ${userEmail}.`);
 
-    const existingOtp = await this.getOtpDetails({ userEmail });
+    const existingOtp = await this.getOtpDetails({ userEmail }, true);
 
     if (!existingOtp) {
       throw new CustomError(NO_OTP_FOUND);
@@ -100,13 +105,17 @@ export class OtpProvider {
     return newOtp;
   }
 
-  private async getOtpDetails(params: {
-    otpCode?: string;
-    userEmail?: string;
-    userId?: string;
-  }): Promise<Otp | null> {
+  private async getOtpDetails(
+    params: {
+      otpCode?: string;
+      userEmail?: string;
+      userId?: string;
+    },
+    includeRelation: boolean = false
+  ): Promise<Otp | null> {
     return await this.otpRepository.findOne({
       where: params,
+      ...(includeRelation ? { relations: ["user"] } : {}),
     });
   }
 }
