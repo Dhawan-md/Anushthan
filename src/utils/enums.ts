@@ -1,8 +1,8 @@
 import { registerEnumType } from "type-graphql";
 
-export enum UserRole{
+export enum UserRole {
   CUSTOMER = "CUSTOMER",
-  PANDIT = "PANDIT"
+  PANDIT = "PANDIT",
 }
 
 export enum OtpType {
@@ -43,4 +43,9 @@ export enum EmailTemplate {
   PANDIT_APPROVED = "panditApproved.html",
   PANDIT_SUSPENDED = "panditSuspended.html",
   PANDIT_PENDING = "panditPending.html",
+}
+
+export enum s3BucketType {
+  IMAGE = "image",
+  DOCUMENT = "document",
 }

@@ -23,9 +23,13 @@ export const ONE_NUMERICAL_DIGIT =
 export const USER_REGISTERED = "User registered.";
 export const USER_FOUND = "User Found.";
 export const USER_LIST = "Users list.";
+export const NO_USER_FOUND = "No user with this ID or email found.";
 export const USER_EMAIL_ALREADY_EXISTS = "User with this email already exist.";
 export const ERROR_FETCHING_USER_DATA =
   "Error occured while fetching user data.";
+export const USER_UPDATED = "User has been updated.";
+export const USER_ALREADY_VERIFIED = "User is already verified.";
+export const USER_VERIFIED_SUCCESS = "User verified successfully.";
 
 // OTP Messages
 export const VALID_OTP = "OTP is valid.";
@@ -48,6 +52,7 @@ export const NO_TEMPLATE_FOUND = "No template found for this email type.";
 // s3 messages
 export const S3_INITIALIZATION_FAILED =
   "S3 client initialization failed. Please check AWS credentials.";
+export const INVALID_BUCKET = "Invaid bucket! bucket does not exists.";
 
 // documents messages
 export const FILE_UPLOAD_FAIL = "Request timeout! Failed to upload files.";

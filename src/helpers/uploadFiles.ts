@@ -6,9 +6,12 @@ import { v4 as uuidv4 } from "uuid";
 import { CustomError } from "../utils/custumError";
 import { FILENAME_MISSING, S3_INITIALIZATION_FAILED } from "../utils/messages";
 import { s3 } from "../config/aws";
+import { getBucketName } from "./getBucketName";
+import { s3BucketType } from "../utils/enums";
 
 export const uploadFiles = async (
-  documents: FileUpload[]
+  documents: FileUpload[],
+  type: s3BucketType
 ): Promise<{ filePath: string; fileName: string }[]> => {
   return await Promise.all(
     documents.map(async (document) => {
@@ -21,10 +24,12 @@ export const uploadFiles = async (
         throw new CustomError(S3_INITIALIZATION_FAILED);
       }
 
+      const bucketName = getBucketName(type);
+
       const upload = new Upload({
         client: s3,
         params: {
-          Bucket: process.env["AWS_BUCKET_NAME"],
+          Bucket: bucketName,
           Key: filePath,
           Body: document.createReadStream(),
           ContentType: document.mimetype,

@@ -1,5 +1,6 @@
 import { Service } from "typedi";
 import { Repository } from "typeorm";
+import speakeasy from "speakeasy";
 
 import { Otp } from "../../entities/Otp";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
@@ -8,9 +9,12 @@ import { logger } from "../../utils/logger";
 import { generateOtp } from "../../helpers/generateOtp";
 import { OtpResponse } from "../../types/responses/Otpresponse";
 import {
+  EXPIRED_OTP,
+  INVALID_OTP,
   NO_OTP_FOUND,
   OTP_SENT,
   RESEND_OTP_SUCCESS,
+  VALID_OTP,
 } from "../../utils/messages";
 import { OtpStatus, OtpType } from "../../utils/enums";
 import { CustomError } from "../../utils/custumError";
@@ -87,6 +91,67 @@ export class OtpProvider {
     return new OtpResponse(true, RESEND_OTP_SUCCESS, otpToSend);
   }
 
+  async verifyOtp(params: {
+    userId: string;
+    otpCode: string;
+    OtpType: OtpType;
+  }): Promise<OtpResponse> {
+    logger.info(`🔍 Verifying OTP for user ${params.userId}`);
+
+    const otpData = await this.checkOtpValidity(params.userId, params.OtpType);
+
+    const isMatching = speakeasy.totp.verify({
+      secret: otpData.userSecret + otpData.createdAt.toString(),
+      encoding: "base32",
+      token: params.otpCode,
+      step: 300,
+      window: 0,
+    });
+
+    if (!isMatching) {
+      logger.warn(`❌ Invalid OTP for user ${params.userId}`);
+      throw new CustomError(INVALID_OTP);
+    }
+
+    logger.info(`✅ OTP verified successfully for user ${params.userId}`);
+    this.disableOtp(params.userId);
+
+    return new OtpResponse(true, VALID_OTP);
+  }
+
+  private async checkOtpValidity(userId: string, otpType: OtpType) {
+    logger.info(`🔎 Checking OTP validity for user ${userId}`);
+
+    const otpData = await this.getOtpDetails({ userId });
+
+    if (!otpData) {
+      throw new CustomError(NO_OTP_FOUND);
+    }
+
+    if (otpData.status === OtpStatus.INACTIVE) {
+      throw new CustomError(EXPIRED_OTP);
+    }
+
+    const isExpired = otpData.expiresAt < new Date();
+    const isInvalid = otpData.otpType !== otpType;
+
+    if (isExpired || isInvalid) {
+      await this.disableOtp(userId);
+      throw new CustomError(EXPIRED_OTP);
+    }
+
+    logger.info(`✅ OTP is valid for user ${userId}`);
+
+    return otpData;
+  }
+
+  async disableOtp(userId: string) {
+    await this.otpRepository.update(
+      { user: { id: userId } },
+      { status: OtpStatus.INACTIVE }
+    );
+  }
+
   private async generateAndSaveNewOtp(
     existingOtp: Otp,
     otpType
@@ -102,6 +167,7 @@ export class OtpProvider {
     logger.info(
       `✅ New OTP generated: ${newOtp.otpCode}, expires at ${newOtp.expiresAt}`
     );
+
     return newOtp;
   }
 

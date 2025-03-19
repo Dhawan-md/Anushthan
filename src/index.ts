@@ -19,6 +19,8 @@ import { logger } from "./utils/logger";
 import { UserQueryresolver } from "./resolvers/user/UserQueryResolver";
 import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
 import { UploadScalar } from "./types/scalar/UploadScalar";
+import { context } from "./auth/context";
+import { Context } from "./types/context";
 
 const createApp = async () => {
   const app: Application = express();
@@ -27,6 +29,9 @@ const createApp = async () => {
 
   const schema = await buildSchema({
     resolvers: [UserMutationResolver, UserQueryresolver, OtpMutationResolver],
+    authChecker: ({ context }: { context: Context }) => {
+      return !!context.user?.userId;
+    },
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
     scalarsMap: [{ type: Upload, scalar: UploadScalar }],
@@ -40,6 +45,7 @@ const createApp = async () => {
     schema,
     resolvers,
     logger,
+    context,
   });
   await server.start();
   server.applyMiddleware({ app, path: "/graphql" });
