@@ -17,7 +17,9 @@ import {
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { OtpProvider } from "../otp/OtpProvider";
 import { sendEmail } from "../../service/email/sendEmail";
-import { EmailType } from "../../utils/enums";
+import { EmailType, s3BucketType } from "../../utils/enums";
+import { FileUpload } from "graphql-upload-minimal";
+import { uploadFiles } from "../../helpers/uploadFiles";
 
 @Service()
 export class UserSignInProvider {
@@ -37,6 +39,7 @@ export class UserSignInProvider {
     userEmail: string;
     password: string;
     phoneNumber: string;
+    profileImage: FileUpload;
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validatePassword(params.password);
@@ -49,6 +52,11 @@ export class UserSignInProvider {
       throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
     }
 
+    const uploadedImage = await uploadFiles(
+      params.profileImage,
+      s3BucketType.IMAGE
+    );
+
     const hashedPassword = await bcrypt.hash(params.password, 10);
     const newUser = this.userSignInRepository.create({
       name: params.name,
@@ -56,6 +64,7 @@ export class UserSignInProvider {
       userEmail: params.userEmail,
       password: hashedPassword,
       phoneNumber: params.phoneNumber,
+      profile_pic: JSON.stringify(uploadedImage),
     });
     const user = await this.userSignInRepository.save(newUser);
 

@@ -180,7 +180,7 @@ export class OtpProvider {
     includeRelation: boolean = false
   ): Promise<Otp | null> {
     return await this.otpRepository.findOne({
-      where: params,
+      where: params.userId ? {user:{id:params.userId}} : params,
       ...(includeRelation ? { relations: ["user"] } : {}),
     });
   }

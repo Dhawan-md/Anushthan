@@ -31,7 +31,7 @@ export class UpdateUserProvider {
 
   async updateUser(updatedUserData: Partial<User>, userId: string) {
     logger.info(`🔄 Updating user with ID: ${userId}`);
-    const userData = await this.userInfoProvider.getUser({ userId });
+    const userData = await this.userInfoProvider.getUser({ id: userId });
 
     if (!userData) {
       throw new Error(NO_USER_FOUND);
@@ -41,7 +41,6 @@ export class UpdateUserProvider {
     await this.updateUserRepository.save(userData);
 
     const updatedUser = await this.updateUserRepository.save(userData);
-    console.log(updatedUser);
 
     logger.info(`✅ Successfully updated user with ID: ${userId}`);
     return new SingleUserResponse(true, USER_UPDATED, updatedUser);

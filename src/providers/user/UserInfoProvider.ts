@@ -26,11 +26,11 @@ export class UserInfoProvider {
   async getUser(params: {
     username?: string;
     userEmail?: string;
-    userId?: string;
+    id?: string;
   }): Promise<User | null> {
     logger.info(
       `🔍 Searching for user with params: ${
-        params.username || params.userId || params.userEmail
+        params.username || params.id || params.userEmail
       }`
     );
     return await this.userInfoRepository.findOne({ where: params });

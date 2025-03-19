@@ -3,6 +3,8 @@ export const INTERNAL_ERROR_OCCURRED = "Internal error occurred.";
 // env messages
 export const MISSING_ENV_VARIABLES =
   "Required env variables are missing, please check the env file.";
+export const MISSING_BUCKET_NAME =
+  "Bucket name is missing, please check the env file.";
 
 // token messages
 export const FAILED_TO_GENERATE_TOKEN = "Error occurred in token generation.";
@@ -54,7 +56,7 @@ export const S3_INITIALIZATION_FAILED =
   "S3 client initialization failed. Please check AWS credentials.";
 export const INVALID_BUCKET = "Invaid bucket! bucket does not exists.";
 
-// documents messages
+// File upload messages
 export const FILE_UPLOAD_FAIL = "Request timeout! Failed to upload files.";
 export const DOCUMENTS_NOT_FOUND = "No document found.";
 export const DOCUMENT_ALREADY_SUBMITTED =

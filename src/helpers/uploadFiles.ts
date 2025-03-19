@@ -10,11 +10,16 @@ import { getBucketName } from "./getBucketName";
 import { s3BucketType } from "../utils/enums";
 
 export const uploadFiles = async (
-  documents: FileUpload[],
+  documents: FileUpload | FileUpload[],
   type: s3BucketType
-): Promise<{ filePath: string; fileName: string }[]> => {
-  return await Promise.all(
-    documents.map(async (document) => {
+): Promise<
+  | { filePath: string; fileName: string }
+  | { filePath: string; fileName: string }[]
+> => {
+  const files = Array.isArray(documents) ? documents : [documents];
+
+  const uploadedFiles = await Promise.all(
+    files.map(async (document) => {
       if (!document.filename) throw new CustomError(FILENAME_MISSING);
 
       const fileName = `${uuidv4()}-${document.filename}`;
@@ -41,4 +46,5 @@ export const uploadFiles = async (
       return { filePath, fileName: document.filename };
     })
   );
+  return uploadFiles.length === 1 ? uploadFiles[0] : uploadedFiles;
 };
