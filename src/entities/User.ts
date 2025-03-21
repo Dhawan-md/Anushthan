@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   OneToOne,
+  UpdateDateColumn,
 } from "typeorm";
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
@@ -65,4 +66,8 @@ export class User {
   @Field()
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
+
+  @Field()
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

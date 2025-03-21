@@ -20,6 +20,10 @@ export const ONE_LOWER_CASE =
   "Password must contain at least one lowercase letter.";
 export const ONE_NUMERICAL_DIGIT =
   "Password must contain at least one numerical digit.";
+export const INVALID_PASSWORD = "Invalid password.";
+export const OLD_PASSWORD_ERROR =
+  "New password cannot be the same as the old password.";
+export const RESET_PASSWORD_SUCCESS = "Password reset successfully.";
 
 // User Messages
 export const USER_REGISTERED = "User registered.";
@@ -32,6 +36,7 @@ export const ERROR_FETCHING_USER_DATA =
 export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
+export const LOGIN_SUCCESSFULL = "Logged in successfully.";
 
 // OTP Messages
 export const VALID_OTP = "OTP is valid.";
@@ -42,14 +47,18 @@ export const NO_OTP_FOUND = "Failed to find otp details";
 export const INVALID_OTP_TYPE = "Invalid Otp type provided";
 export const RESEND_OTP_SUCCESS = "OTP sent again.";
 export const OTP_GENERATION_FAILED = "Failed to generate OTP.";
+export const SESSION_EXPIRED = "Session has expired."
+export const OTP_VERIFICATION_REQUIRED = "You need to verify otp for changing password"
 
 // email messages
 export const EMAIL_SENT = "Email sent successfully.";
 export const FAILED_TO_SEND_EMAIL = "Failed to send email.";
+export const FAILED_TO_CREATE_EMAIL = "Failed to create email.";
 export const EMAIL_ERROR_OCCURED =
   "Internal error occured while sending email.";
 export const FAILED_LOADING_TEMPLATE = "Failed to laod email template.";
 export const NO_TEMPLATE_FOUND = "No template found for this email type.";
+export const INVALID_EMAIL = "Invalid Email! Please check the email."
 
 // s3 messages
 export const S3_INITIALIZATION_FAILED =

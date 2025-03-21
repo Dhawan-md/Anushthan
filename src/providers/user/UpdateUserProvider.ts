@@ -16,6 +16,7 @@ import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { CustomError } from "../../utils/custumError";
 import { EmailType, OtpType } from "../../utils/enums";
 import { sendEmail } from "../../service/email/sendEmail";
+import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class UpdateUserProvider {
@@ -68,9 +69,9 @@ export class UpdateUserProvider {
 
     logger.info(`🔍 Verifying OTP for ${userEmail}`);
     await this.otpProvider.verifyOtp({
-      userId: userData.id,
+      userEmail,
       otpCode,
-      OtpType: OtpType.USER,
+      otpType: OtpType.USER,
     });
 
     logger.info(`📧 Sending verification email to ${userEmail}`);
@@ -84,7 +85,13 @@ export class UpdateUserProvider {
     userData.isVerified = true;
     await this.updateUser(userData, userData.id);
 
+    const jwtToken = generateJwtToken({
+      userId: userData.id,
+      isVerified: userData.isVerified,
+      userRole: userData.userRole,
+    });
+
     logger.info(`✅ User ${userEmail} successfully verified`);
-    return new SingleUserResponse(true, USER_VERIFIED_SUCCESS);
+    return new SingleUserResponse(true, USER_VERIFIED_SUCCESS, null, jwtToken);
   }
 }

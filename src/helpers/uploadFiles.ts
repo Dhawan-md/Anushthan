@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { CustomError } from "../utils/custumError";
 import { FILENAME_MISSING, S3_INITIALIZATION_FAILED } from "../utils/messages";
 import { s3 } from "../config/aws";
-import { getBucketName } from "./getBucketName";
+import { getBucketName } from "../utils/getBucketName";
 import { s3BucketType } from "../utils/enums";
 
 export const uploadFiles = async (

@@ -31,3 +31,13 @@ export class OtpToken {
     this.expiresAt = expiresAt;
   }
 }
+
+@ObjectType()
+export class resetPasswordToken {
+  @Field()
+  token: AccessToken;
+
+  constructor(token: AccessToken) {
+    this.token = token;
+  }
+}

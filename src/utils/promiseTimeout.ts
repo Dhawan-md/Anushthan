@@ -1,5 +1,5 @@
-import { CustomError } from "../utils/custumError";
-import { FILE_UPLOAD_FAIL } from "../utils/messages";
+import { CustomError } from "./custumError";
+import { FILE_UPLOAD_FAIL } from "./messages";
 
 export const promiseTimeout = <T>(
   promise: Promise<T>,

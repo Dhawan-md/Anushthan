@@ -1,6 +1,6 @@
-import { EmailType, OtpType } from "../utils/enums";
-import { CustomError } from "../utils/custumError";
-import { INVALID_OTP_TYPE } from "../utils/messages";
+import { EmailType, OtpType } from "./enums";
+import { CustomError } from "./custumError";
+import { INVALID_OTP_TYPE } from "./messages";
 
 export const getEmailTypeByOtpType = (otpType: OtpType): EmailType => {
   switch (otpType) {

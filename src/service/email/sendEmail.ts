@@ -1,7 +1,8 @@
-import { getEmailTemplateByType } from "../../helpers/getEmailTemplateByType";
+import { getEmailTemplateByType } from "../../utils/getEmailTemplateByType";
 import { EmailType } from "../../utils/enums";
 import { createEmail } from "./createEmail";
 import { CustomError } from "../../utils/custumError";
+import { FAILED_TO_SEND_EMAIL } from "../../utils/messages";
 
 export const sendEmail = async (
   userEmail: string,
@@ -12,6 +13,6 @@ export const sendEmail = async (
     const emailTemplate = getEmailTemplateByType(type);
     await createEmail(userEmail, emailTemplate, type, placeholders);
   } catch (error) {
-    throw new CustomError(error);
+    throw new CustomError(FAILED_TO_SEND_EMAIL);
   }
 };

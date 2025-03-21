@@ -3,6 +3,7 @@ import { EmailType } from "../../utils/enums";
 import { CustomError } from "../../utils/custumError";
 import { loadEmailTemplate } from "./loadEmailTemplate";
 import { logger } from "../../utils/logger";
+import { FAILED_TO_CREATE_EMAIL } from "../../utils/messages";
 
 export const createEmail = async (
   to: string,
@@ -22,6 +23,6 @@ export const createEmail = async (
     await sgMail.send(msg);
     logger.info(`Email sent to ${to} successfully.`);
   } catch (error) {
-    throw new CustomError(error);
+    throw new CustomError(FAILED_TO_CREATE_EMAIL);
   }
 };

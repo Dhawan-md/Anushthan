@@ -28,7 +28,11 @@ const createApp = async () => {
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
 
   const schema = await buildSchema({
-    resolvers: [UserMutationResolver, UserQueryresolver, OtpMutationResolver],
+    resolvers: [
+      UserMutationResolver,
+      UserQueryresolver,
+      OtpMutationResolver,
+    ],
     authChecker: ({ context }: { context: Context }) => {
       return !!context.user?.userId;
     },

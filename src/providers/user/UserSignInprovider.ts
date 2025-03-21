@@ -6,10 +6,13 @@ import { User } from "../../entities/User";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { logger } from "../../utils/logger";
-import { validatePassword } from "../../helpers/validatePassword";
+import { validatePassword } from "../../utils/validatePassword";
 import { UserInfoProvider } from "./UserInfoProvider";
 import { CustomError } from "../../utils/custumError";
 import {
+  INVALID_PASSWORD,
+  LOGIN_SUCCESSFULL,
+  NO_USER_FOUND,
   OTP_GENERATION_FAILED,
   USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
@@ -20,6 +23,7 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { EmailType, s3BucketType } from "../../utils/enums";
 import { FileUpload } from "graphql-upload-minimal";
 import { uploadFiles } from "../../helpers/uploadFiles";
+import { validateEmail } from "../../utils/validateEmail";
 
 @Service()
 export class UserSignInProvider {
@@ -43,6 +47,7 @@ export class UserSignInProvider {
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validatePassword(params.password);
+    validateEmail(params.userEmail);
 
     const isExistingUser = await this.userInfoProvider.getUser({
       userEmail: params.userEmail,
@@ -68,11 +73,14 @@ export class UserSignInProvider {
     });
     const user = await this.userSignInRepository.save(newUser);
 
-    const jwtToken = generateJwtToken({
-      userId: user.id,
-      isVerified: user.isVerified,
-      userRole: user.userRole,
-    });
+    const jwtToken = generateJwtToken(
+      {
+        userId: user.id,
+        isVerified: user.isVerified,
+        userRole: user.userRole,
+      },
+      "24h"
+    );
 
     const otpData = await this.otpProvider.saveOtp(user);
 
@@ -91,5 +99,41 @@ export class UserSignInProvider {
 
     logger.info(`✅ User ${user.id} registered successfully.`);
     return new SingleUserResponse(true, USER_REGISTERED, user, jwtToken);
+  }
+
+  async loginUser(
+    emailOrUsername: string,
+    password: string
+  ): Promise<SingleUserResponse> {
+    logger.info(`🔄Logging in user: ${emailOrUsername}.`);
+    validateEmail(emailOrUsername);
+
+    const userData = await this.userSignInRepository.findOneBy([
+      { userEmail: emailOrUsername },
+      { username: emailOrUsername },
+    ]);
+
+    if (!userData) {
+      throw new CustomError(NO_USER_FOUND);
+    }
+
+    const isValidPassword = await bcrypt.compare(password, userData.password);
+
+    if (!isValidPassword) {
+      throw new CustomError(INVALID_PASSWORD);
+    }
+
+    const jwtToken = generateJwtToken(
+      {
+        userId: userData.id,
+        isVerified: userData.isVerified,
+        userRole: userData.userRole,
+      },
+      "24h"
+    );
+
+    logger.info(`✅ User ${userData.username} logged in successfully.`);
+
+    return new SingleUserResponse(true, LOGIN_SUCCESSFULL, userData, jwtToken);
   }
 }

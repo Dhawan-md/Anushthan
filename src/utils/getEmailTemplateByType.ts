@@ -1,6 +1,6 @@
-import { EmailTemplate, EmailType } from "../utils/enums";
-import { CustomError } from "../utils/custumError";
-import { NO_TEMPLATE_FOUND } from "../utils/messages";
+import { EmailTemplate, EmailType } from "./enums";
+import { CustomError } from "./custumError";
+import { NO_TEMPLATE_FOUND } from "./messages";
 
 export const getEmailTemplateByType = (emailType: EmailType): EmailTemplate => {
   switch (emailType) {

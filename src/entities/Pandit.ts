@@ -5,6 +5,7 @@ import {
   OneToOne,
   CreateDateColumn,
   JoinColumn,
+  UpdateDateColumn,
 } from "typeorm";
 
 import { User } from "./User";
@@ -17,7 +18,7 @@ export class Pandit {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field(()=>User)
+  @Field(() => User)
   @OneToOne(() => User, (user) => user.pandit, { onDelete: "CASCADE" })
   @JoinColumn()
   user!: User;
@@ -31,12 +32,24 @@ export class Pandit {
   experience!: number;
 
   @Field()
-  @Column()
-  location!: string;
+  @Column({ type: "decimal", precision: 10, scale: 8, nullable: true })
+  latitude: number;
 
   @Field()
-  @Column({ type: "boolean", default: false })
-  documents_verified!: boolean;
+  @Column({ type: "decimal", precision: 10, scale: 8, nullable: true })
+  longitude: number;
+
+  @Field()
+  @Column()
+  address!: string;
+
+  @Field()
+  @Column({ default: false, name: "is_available" })
+  isAvailable!: boolean;
+
+  @Field()
+  @Column({ type: "boolean", default: false, name: "documents_verified" })
+  documentsVerified!: boolean;
 
   @Field()
   @Column({ type: "decimal", precision: 2, default: 0 })
@@ -45,4 +58,8 @@ export class Pandit {
   @Field()
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
+
+  @Field()
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

@@ -5,7 +5,7 @@ import { s3 } from "../config/aws";
 import { CustomError } from "../utils/custumError";
 import { S3_INITIALIZATION_FAILED } from "../utils/messages";
 import { s3BucketType } from "../utils/enums";
-import { getBucketName } from "./getBucketName";
+import { getBucketName } from "../utils/getBucketName";
 
 export const generateSignedUrl = async (
   filePath: string,

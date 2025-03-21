@@ -5,7 +5,9 @@ import { UserSignInProvider } from "../../providers/user/UserSignInprovider";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { UpdateUserProvider } from "../../providers/user/UpdateUserProvider";
 import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
-import { promiseTimeout } from "../../helpers/promiseTimeout";
+import { promiseTimeout } from "../../utils/promiseTimeout";
+import { ForgetPasswordProvider } from "../../providers/user/ForgetPasswordProvider";
+import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 
 @Service()
 @Resolver()
@@ -14,7 +16,9 @@ export class UserMutationResolver {
     @Inject(() => UserSignInProvider)
     private userSignInProvider: UserSignInProvider,
     @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider
+    private updateUserProvider: UpdateUserProvider,
+    @Inject(() => ForgetPasswordProvider)
+    private forgetPasswordProvider: ForgetPasswordProvider
   ) {}
 
   @Mutation(() => SingleUserResponse)
@@ -42,10 +46,47 @@ export class UserMutationResolver {
   }
 
   @Mutation(() => SingleUserResponse)
+  async loginuser(
+    @Arg("userEmail") userEmail: string,
+    @Arg("password") password: string
+  ): Promise<SingleUserResponse> {
+    return await this.userSignInProvider.loginUser(userEmail, password);
+  }
+
+  @Mutation(() => SingleUserResponse)
   async verifyUser(
     @Arg("userEmail") userEmail: string,
     @Arg("otpCode") otpCode: string
   ): Promise<SingleUserResponse> {
     return await this.updateUserProvider.verifyUser(userEmail, otpCode);
+  }
+
+  @Mutation(() => SingleUserResponse)
+  async forgetPassword(
+    @Arg("userEmail") userEmail: string
+  ): Promise<SingleUserResponse> {
+    return await this.forgetPasswordProvider.forgetPassword(userEmail);
+  }
+
+  @Mutation(() => VerifyResetResponse)
+  async verifyReset(
+    @Arg("userEmail") userEmail: string,
+    @Arg("otpCode") otpCode: string
+  ): Promise<VerifyResetResponse> {
+    return await this.forgetPasswordProvider.verifyResetPassword(
+      userEmail,
+      otpCode
+    );
+  }
+
+  @Mutation(() => SingleUserResponse)
+  async resetPassword(
+    @Arg("newPassword") newPassword: string,
+    @Arg("otpToken") otpToken: string
+  ) {
+    return await this.forgetPasswordProvider.resetPassword({
+      newPassword,
+      otpToken,
+    });
   }
 }
