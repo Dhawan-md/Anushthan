@@ -10,13 +10,14 @@ import {
   // Upload,
 } from "graphql-upload-minimal";
 import { ApolloServer } from "apollo-server-express";
+import { Server } from "http";
 
 import { intializeDatabase } from "./config/database";
 import { UserMutationResolver } from "./resolvers/user/UserMutationResolver";
 import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import { logger } from "./utils/logger";
-import { UserQueryresolver } from "./resolvers/user/UserQueryResolver";
+import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
 import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
 import { UploadScalar } from "./types/scalar/UploadScalar";
 import { context } from "./auth/context";
@@ -28,11 +29,7 @@ const createApp = async () => {
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
 
   const schema = await buildSchema({
-    resolvers: [
-      UserMutationResolver,
-      UserQueryresolver,
-      OtpMutationResolver,
-    ],
+    resolvers: [UserMutationResolver, UserQueryResolver, OtpMutationResolver],
     authChecker: ({ context }: { context: Context }) => {
       return !!context.user?.userId;
     },
@@ -58,10 +55,28 @@ const createApp = async () => {
 };
 
 const startServer = async () => {
-  await intializeDatabase();
-  const app = await createApp();
-  app.listen(5000, () => {
-    console.log("Server is running at http://localhost:5000/graphql");
+  try {
+    await intializeDatabase();
+    const app = await createApp();
+    const server = app.listen(5000, () => {
+      logger.info("🚀 Server is running at http://localhost:5000/graphql");
+    });
+
+    // ✅ Gracefully handle shutdown
+    process.on("SIGINT", () => shutdown(server));
+    process.on("SIGTERM", () => shutdown(server));
+  } catch (error) {
+    logger.error("❌ Server failed to start:", error);
+    process.exit(1);
+  }
+};
+
+const shutdown = (server: Server) => {
+  logger.info("🛑 Shutting down server...");
+
+  server.close(() => {
+    logger.info("✅ Server closed.");
+    process.exit(0);
   });
 };
 

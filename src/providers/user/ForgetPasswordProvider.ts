@@ -8,9 +8,9 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { OtpType } from "../../utils/enums";
 import {
   MISSING_ENV_VARIABLES,
-  NO_USER_FOUND,
   OLD_PASSWORD_ERROR,
   OTP_SENT,
+  OTP_VERIFICATION_REQUIRED,
   RESET_PASSWORD_SUCCESS,
 } from "../../utils/messages";
 import { sendEmail } from "../../service/email/sendEmail";
@@ -59,15 +59,14 @@ export class ForgetPasswordProvider {
     });
 
     const userData = await this.userInfoProvider.getUser({ userEmail });
-    if (!userData) {
-      logger.warn(`❌ No user found with email: ${userEmail}`);
-      throw new CustomError(NO_USER_FOUND);
-    }
+
     const verificationToken = generateJwtToken(userData.id, "5m");
 
-    return new VerifyResetResponse(isValidOTp.success, isValidOTp.message, {
-      token: verificationToken,
-    });
+    return new VerifyResetResponse(
+      isValidOTp.success,
+      isValidOTp.message,
+      verificationToken
+    );
   }
 
   async resetPassword(params: {
@@ -75,27 +74,25 @@ export class ForgetPasswordProvider {
     otpToken: string;
   }): Promise<SingleUserResponse> {
     const { newPassword, otpToken } = params;
-
+    
     if (!process.env["JWT_SECRET"]) {
       throw new CustomError(MISSING_ENV_VARIABLES);
     }
-
-    const decode = verify(otpToken, process.env["JWT_SECRET"]) as {
+    
+    const payload = verify(otpToken, process.env["JWT_SECRET"]) as {
       userId: string;
     };
+    
+    if(!payload.userId){
+      throw new CustomError(OTP_VERIFICATION_REQUIRED)
+    }
 
-    const { userId } = decode;
+    const { userId } = payload;
     logger.info(`🔄 Password reset request received for: ${userId}`);
-
+    
     validatePassword(newPassword);
 
     const userData = await this.userInfoProvider.getUser({ id: userId });
-
-    if (!userData) {
-      logger.warn(`❌ No user found with email: ${userId}`);
-      throw new CustomError(NO_USER_FOUND);
-    }
-
     const isSamePassword = await bcrypt.compare(newPassword, userData.password);
 
     if (isSamePassword) {

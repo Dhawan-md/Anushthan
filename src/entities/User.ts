@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   OneToOne,
   UpdateDateColumn,
+  Index,
 } from "typeorm";
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
@@ -28,11 +29,12 @@ export class User {
 
   @Field()
   @Column({ unique: true })
+  @Index()
   userEmail!: string;
 
   @Field()
   @Column({ unique: true, name: "phone_number" })
-  phoneNumber: string;
+  phoneNumber!: string;
 
   @Field()
   @Column()
@@ -45,15 +47,15 @@ export class User {
     enum: UserRole,
     default: UserRole.CUSTOMER,
   })
-  userRole: UserRole;
+  userRole!: UserRole;
 
   @Field()
   @Column({ name: "profile_pic", nullable: true })
-  profile_pic: string;
+  profilePic?: string;
 
   @Field()
   @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
-  pandit: Pandit;
+  pandit?: Pandit;
 
   @Field()
   @OneToOne(() => Otp, (otp) => otp.user)

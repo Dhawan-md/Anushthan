@@ -10,8 +10,6 @@ export const generateOtp = (userSecret: string) => {
     step: 300,
   });
 
-  console.log(userSecret + createdAt.toString(), 1);
-
   return {
     otpCode,
     createdAt,

@@ -6,7 +6,7 @@ import { MultipleUserResponse } from "../../types/responses/UserResponse";
 
 @Service()
 @Resolver()
-export class UserQueryresolver {
+export class UserQueryResolver {
   constructor(
     @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
   ) {}

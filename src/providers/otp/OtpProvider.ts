@@ -1,7 +1,6 @@
 import { Service } from "typedi";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 import speakeasy from "speakeasy";
-import bcrypt from "bcryptjs";
 
 import { Otp } from "../../entities/Otp";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
@@ -15,9 +14,7 @@ import {
   NO_OTP_FOUND,
   OTP_GENERATION_FAILED,
   OTP_SENT,
-  OTP_VERIFICATION_REQUIRED,
   RESEND_OTP_SUCCESS,
-  SESSION_EXPIRED,
   VALID_OTP,
 } from "../../utils/messages";
 import { OtpStatus, OtpType } from "../../utils/enums";
@@ -35,7 +32,7 @@ export class OtpProvider {
     this.otpRepository = this.repositoryFactory.getRepository(Otp);
   }
 
-  async saveOtp(user: User) {
+  async saveOtp(user: User, transactionalEntityManager: EntityManager) {
     logger.info(`🔄 Generating OTP for user (${user.userEmail})`);
 
     const userSecret = generateUserSecret();
@@ -45,7 +42,7 @@ export class OtpProvider {
       `✅ OTP generated: ${otpData.otpCode}, expires at ${otpData.expiresAt}`
     );
 
-    const otp = this.otpRepository.create({
+    const otp = transactionalEntityManager.create(Otp, {
       user,
       userEmail: user.userEmail,
       otpCode: otpData.otpCode,
@@ -54,7 +51,7 @@ export class OtpProvider {
       expiresAt: otpData.expiresAt,
     });
 
-    await this.otpRepository.save(otp);
+    await transactionalEntityManager.save(otp);
     logger.info(
       `💾 OTP saved in the database for user with email ${user.userEmail}`
     );
@@ -93,8 +90,13 @@ export class OtpProvider {
       params.otpType
     );
 
+    if (!otpData.success) {
+      logger.warn(`❌ Otp has been expired for ${params.userEmail}`);
+      throw new CustomError(EXPIRED_OTP);
+    }
+
     const isMatching = speakeasy.totp.verify({
-      secret: otpData.userSecret + otpData.createdAt.toString(),
+      secret: otpData.data.userSecret + otpData.data.createdAt.toString(),
       encoding: "base32",
       token: params.otpCode,
       step: 300,
@@ -112,49 +114,6 @@ export class OtpProvider {
     return new OtpResponse(true, VALID_OTP);
   }
 
-  async verifyOtpToken(userEmail: string, token: string) {
-    const otpData = await this.getOtpDetails({ userEmail });
-
-    if (!otpData) {
-      throw new CustomError(NO_OTP_FOUND);
-    }
-
-    if (new Date() > otpData.expiresAt) {
-      throw new CustomError(SESSION_EXPIRED);
-    }
-
-    const isValidToken = await bcrypt.compare(otpData.otpCode, token);
-    if (!isValidToken) {
-      throw new CustomError(OTP_VERIFICATION_REQUIRED);
-    }
-  }
-
-  private async checkOtpValidity(userEmail: string, otpType: OtpType) {
-    logger.info(`🔎 Checking OTP validity for user ${userEmail}`);
-
-    const otpData = await this.getOtpDetails({ userEmail });
-
-    if (!otpData) {
-      throw new CustomError(NO_OTP_FOUND);
-    }
-
-    if (otpData.status === OtpStatus.INACTIVE) {
-      throw new CustomError(EXPIRED_OTP);
-    }
-
-    const isExpired = otpData.expiresAt < new Date();
-    const isInvalid = otpData.otpType !== otpType;
-
-    if (isExpired || isInvalid) {
-      await this.disableOtp(userEmail);
-      throw new CustomError(EXPIRED_OTP);
-    }
-
-    logger.info(`✅ OTP is valid for user ${userEmail}`);
-
-    return otpData;
-  }
-
   async disableOtp(userEmail: string) {
     await this.otpRepository.update(
       { userEmail },
@@ -165,32 +124,22 @@ export class OtpProvider {
   async generateAndSaveNewOtp(userEmail: string, otpType): Promise<OtpToken> {
     logger.info(`🔄 Fetching OTP details for ${userEmail}`);
 
-    const existingOtp = await this.getOtpDetails({ userEmail }, true);
+    const existingOtp = await this.checkOtpValidity(userEmail, otpType);
 
-    if (!existingOtp) {
-      throw new CustomError(NO_OTP_FOUND);
+    if (existingOtp.success) {
+      return existingOtp.data;
     }
 
-    const isOtpValid =
-      existingOtp.expiresAt > new Date() &&
-      existingOtp.status === OtpStatus.ACTIVE &&
-      existingOtp.otpType === otpType;
+    logger.info(`🔄 Generating a new OTP for ${existingOtp.data.userEmail}`);
 
-    if (isOtpValid) {
-      logger.info(`✅ Existing OTP is still valid: ${existingOtp.otpCode}`);
-      return existingOtp;
-    }
-
-    logger.info(`🔄 Generating a new OTP for ${existingOtp.userEmail}`);
-
-    const newOtp = generateOtp(existingOtp.userSecret);
+    const newOtp = generateOtp(existingOtp.data.userSecret);
 
     if (!newOtp) {
       throw new CustomError(OTP_GENERATION_FAILED);
     }
 
     await this.otpRepository.update(
-      { id: existingOtp.id },
+      { id: existingOtp.data.id },
       { ...newOtp, status: OtpStatus.ACTIVE, otpType }
     );
 
@@ -201,7 +150,7 @@ export class OtpProvider {
     return newOtp;
   }
 
-  async getOtpDetails(
+  private async getOtpDetails(
     params: {
       otpCode?: string;
       userEmail?: string;
@@ -213,5 +162,29 @@ export class OtpProvider {
       where: params.userId ? { user: { id: params.userId } } : params,
       ...(includeRelation ? { relations: ["user"] } : {}),
     });
+  }
+
+  private async checkOtpValidity(userEmail: string, otpType: OtpType) {
+    logger.info(`🔎 Checking OTP validity for user ${userEmail}`);
+
+    const otpData = await this.getOtpDetails({ userEmail });
+
+    if (!otpData) {
+      throw new CustomError(NO_OTP_FOUND);
+    }
+    const isOtpValid =
+      otpData.expiresAt > new Date() &&
+      otpData.status === OtpStatus.ACTIVE &&
+      otpData.otpType === otpType;
+
+    if (isOtpValid) {
+      logger.info(`✅ Existing OTP is still valid: ${otpData.otpCode}`);
+      return { success: true, data: otpData };
+    }
+
+    await this.disableOtp(userEmail);
+    logger.warn(`❌ OTP expired or invalid for ${userEmail}, disabling it`);
+
+    return { success: false, data: otpData };
   }
 }

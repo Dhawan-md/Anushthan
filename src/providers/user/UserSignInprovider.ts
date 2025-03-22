@@ -12,7 +12,6 @@ import { CustomError } from "../../utils/custumError";
 import {
   INVALID_PASSWORD,
   LOGIN_SUCCESSFULL,
-  NO_USER_FOUND,
   OTP_GENERATION_FAILED,
   USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
@@ -22,7 +21,7 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { sendEmail } from "../../service/email/sendEmail";
 import { EmailType, s3BucketType } from "../../utils/enums";
 import { FileUpload } from "graphql-upload-minimal";
-import { uploadFiles } from "../../helpers/uploadFiles";
+import { uploadFiles } from "../../helpers/uploadS3Files";
 import { validateEmail } from "../../utils/validateEmail";
 
 @Service()
@@ -63,59 +62,58 @@ export class UserSignInProvider {
     );
 
     const hashedPassword = await bcrypt.hash(params.password, 10);
-    const newUser = this.userSignInRepository.create({
-      name: params.name,
-      username: params.username,
-      userEmail: params.userEmail,
-      password: hashedPassword,
-      phoneNumber: params.phoneNumber,
-      profile_pic: JSON.stringify(uploadedImage),
-    });
-    const user = await this.userSignInRepository.save(newUser);
+    return await this.userSignInRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const newUser = transactionalEntityManager.create(User, {
+          name: params.name,
+          username: params.username,
+          userEmail: params.userEmail,
+          password: hashedPassword,
+          phoneNumber: params.phoneNumber,
+          profilePic: JSON.stringify(uploadedImage),
+        });
+        const user = await transactionalEntityManager.save(newUser);
 
-    const jwtToken = generateJwtToken(
-      {
-        userId: user.id,
-        isVerified: user.isVerified,
-        userRole: user.userRole,
-      },
-      "24h"
+        const jwtToken = generateJwtToken(
+          {
+            userId: user.id,
+            isVerified: user.isVerified,
+            userRole: user.userRole,
+          },
+          "24h"
+        );
+
+        const otpData = await this.otpProvider.saveOtp(
+          user,
+          transactionalEntityManager
+        );
+
+        if (!otpData.data || !otpData.success) {
+          throw new CustomError(OTP_GENERATION_FAILED);
+        }
+
+        await sendEmail(
+          params.userEmail,
+          {
+            name: params.name,
+            otpCode: otpData.data?.otpCode,
+          },
+          EmailType.ACCOUNT_VERIFICATION
+        );
+        logger.info(`✅ User ${user.id} registered successfully.`);
+        return new SingleUserResponse(true, USER_REGISTERED, user, jwtToken);
+      }
     );
-
-    const otpData = await this.otpProvider.saveOtp(user);
-
-    if (!otpData.data || !otpData.success) {
-      throw new CustomError(OTP_GENERATION_FAILED);
-    }
-
-    await sendEmail(
-      params.userEmail,
-      {
-        name: params.name,
-        otpCode: otpData.data?.otpCode,
-      },
-      EmailType.ACCOUNT_VERIFICATION
-    );
-
-    logger.info(`✅ User ${user.id} registered successfully.`);
-    return new SingleUserResponse(true, USER_REGISTERED, user, jwtToken);
   }
 
   async loginUser(
-    emailOrUsername: string,
+    userEmail: string,
     password: string
   ): Promise<SingleUserResponse> {
-    logger.info(`🔄Logging in user: ${emailOrUsername}.`);
-    validateEmail(emailOrUsername);
+    logger.info(`🔄Logging in user: ${userEmail}.`);
+    validateEmail(userEmail);
 
-    const userData = await this.userSignInRepository.findOneBy([
-      { userEmail: emailOrUsername },
-      { username: emailOrUsername },
-    ]);
-
-    if (!userData) {
-      throw new CustomError(NO_USER_FOUND);
-    }
+    const userData = await this.userInfoProvider.getUser({ userEmail });
 
     const isValidPassword = await bcrypt.compare(password, userData.password);
 

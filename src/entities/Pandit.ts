@@ -32,12 +32,12 @@ export class Pandit {
   experience!: number;
 
   @Field()
-  @Column({ type: "decimal", precision: 10, scale: 8, nullable: true })
-  latitude: number;
+  @Column({ type: "double precision", nullable: true })
+  latitude?: number;
 
   @Field()
-  @Column({ type: "decimal", precision: 10, scale: 8, nullable: true })
-  longitude: number;
+  @Column({ type: "double precision", nullable: true })
+  longitude?: number;
 
   @Field()
   @Column()
@@ -52,7 +52,7 @@ export class Pandit {
   documentsVerified!: boolean;
 
   @Field()
-  @Column({ type: "decimal", precision: 2, default: 0 })
+  @Column({ type: "decimal", precision: 2, scale: 1, default: 0 })
   ratings!: number;
 
   @Field()

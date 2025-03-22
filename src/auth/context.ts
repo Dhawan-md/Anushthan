@@ -3,6 +3,7 @@ import { verify } from "jsonwebtoken";
 
 import { Context, CustomJwtPayload } from "../types/context";
 import { logger } from "../utils/logger";
+import { CustomError } from "../utils/custumError";
 
 export const context = ({
   req,
@@ -33,6 +34,7 @@ export const context = ({
       }
     } catch (error) {
       logger.warn("❌ Invalid token:", error);
+      throw new CustomError("Unauthorized: Invalid or expired token");
     }
   }
 

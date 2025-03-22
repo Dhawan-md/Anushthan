@@ -52,10 +52,6 @@ const retryGetS3Client = async (
   return null;
 };
 
-let s3: S3Client | null = null;
-
-(async () => {
-  s3 = await retryGetS3Client();
-})();
-
-export { s3 };
+export const getInitializedS3Client = async (): Promise<S3Client | null> => {
+  return retryGetS3Client();
+};

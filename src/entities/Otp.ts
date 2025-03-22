@@ -2,6 +2,7 @@ import { Field, ObjectType } from "type-graphql";
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -15,15 +16,16 @@ import { User } from "./User";
 export class Otp {
   @Field()
   @PrimaryGeneratedColumn("uuid")
-  id!: number;
+  id!: string;
 
   @Field(() => User)
   @OneToOne(() => User, (user) => user.otp, { onDelete: "CASCADE" })
-  @JoinColumn({name: "user_id"})
+  @JoinColumn({ name: "user_id" })
   user!: User;
 
   @Field()
   @Column({ name: "user_email" })
+  @Index()
   userEmail!: string;
 
   @Field()

@@ -7,13 +7,11 @@ import { UserInfoProvider } from "./UserInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
 import { logger } from "../../utils/logger";
 import {
-  NO_USER_FOUND,
   USER_ALREADY_VERIFIED,
   USER_UPDATED,
   USER_VERIFIED_SUCCESS,
 } from "../../utils/messages";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { CustomError } from "../../utils/custumError";
 import { EmailType, OtpType } from "../../utils/enums";
 import { sendEmail } from "../../service/email/sendEmail";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
@@ -31,20 +29,19 @@ export class UpdateUserProvider {
   }
 
   async updateUser(updatedUserData: Partial<User>, userId: string) {
-    logger.info(`🔄 Updating user with ID: ${userId}`);
-    const userData = await this.userInfoProvider.getUser({ id: userId });
+    return await this.updateUserRepository.manager.transaction(
+      async (transactionalEnitityManager) => {
+        logger.info(`🔄 Updating user with ID: ${userId}`);
+        const userData = await this.userInfoProvider.getUser({ id: userId });
 
-    if (!userData) {
-      throw new Error(NO_USER_FOUND);
-    }
+        Object.assign(userData, updatedUserData);
 
-    Object.assign(userData, updatedUserData);
-    await this.updateUserRepository.save(userData);
+        const updatedUser = await transactionalEnitityManager.save(userData);
 
-    const updatedUser = await this.updateUserRepository.save(userData);
-
-    logger.info(`✅ Successfully updated user with ID: ${userId}`);
-    return new SingleUserResponse(true, USER_UPDATED, updatedUser);
+        logger.info(`✅ Successfully updated user with ID: ${userId}`);
+        return new SingleUserResponse(true, USER_UPDATED, updatedUser);
+      }
+    );
   }
 
   async verifyUser(
@@ -56,10 +53,6 @@ export class UpdateUserProvider {
     const userData = await this.userInfoProvider.getUser({
       userEmail,
     });
-    if (!userData) {
-      logger.warn(`❌ Error fetching user data for ${userEmail}`);
-      throw new CustomError(NO_USER_FOUND);
-    }
 
     if (userData.isVerified) {
       logger.info(`✅ User ${userEmail} is already verified`);

@@ -1,36 +1,44 @@
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+
 import { User } from "../entities/User";
-import { CustomError } from "../utils/custumError";
-import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { Pandit } from "../entities/Pandit";
 import { Otp } from "../entities/Otp";
+import { CustomError } from "../utils/custumError";
+import { MISSING_ENV_VARIABLES } from "../utils/messages";
+import { logger } from "../utils/logger";
 
 dotenv.config();
-
-if (
-  !process.env["DB_HOST"] ||
-  !process.env["DB_USER"] ||
-  !process.env["DB_PASSWORD"] ||
-  !process.env["DB_NAME"]
-) {
-  throw new CustomError(MISSING_ENV_VARIABLES);
-}
 
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: process.env["DB_HOST"],
-  port: parseInt(process.env["DB_PORT"] || "5432", 10),
+  port: parseInt(process.env["DB_PORT"] ?? "5432", 10),
   username: process.env["DB_USER"],
   password: process.env["DB_PASSWORD"],
   database: process.env["DB_NAME"],
   entities: [User, Pandit, Otp],
-  synchronize: true,
+  synchronize: process.env["NODE_ENV"] !== "production",
 });
 
 export const intializeDatabase = async () => {
+  if (
+    !process.env["DB_HOST"] ||
+    !process.env["DB_USER"] ||
+    !process.env["DB_PASSWORD"] ||
+    !process.env["DB_NAME"] ||
+    !process.env["NODE_ENV"]
+  ) {
+    throw new CustomError(MISSING_ENV_VARIABLES);
+  }
+
   if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-    console.log("Database connected!");
+    try {
+      await AppDataSource.initialize();
+      logger.info("✅ Database connected successfully!");
+    } catch (error) {
+      logger.error("🔥 Database connection failed:", error);
+      throw new CustomError("Database connection failed!");
+    }
   }
 };
