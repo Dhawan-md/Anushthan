@@ -4,7 +4,7 @@ import { DataSource } from "typeorm";
 import { User } from "../entities/User";
 import { Pandit } from "../entities/Pandit";
 import { Otp } from "../entities/Otp";
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { logger } from "../utils/logger";
 

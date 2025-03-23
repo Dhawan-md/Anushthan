@@ -8,10 +8,10 @@ import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { logger } from "../../utils/logger";
 import { validatePassword } from "../../utils/validatePassword";
 import { UserInfoProvider } from "./UserInfoProvider";
-import { CustomError } from "../../utils/custumError";
+import { CustomError } from "../../utils/customError";
 import {
   INVALID_PASSWORD,
-  LOGIN_SUCCESSFULL,
+  LOGIN_SUCCESSFUL,
   OTP_GENERATION_FAILED,
   USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
@@ -19,10 +19,11 @@ import {
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { OtpProvider } from "../otp/OtpProvider";
 import { sendEmail } from "../../service/email/sendEmail";
-import { EmailType, s3BucketType } from "../../utils/enums";
+import { EmailType, S3BucketType } from "../../utils/enums";
 import { FileUpload } from "graphql-upload-minimal";
 import { uploadFiles } from "../../helpers/uploadS3Files";
 import { validateEmail } from "../../utils/validateEmail";
+import { hashPassword } from "../../utils/hashPassword";
 
 @Service()
 export class UserSignInProvider {
@@ -42,49 +43,51 @@ export class UserSignInProvider {
     userEmail: string;
     password: string;
     phoneNumber: string;
-    profileImage: FileUpload;
+    profileImage?: FileUpload | null;
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validatePassword(params.password);
     validateEmail(params.userEmail);
 
-    const isExistingUser = await this.userInfoProvider.getUser({
-      userEmail: params.userEmail,
-    });
+    const isExistingUser = await this.userInfoProvider.findUser(
+      params.userEmail
+    );
 
     if (isExistingUser) {
       throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
     }
+    let uploadedImage;
 
-    const uploadedImage = await uploadFiles(
-      params.profileImage,
-      s3BucketType.IMAGE
-    );
+    if (params.profileImage) {
+      uploadedImage = await uploadFiles(
+        params.profileImage,
+        S3BucketType.IMAGE
+      );
+    }
 
-    const hashedPassword = await bcrypt.hash(params.password, 10);
+    const hashedPassword = await hashPassword(params.password);
     return await this.userSignInRepository.manager.transaction(
       async (transactionalEntityManager) => {
-        const newUser = transactionalEntityManager.create(User, {
+        const newUser = await transactionalEntityManager.save(User, {
           name: params.name,
           username: params.username,
           userEmail: params.userEmail,
           password: hashedPassword,
           phoneNumber: params.phoneNumber,
-          profilePic: JSON.stringify(uploadedImage),
+          profilePic: uploadedImage || null,
         });
-        const user = await transactionalEntityManager.save(newUser);
 
         const jwtToken = generateJwtToken(
           {
-            userId: user.id,
-            isVerified: user.isVerified,
-            userRole: user.userRole,
+            userId: newUser.id,
+            isVerified: newUser.isVerified,
+            userRole: newUser.userRole,
           },
           "24h"
         );
 
         const otpData = await this.otpProvider.saveOtp(
-          user,
+          newUser,
           transactionalEntityManager
         );
 
@@ -100,8 +103,8 @@ export class UserSignInProvider {
           },
           EmailType.ACCOUNT_VERIFICATION
         );
-        logger.info(`✅ User ${user.id} registered successfully.`);
-        return new SingleUserResponse(true, USER_REGISTERED, user, jwtToken);
+        logger.info(`✅ User ${newUser.id} registered successfully.`);
+        return new SingleUserResponse(true, USER_REGISTERED, newUser, jwtToken);
       }
     );
   }
@@ -132,6 +135,6 @@ export class UserSignInProvider {
 
     logger.info(`✅ User ${userData.username} logged in successfully.`);
 
-    return new SingleUserResponse(true, LOGIN_SUCCESSFULL, userData, jwtToken);
+    return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
   }
 }

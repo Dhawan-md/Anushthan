@@ -3,7 +3,7 @@ import { verify } from "jsonwebtoken";
 
 import { Context, CustomJwtPayload } from "../types/context";
 import { logger } from "../utils/logger";
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 
 export const context = ({
   req,

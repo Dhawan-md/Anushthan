@@ -1,5 +1,5 @@
 import { EmailType, OtpType } from "./enums";
-import { CustomError } from "./custumError";
+import { CustomError } from "./customError";
 import { INVALID_OTP_TYPE } from "./messages";
 
 export const getEmailTypeByOtpType = (otpType: OtpType): EmailType => {

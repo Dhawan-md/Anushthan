@@ -1,6 +1,6 @@
 import { MiddlewareFn } from "type-graphql";
 
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 import { BaseResponse } from "../utils/response";
 import { logger } from "../utils/logger";
 import { INTERNAL_ERROR_OCCURRED } from "../utils/messages";

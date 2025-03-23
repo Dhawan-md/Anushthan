@@ -28,10 +28,13 @@ export class UserMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("phoneNumber") phoneNumber: string,
     @Arg("password") password: string,
-    @Arg("profileImage", () => GraphQLUpload)
-    profileImage: Promise<FileUpload>
+    @Arg("profileImage", () => GraphQLUpload, { nullable: true })
+    profileImage?: Promise<FileUpload>
   ): Promise<SingleUserResponse> {
-    const resolvedImage = await promiseTimeout(profileImage, 15000);
+    let resolvedImage;
+    if (profileImage) {
+      resolvedImage = await promiseTimeout(profileImage, 15000);
+    }
 
     const user = await this.userSignInProvider.registerUser({
       name,
@@ -39,7 +42,7 @@ export class UserMutationResolver {
       password,
       userEmail,
       phoneNumber,
-      profileImage: resolvedImage,
+      profileImage: resolvedImage || null,
     });
 
     return user;
@@ -50,7 +53,7 @@ export class UserMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("password") password: string
   ): Promise<SingleUserResponse> {
-    return await this.userSignInProvider.loginUser(userEmail, password);
+    return this.userSignInProvider.loginUser(userEmail, password);
   }
 
   @Mutation(() => SingleUserResponse)
@@ -58,14 +61,14 @@ export class UserMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("otpCode") otpCode: string
   ): Promise<SingleUserResponse> {
-    return await this.updateUserProvider.verifyUser(userEmail, otpCode);
+    return this.updateUserProvider.verifyUser(userEmail, otpCode);
   }
 
   @Mutation(() => SingleUserResponse)
   async forgetPassword(
     @Arg("userEmail") userEmail: string
   ): Promise<SingleUserResponse> {
-    return await this.forgetPasswordProvider.forgetPassword(userEmail);
+    return this.forgetPasswordProvider.forgetPassword(userEmail);
   }
 
   @Mutation(() => VerifyResetResponse)
@@ -73,10 +76,7 @@ export class UserMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("otpCode") otpCode: string
   ): Promise<VerifyResetResponse> {
-    return await this.forgetPasswordProvider.verifyResetPassword(
-      userEmail,
-      otpCode
-    );
+    return this.forgetPasswordProvider.verifyResetPassword(userEmail, otpCode);
   }
 
   @Mutation(() => SingleUserResponse)
@@ -84,7 +84,7 @@ export class UserMutationResolver {
     @Arg("newPassword") newPassword: string,
     @Arg("otpToken") otpToken: string
   ) {
-    return await this.forgetPasswordProvider.resetPassword({
+    return this.forgetPasswordProvider.resetPassword({
       newPassword,
       otpToken,
     });

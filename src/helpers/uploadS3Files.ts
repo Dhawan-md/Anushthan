@@ -3,17 +3,21 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { ObjectCannedACL } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 
-import { CustomError } from "../utils/custumError";
-import { FILENAME_MISSING, S3_INITIALIZATION_FAILED } from "../utils/messages";
+import { CustomError } from "../utils/customError";
+import {
+  FILENAME_MISSING,
+  INTERNAL_ERROR_OCCURRED,
+  S3_INITIALIZATION_FAILED,
+} from "../utils/messages";
 import { getInitializedS3Client } from "../config/aws";
 import { getBucketName } from "../utils/getBucketName";
-import { s3BucketType } from "../utils/enums";
+import { S3BucketType } from "../utils/enums";
 import { logger } from "../utils/logger";
 import { deleteS3File } from "./deleteS3file";
 
 export const uploadFiles = async (
   documents: FileUpload | FileUpload[],
-  type: s3BucketType
+  type: S3BucketType
 ): Promise<
   | { filePath: string; fileName: string }
   | { filePath: string; fileName: string }[]
@@ -56,7 +60,7 @@ export const uploadFiles = async (
     return uploadedFiles.length === 1 ? uploadedFiles[0] : uploadedFiles;
   } catch (error) {
     // ❌ Rollback: Delete successfully uploaded files
-    logger.error(`🔥 File upload failed `);
+    logger.error(`🔥 File upload failed `, error);
 
     await Promise.all(
       uploadedFiles.map(async ({ filePath, fileName }) => {
@@ -64,6 +68,6 @@ export const uploadFiles = async (
       })
     );
 
-    throw new CustomError(error);
+    throw new CustomError(INTERNAL_ERROR_OCCURRED);
   }
 };

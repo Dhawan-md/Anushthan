@@ -17,10 +17,11 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
 import { validatePassword } from "../../utils/validatePassword";
 import { UserInfoProvider } from "./UserInfoProvider";
-import { CustomError } from "../../utils/custumError";
+import { CustomError } from "../../utils/customError";
 import { UpdateUserProvider } from "./UpdateUserProvider";
 import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { hashPassword } from "../../utils/hashPassword";
 
 @Service()
 export class ForgetPasswordProvider {
@@ -74,22 +75,22 @@ export class ForgetPasswordProvider {
     otpToken: string;
   }): Promise<SingleUserResponse> {
     const { newPassword, otpToken } = params;
-    
+
     if (!process.env["JWT_SECRET"]) {
       throw new CustomError(MISSING_ENV_VARIABLES);
     }
-    
+
     const payload = verify(otpToken, process.env["JWT_SECRET"]) as {
       userId: string;
     };
-    
-    if(!payload.userId){
-      throw new CustomError(OTP_VERIFICATION_REQUIRED)
+
+    if (!payload.userId) {
+      throw new CustomError(OTP_VERIFICATION_REQUIRED);
     }
 
     const { userId } = payload;
     logger.info(`🔄 Password reset request received for: ${userId}`);
-    
+
     validatePassword(newPassword);
 
     const userData = await this.userInfoProvider.getUser({ id: userId });
@@ -100,7 +101,7 @@ export class ForgetPasswordProvider {
       throw new CustomError(OLD_PASSWORD_ERROR);
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
     userData.password = hashedPassword;
 
     await this.updateUserProvider.updateUser(userData, userData.id);

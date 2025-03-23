@@ -18,7 +18,7 @@ import {
   VALID_OTP,
 } from "../../utils/messages";
 import { OtpStatus, OtpType } from "../../utils/enums";
-import { CustomError } from "../../utils/custumError";
+import { CustomError } from "../../utils/customError";
 import { OtpToken } from "../../types/globalTypes";
 import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";

@@ -1,18 +1,14 @@
-import { GraphQLScalarType, Kind } from "graphql";
+import { GraphQLScalarType } from "graphql";
+import { CustomError } from "../../utils/customError";
 
 export const UploadScalar = new GraphQLScalarType({
   name: "Upload",
-  description: "Upload scalar type",
-  serialize(value) {
-    return value; // Handle serialization if needed
+  description: "Custom scalar for handling file uploads.",
+  parseValue: (value) => value, // Return the uploaded file
+  serialize: () => {
+    throw new CustomError("Upload serialization is not supported.");
   },
-  parseValue(value) {
-    return value; // Handle value parsing if needed
-  },
-  parseLiteral(ast) {
-    if (ast.kind === Kind.STRING) {
-      return ast.value; // Handle AST parsing if needed
-    }
-    return null;
+  parseLiteral: () => {
+    throw new CustomError("Upload literal is not supported.");
   },
 });

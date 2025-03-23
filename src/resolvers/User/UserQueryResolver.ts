@@ -12,8 +12,8 @@ export class UserQueryResolver {
   ) {}
 
   @Query(() => MultipleUserResponse)
-  async getAllUsers() {
-    const users = this.userInfoProvider.getAllUsers();
+  async getAllUsers(): Promise<MultipleUserResponse> {
+    const users = await this.userInfoProvider.getAllUsers();
 
     return users;
   }

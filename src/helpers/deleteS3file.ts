@@ -1,7 +1,7 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 import { getInitializedS3Client } from "../config/aws";
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 import { logger } from "../utils/logger";
 import { S3_INITIALIZATION_FAILED } from "../utils/messages";
 

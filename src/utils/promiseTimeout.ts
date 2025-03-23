@@ -1,4 +1,4 @@
-import { CustomError } from "./custumError";
+import { CustomError } from "./customError";
 import { FILE_UPLOAD_FAIL } from "./messages";
 
 export const promiseTimeout = <T>(

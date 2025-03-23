@@ -6,7 +6,7 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
 import { NO_USER_FOUND, USER_LIST } from "../../utils/messages";
-import { CustomError } from "../../utils/custumError";
+import { CustomError } from "../../utils/customError";
 
 @Service()
 export class UserInfoProvider {
@@ -29,6 +29,11 @@ export class UserInfoProvider {
 
     logger.info(`✅ Retrieved ${userList.length} users from the database.`);
     return new MultipleUserResponse(true, USER_LIST, userList, total);
+  }
+
+  async findUser(userEmail: string): Promise<User | null> {
+    logger.info(`🔍 Searching for user with params: ${userEmail}`);
+    return await this.userInfoRepository.findOne({ where: { userEmail } });
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {

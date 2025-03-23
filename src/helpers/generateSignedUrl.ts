@@ -2,7 +2,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { getInitializedS3Client } from "../config/aws";
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 import {
   S3_INITIALIZATION_FAILED,
   SIGNED_URL_GENERATION_FAILED,

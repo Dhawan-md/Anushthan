@@ -2,7 +2,7 @@ import { decode, JwtPayload, sign } from "jsonwebtoken";
 import ms from "ms";
 
 import { logger } from "../utils/logger";
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "../utils/customError";
 import { FAILED_TO_GENERATE_TOKEN } from "../utils/messages";
 
 export const generateJwtToken = <T extends Object>(

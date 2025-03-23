@@ -1,16 +1,17 @@
 export const INTERNAL_ERROR_OCCURRED = "Internal error occurred.";
 
-// env messages
+// Env messages
 export const MISSING_ENV_VARIABLES =
-  "Required env variables are missing, please check the env file.";
+  "Required env variables are missing. Please check the env file.";
 export const MISSING_BUCKET_NAME =
-  "Bucket name is missing, please check the env file.";
+  "Bucket name is missing. Please check the env file.";
 
-// token messages
-export const FAILED_TO_GENERATE_TOKEN = "Error occurred in token generation.";
-export const INVALID_TOKEN = "Unauthorized: Invalid or expired token";
+// Token messages
+export const FAILED_TO_GENERATE_TOKEN =
+  "Error occurred during token generation.";
+export const INVALID_TOKEN = "Unauthorized: Invalid or expired token.";
 
-// password messages
+// Password messages
 export const MIN_PASSWORD_LENGTH =
   "Password must be at least 8 characters long.";
 export const ONE_SPECIAL_CHAR =
@@ -26,51 +27,51 @@ export const OLD_PASSWORD_ERROR =
   "New password cannot be the same as the old password.";
 export const RESET_PASSWORD_SUCCESS = "Password reset successfully.";
 
-// User Messages
+// User messages
 export const USER_REGISTERED = "User registered.";
-export const USER_FOUND = "User Found.";
+export const USER_FOUND = "User found.";
 export const USER_LIST = "Users list.";
 export const NO_USER_FOUND = "No user with this ID or email found.";
-export const USER_EMAIL_ALREADY_EXISTS = "User with this email already exist.";
+export const USER_EMAIL_ALREADY_EXISTS = "User with this email already exists.";
 export const ERROR_FETCHING_USER_DATA =
-  "Error occured while fetching user data.";
+  "Error occurred while fetching user data.";
 export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
-export const LOGIN_SUCCESSFULL = "Logged in successfully.";
+export const LOGIN_SUCCESSFUL = "Login successful.";
 
-// OTP Messages
+// OTP messages
 export const VALID_OTP = "OTP is valid.";
 export const INVALID_OTP = "OTP is invalid.";
-export const EXPIRED_OTP = "OTP has expired";
+export const EXPIRED_OTP = "OTP has expired.";
 export const OTP_SENT = "OTP sent.";
-export const NO_OTP_FOUND = "Failed to find otp details";
-export const INVALID_OTP_TYPE = "Invalid Otp type provided";
+export const NO_OTP_FOUND = "Failed to find OTP details.";
+export const INVALID_OTP_TYPE = "Invalid OTP type provided.";
 export const RESEND_OTP_SUCCESS = "OTP sent again.";
 export const OTP_GENERATION_FAILED = "Failed to generate OTP.";
 export const SESSION_EXPIRED = "Session has expired.";
 export const OTP_VERIFICATION_REQUIRED =
-  "You need to verify otp for changing password";
+  "You need to verify OTP before changing your password.";
 
-// email messages
+// Email messages
 export const EMAIL_SENT = "Email sent successfully.";
 export const FAILED_TO_SEND_EMAIL = "Failed to send email.";
 export const FAILED_TO_CREATE_EMAIL = "Failed to create email.";
-export const EMAIL_ERROR_OCCURED =
-  "Internal error occured while sending email.";
-export const FAILED_LOADING_TEMPLATE = "Failed to laod email template.";
+export const EMAIL_ERROR_OCCURRED =
+  "Internal error occurred while sending email.";
+export const FAILED_LOADING_TEMPLATE = "Failed to load email template.";
 export const NO_TEMPLATE_FOUND = "No template found for this email type.";
-export const INVALID_EMAIL = "Invalid Email! Please check the email.";
+export const INVALID_EMAIL = "Invalid email! Please check the email.";
 
-// s3 messages
+// S3 messages
 export const S3_INITIALIZATION_FAILED =
   "S3 client initialization failed. Please check AWS credentials.";
-export const INVALID_BUCKET = "Invaid bucket! bucket does not exists.";
+export const INVALID_BUCKET = "Invalid bucket! Bucket does not exist.";
 export const SIGNED_URL_GENERATION_FAILED = "Failed to generate signed URL.";
 
 // File upload messages
-export const FILE_UPLOAD_FAIL = "Request timeout! Failed to upload files.";
+export const FILE_UPLOAD_FAIL = "File upload failed due to request timeout.";
 export const DOCUMENTS_NOT_FOUND = "No document found.";
 export const DOCUMENT_ALREADY_SUBMITTED =
-  "Documents already submitted. Please wait for further response.";
+  "Documents have already been submitted. Please wait for further response.";
 export const FILENAME_MISSING = "File upload failed: filename is missing.";

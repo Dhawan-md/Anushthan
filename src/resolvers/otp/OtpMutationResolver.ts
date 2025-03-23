@@ -15,6 +15,6 @@ export class OtpMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("otpType") otpType: OtpType
   ) {
-    return await this.otpProvider.resendOtp(userEmail, otpType);
+    return this.otpProvider.resendOtp(userEmail, otpType);
   }
 }

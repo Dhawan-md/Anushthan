@@ -15,6 +15,11 @@ export enum OtpStatus {
   INACTIVE = "INACTIVE",
 }
 
+registerEnumType(UserRole, {
+  name: "UserRole",
+  description: "Different roles of users in the system",
+});
+
 registerEnumType(OtpStatus, {
   name: "OtpStatus", // ✅ GraphQL name
   description: "Status of the OTP",
@@ -30,7 +35,7 @@ export enum EmailType {
   ACCOUNT_VERIFIED = "Account has been verified.",
   FORGET_PASSWORD = "Forget password reset token.",
   PANDIT_REJECTED = "Documents submitted for pandit verification has been rejected",
-  PANDIT_APPROVED = "Cogratulations! documents submitted for pandit verification has been approved",
+  PANDIT_APPROVED = "Congratulations! documents submitted for pandit verification has been approved",
   PANDIT_SUSPENDED = "Due to some suspicious activities pandit has been suspended.",
   PANDIT_PENDING = "Documents has been submitted. You will receive a response shortly.",
 }
@@ -45,7 +50,7 @@ export enum EmailTemplate {
   PANDIT_PENDING = "panditPending.html",
 }
 
-export enum s3BucketType {
+export enum S3BucketType {
   IMAGE = "image",
   DOCUMENT = "document",
 }
