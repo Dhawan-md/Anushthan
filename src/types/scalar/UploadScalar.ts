@@ -1,4 +1,5 @@
 import { GraphQLScalarType } from "graphql";
+
 import { CustomError } from "../../utils/customError";
 
 export const UploadScalar = new GraphQLScalarType({
