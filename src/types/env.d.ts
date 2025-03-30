@@ -1,5 +1,7 @@
 declare namespace NodeJS {
   interface ProcessEnv {
+    NODE_ENV: string;
+
     // Database
     DB_NAME: string;
     DB_USER: string;
@@ -18,7 +20,7 @@ declare namespace NodeJS {
     AWS_BUCKET_NAME: string;
 
     // Sendgrid
-    SENDGRID_API_KEY: string
+    SENDGRID_API_KEY: string;
 
     // Server
     PORT?: string;

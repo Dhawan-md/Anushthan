@@ -1,4 +1,4 @@
-import { CustomError } from "../utils/custumError";
+import { CustomError } from "./customError";
 
 import {
   MIN_PASSWORD_LENGTH,
