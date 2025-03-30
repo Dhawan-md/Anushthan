@@ -33,14 +33,21 @@ export class UserInfoProvider {
 
   async findUser(userEmail: string): Promise<User | null> {
     logger.info(`🔍 Searching for user with params: ${userEmail}`);
-    return await this.userInfoRepository.findOne({ where: { userEmail } });
+    return await this.userInfoRepository.findOne({
+      where: { userEmail: userEmail.toLowerCase() },
+    });
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
     logger.info(
       `🔍 Searching for user with params: ${params.id || params.userEmail}`
     );
-    const userData = await this.userInfoRepository.findOne({ where: params });
+    const userData = await this.userInfoRepository.findOne({
+      where: [
+        { id: params.id },
+        { userEmail: params.userEmail?.toLowerCase() },
+      ],
+    });
 
     if (!userData) {
       logger.warn(

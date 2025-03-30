@@ -12,7 +12,7 @@ export const loadEmailTemplate = async (
 
   // replace placeholders dynamically
   for (const [key, value] of Object.entries(placeholders)) {
-    templateContent = templateContent.replaceAll(`${key}`, value);
+    templateContent = templateContent.replaceAll(key, value);
   }
 
   return templateContent;

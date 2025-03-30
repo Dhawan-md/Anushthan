@@ -32,10 +32,11 @@ export class UserMutationResolver {
     profileImage?: Promise<FileUpload>
   ): Promise<SingleUserResponse> {
     let resolvedImage;
+    
     if (profileImage) {
       resolvedImage = await promiseTimeout(profileImage, 15000);
     }
-
+    
     const user = await this.userSignInProvider.registerUser({
       name,
       username,

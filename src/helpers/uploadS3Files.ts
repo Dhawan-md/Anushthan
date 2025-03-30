@@ -18,12 +18,9 @@ import { deleteS3File } from "./deleteS3file";
 export const uploadFiles = async (
   documents: FileUpload | FileUpload[],
   type: S3BucketType
-): Promise<
-  | { filePath: string; fileName: string }
-  | { filePath: string; fileName: string }[]
-> => {
+): Promise<{ filePath: string }[]> => {
   const files = Array.isArray(documents) ? documents : [documents];
-  const uploadedFiles: { filePath: string; fileName: string }[] = [];
+  const uploadedFiles: { filePath: string }[] = [];
   const s3 = await getInitializedS3Client();
 
   if (!s3) {
@@ -53,18 +50,18 @@ export const uploadFiles = async (
         await upload.done();
 
         logger.info(`✅ File uploaded successfully: ${filePath}`);
-        uploadedFiles.push({ filePath, fileName: document.filename });
+        uploadedFiles.push({ filePath });
       })
     );
 
-    return uploadedFiles.length === 1 ? uploadedFiles[0] : uploadedFiles;
+    return uploadedFiles;
   } catch (error) {
     // ❌ Rollback: Delete successfully uploaded files
     logger.error(`🔥 File upload failed `, error);
 
     await Promise.all(
-      uploadedFiles.map(async ({ filePath, fileName }) => {
-        await deleteS3File(bucketName, fileName, filePath);
+      uploadedFiles.map(async ({ filePath }) => {
+        await deleteS3File(bucketName, filePath);
       })
     );
 

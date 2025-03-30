@@ -39,11 +39,13 @@ export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
 export const LOGIN_SUCCESSFUL = "Login successful.";
+export const PHONE_NUMBER_REQUIRED =
+  "Phone Number Required! Phone number field cannot be empty.";
 
 // OTP messages
 export const VALID_OTP = "OTP is valid.";
 export const INVALID_OTP = "OTP is invalid.";
-export const EXPIRED_OTP = "OTP has expired.";
+export const EXPIRED_OTP = "OTP session has expired.";
 export const OTP_SENT = "OTP sent.";
 export const NO_OTP_FOUND = "Failed to find OTP details.";
 export const INVALID_OTP_TYPE = "Invalid OTP type provided.";

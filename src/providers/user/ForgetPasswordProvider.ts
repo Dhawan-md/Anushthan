@@ -61,7 +61,7 @@ export class ForgetPasswordProvider {
 
     const userData = await this.userInfoProvider.getUser({ userEmail });
 
-    const verificationToken = generateJwtToken(userData.id, "5m");
+    const verificationToken = generateJwtToken({ userId: userData.id }, "5m");
 
     return new VerifyResetResponse(
       isValidOTp.success,

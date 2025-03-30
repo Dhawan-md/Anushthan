@@ -42,16 +42,15 @@ export class OtpProvider {
       `✅ OTP generated: ${otpData.otpCode}, expires at ${otpData.expiresAt}`
     );
 
-    const otp = transactionalEntityManager.create(Otp, {
+    await transactionalEntityManager.save(Otp, {
       user,
-      userEmail: user.userEmail,
+      userEmail: user.userEmail.toLowerCase(),
       otpCode: otpData.otpCode,
       userSecret: userSecret.base32,
       createdAt: otpData.createdAt,
       expiresAt: otpData.expiresAt,
     });
 
-    await transactionalEntityManager.save(otp);
     logger.info(
       `💾 OTP saved in the database for user with email ${user.userEmail}`
     );
@@ -91,16 +90,16 @@ export class OtpProvider {
     );
 
     if (!otpData.success) {
-      logger.warn(`❌ Otp has been expired for ${params.userEmail}`);
-      throw new CustomError(EXPIRED_OTP);
+      logger.warn(`❌ ${otpData.message} for ${params.userEmail}`);
+      throw new CustomError(otpData.message);
     }
 
     const isMatching = speakeasy.totp.verify({
-      secret: otpData.data.userSecret + otpData.data.createdAt.toString(),
+      secret: otpData.data.userSecret + otpData.data.createdAt,
       encoding: "base32",
       token: params.otpCode,
       step: 300,
-      window: 0,
+      window: 1,
     });
 
     if (!isMatching) {
@@ -116,7 +115,7 @@ export class OtpProvider {
 
   async disableOtp(userEmail: string) {
     await this.otpRepository.update(
-      { userEmail },
+      { userEmail: userEmail.toLowerCase() },
       { status: OtpStatus.INACTIVE }
     );
   }
@@ -152,14 +151,12 @@ export class OtpProvider {
 
   private async getOtpDetails(
     params: {
-      otpCode?: string;
-      userEmail?: string;
-      userId?: string;
+      userEmail: string;
     },
     includeRelation: boolean = false
   ): Promise<Otp | null> {
     return await this.otpRepository.findOne({
-      where: params.userId ? { user: { id: params.userId } } : params,
+      where: { userEmail: params.userEmail.toLowerCase() },
       ...(includeRelation ? { relations: ["user"] } : {}),
     });
   }
@@ -172,19 +169,22 @@ export class OtpProvider {
     if (!otpData) {
       throw new CustomError(NO_OTP_FOUND);
     }
-    const isOtpValid =
-      otpData.expiresAt > new Date() &&
-      otpData.status === OtpStatus.ACTIVE &&
-      otpData.otpType === otpType;
+    const isOtpActive =
+      otpData.expiresAt > new Date() && otpData.status === OtpStatus.ACTIVE;
 
-    if (isOtpValid) {
+    const isOtpValid = otpData.otpType === otpType;
+
+    if (isOtpValid && isOtpActive) {
       logger.info(`✅ Existing OTP is still valid: ${otpData.otpCode}`);
-      return { success: true, data: otpData };
+      return { success: true, message: VALID_OTP, data: otpData };
     }
 
-    await this.disableOtp(userEmail);
-    logger.warn(`❌ OTP expired or invalid for ${userEmail}, disabling it`);
+    if (!isOtpActive) {
+      await this.disableOtp(userEmail);
+      logger.warn(`❌ OTP expired for ${userEmail}, disabling it`);
+      return { success: false, message: EXPIRED_OTP, data: otpData };
+    }
 
-    return { success: false, data: otpData };
+    return { success: false, message: INVALID_OTP, data: otpData };
   }
 }

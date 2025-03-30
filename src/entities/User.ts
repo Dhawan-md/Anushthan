@@ -7,14 +7,19 @@ import {
   OneToOne,
   UpdateDateColumn,
   Index,
+  BeforeInsert,
+  BeforeUpdate,
+  BaseEntity,
 } from "typeorm";
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";
+import { CustomError } from "../utils/customError";
+import { PHONE_NUMBER_REQUIRED } from "../utils/messages";
 
 @ObjectType()
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn("uuid", { name: "user_id" })
   id!: string;
@@ -35,6 +40,16 @@ export class User {
   @Field()
   @Column({ unique: true, name: "phone_number" })
   phoneNumber!: string;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  validatePhoneNumber() {
+    if (!this.phoneNumber || this.phoneNumber.trim() === "") {
+      console.log("woked");
+
+      throw new CustomError(PHONE_NUMBER_REQUIRED);
+    }
+  }
 
   @Field()
   @Column()

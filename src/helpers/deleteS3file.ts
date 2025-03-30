@@ -7,7 +7,6 @@ import { S3_INITIALIZATION_FAILED } from "../utils/messages";
 
 export const deleteS3File = async (
   bucketName: string,
-  fileName: string,
   filePath: string
 ) => {
   const s3 = await getInitializedS3Client();
@@ -21,8 +20,8 @@ export const deleteS3File = async (
       Key: filePath,
     });
     await s3.send(deleteFile);
-    logger.info(`🗑️ Rolled back: ${fileName} with file path ${filePath}`);
+    logger.info(`🗑️ Rolled back: with file path ${filePath}`);
   } catch (error) {
-    logger.error(`⚠️ Failed to delete ${fileName} with file path ${filePath} `);
+    logger.error(`⚠️ Failed to delete with file path ${filePath} `);
   }
 };

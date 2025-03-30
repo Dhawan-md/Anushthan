@@ -13,6 +13,7 @@ import {
   INVALID_PASSWORD,
   LOGIN_SUCCESSFUL,
   OTP_GENERATION_FAILED,
+  PHONE_NUMBER_REQUIRED,
   USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
 } from "../../utils/messages";
@@ -56,10 +57,11 @@ export class UserSignInProvider {
     if (isExistingUser) {
       throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
     }
-    let uploadedImage;
+
+    let uploadedImages: { filePath: string }[] | { filePath: string } = [];
 
     if (params.profileImage) {
-      uploadedImage = await uploadFiles(
+      uploadedImages = await uploadFiles(
         params.profileImage,
         S3BucketType.IMAGE
       );
@@ -68,13 +70,17 @@ export class UserSignInProvider {
     const hashedPassword = await hashPassword(params.password);
     return await this.userSignInRepository.manager.transaction(
       async (transactionalEntityManager) => {
+        if (!params.phoneNumber || params.phoneNumber.trim() === "") {
+          throw new CustomError(PHONE_NUMBER_REQUIRED);
+        }
         const newUser = await transactionalEntityManager.save(User, {
           name: params.name,
           username: params.username,
-          userEmail: params.userEmail,
+          userEmail: params.userEmail.toLowerCase(),
           password: hashedPassword,
           phoneNumber: params.phoneNumber,
-          profilePic: uploadedImage || null,
+          profileImage:
+            JSON.stringify(uploadedImages.map((images) => images.filePath))
         });
 
         const jwtToken = generateJwtToken(
