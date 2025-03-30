@@ -90,7 +90,7 @@ export class OtpProvider {
     );
 
     if (!otpData.success) {
-      logger.warn(`❌ ${otpData.message} for ${params.userEmail}`);
+      logger.warn(`❌ ${otpData.message} for ${params.userEmail}`);      
       throw new CustomError(otpData.message);
     }
 

@@ -7,13 +7,11 @@ import { UserInfoProvider } from "./UserInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
 import { logger } from "../../utils/logger";
 import {
-  USER_ALREADY_VERIFIED,
+  LOGIN_SUCCESSFUL,
   USER_UPDATED,
-  USER_VERIFIED_SUCCESS,
 } from "../../utils/messages";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { EmailType, OtpType } from "../../utils/enums";
-import { sendEmail } from "../../service/email/sendEmail";
+import { OtpType } from "../../utils/enums";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 @Service()
@@ -54,12 +52,6 @@ export class UpdateUserProvider {
       userEmail,
     });
 
-    if (userData.isVerified) {
-      logger.info(`✅ User ${userEmail} is already verified`);
-      await this.otpProvider.disableOtp(userData.id);
-      return new SingleUserResponse(true, USER_ALREADY_VERIFIED);
-    }
-
     logger.info(`🔍 Verifying OTP for ${userEmail}`);
     await this.otpProvider.verifyOtp({
       userEmail,
@@ -67,24 +59,12 @@ export class UpdateUserProvider {
       otpType: OtpType.USER,
     });
 
-    logger.info(`📧 Sending verification email to ${userEmail}`);
-    await sendEmail(
-      userData.userEmail,
-      { name: userData.name },
-      EmailType.ACCOUNT_VERIFIED
-    );
-
-    // Update user to set isVerified to true
-    userData.isVerified = true;
-    await this.updateUser(userData, userData.id);
-
     const jwtToken = generateJwtToken({
       userId: userData.id,
-      isVerified: userData.isVerified,
       userRole: userData.userRole,
     });
 
-    logger.info(`✅ User ${userEmail} successfully verified`);
-    return new SingleUserResponse(true, USER_VERIFIED_SUCCESS, null, jwtToken);
+    logger.info(`✅ User ${userData.userEmail} logged in successfully.`);
+    return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
   }
 }

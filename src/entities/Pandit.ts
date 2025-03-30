@@ -32,6 +32,10 @@ export class Pandit {
   experience!: number;
 
   @Field()
+  @Column()
+  password!: string;
+
+  @Field()
   @Column({ type: "double precision", nullable: true })
   latitude?: number;
 
@@ -48,8 +52,8 @@ export class Pandit {
   isAvailable!: boolean;
 
   @Field()
-  @Column({ type: "boolean", default: false, name: "documents_verified" })
-  documentsVerified!: boolean;
+  @Column({ type: "boolean", default: false, name: "is_verified" })
+  isVerified!: boolean;
 
   @Field()
   @Column({ type: "decimal", precision: 2, scale: 1, default: 0 })

@@ -9,7 +9,10 @@ export const MISSING_BUCKET_NAME =
 // Token messages
 export const FAILED_TO_GENERATE_TOKEN =
   "Error occurred during token generation.";
-export const INVALID_TOKEN = "Unauthorized: Invalid or expired token.";
+export const INVALID_TOKEN = "Unauthorized: Invalid token.";
+export const VALID_TOKEN = "Authorized: Valid token.";
+export const EXPIRED_TOKEN = "Unauthorized: Expired token.";
+export const NOT_AUTHENTICATED = "Not authenticated.";
 
 // Password messages
 export const MIN_PASSWORD_LENGTH =
@@ -39,6 +42,7 @@ export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
 export const LOGIN_SUCCESSFUL = "Login successful.";
+export const LOGIN_REQUESTED = "Login requested.";
 export const PHONE_NUMBER_REQUIRED =
   "Phone Number Required! Phone number field cannot be empty.";
 
