@@ -22,10 +22,10 @@ export class Service {
 
   @Field(() => String, { nullable: true })
   @Column({ type: "text", nullable: true })
-  description?: string | null;
+  description?: string
 
   @Field()
-  @Column({ type: "decimal", precision: 10, scale: 2 })
+  @Column({ type: "int"})
   price!: number;
 
   @Field()

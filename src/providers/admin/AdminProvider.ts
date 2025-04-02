@@ -17,6 +17,7 @@ import { hashPassword } from "../../utils/hashPassword";
 import { validatePassword } from "../../utils/validatePassword";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
+import { logger } from "../../utils/logger";
 
 @Service()
 export class AdminProvider {
@@ -27,6 +28,7 @@ export class AdminProvider {
   }
 
   private async getAdminDetailes(email: string) {
+    logger.info(`🔍 Searching for user with params: ${email}`);
     const adminData = await this.adminRepository.findOne({
       where: { email },
     });
@@ -39,6 +41,7 @@ export class AdminProvider {
     email: string;
     password: string;
   }): Promise<SingleAdminResponse> {
+    logger.info(`🔄Processing register user request for : ${params.email}`);
     const adminData = await this.getAdminDetailes(params.email);
 
     if (adminData) {
@@ -56,6 +59,7 @@ export class AdminProvider {
 
     await this.adminRepository.save(admin);
 
+    logger.info(`✅ Admin ${params.email} registered successfully.`);
     return new SingleAdminResponse(true, ADMIN_REGISTER_SUCCESS);
   }
 
@@ -63,6 +67,7 @@ export class AdminProvider {
     email: string,
     password: string
   ): Promise<SingleAdminResponse> {
+    logger.info(`🔄Logging in user: ${email}.`);
     const adminData = await this.getAdminDetailes(email);
 
     if (!adminData) {
@@ -81,7 +86,7 @@ export class AdminProvider {
       },
       "2h"
     );
-
+    logger.info(`✅ Admin ${email} logged in requested.`);
     return new SingleAdminResponse(true, ADMIN_LOGIN_SUCCESS, null, jwtToken);
   }
 }

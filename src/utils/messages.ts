@@ -87,3 +87,6 @@ export const ADMIN_ALREADY_EXISTS = "Admin already exists.";
 export const SUPERADMIN_ONLY = "Only super admin can perform this action.";
 export const ADMIN_REGISTER_SUCCESS = "Admin registered successfully.";
 export const ADMIN_LOGIN_SUCCESS = "Admin logged in successfully.";
+
+// Service messages
+export const SERVICE_ADDED_SUCCESS = "New service added successfully.";

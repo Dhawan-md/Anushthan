@@ -3,13 +3,16 @@ import { Inject, Service } from "typedi";
 
 import { AdminProvider } from "../../providers/admin/AdminProvider";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
+import { ServiceResponse } from "../../types/responses/ServiceResponse";
+import { ServiceProvider } from "../../providers/service/ServiceProvider";
 // import { AdminRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
 export class AdminMutationResolver {
   constructor(
-    @Inject(() => AdminProvider) private adminProvider: AdminProvider
+    @Inject(() => AdminProvider) private adminProvider: AdminProvider,
+    @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -32,5 +35,21 @@ export class AdminMutationResolver {
     @Arg("password") password: string
   ) {
     return await this.adminProvider.loginAdmin(email, password);
+  }
+
+  @Mutation(() => ServiceResponse)
+  @Authorized("ADMIN")
+  async addService(
+    @Arg("name") name: string,
+    @Arg("description") description: string,
+    @Arg("price") price: number,
+    @Arg("duration") duration: number
+  ) {
+    return this.serviceProvider.addService({
+      name,
+      description,
+      price,
+      duration,
+    });
   }
 }
