@@ -6,10 +6,13 @@ import {
   CreateDateColumn,
   JoinColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
 
 import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
+import { Service } from "./Service";
 
 @ObjectType()
 @Entity()
@@ -23,9 +26,10 @@ export class Pandit {
   @JoinColumn()
   user!: User;
 
-  @Field()
-  @Column()
-  category!: string;
+  @Field(() => [Service], { nullable: true })
+  @ManyToMany(() => Service, (service) => service.pandits)
+  @JoinTable()
+  services: Service[];
 
   @Field()
   @Column({ type: "int", default: 0 })
@@ -51,12 +55,16 @@ export class Pandit {
   @Column({ default: false, name: "is_available" })
   isAvailable!: boolean;
 
+  @Field({ nullable: true })
+  @Column({ name: "documents", nullable: true })
+  documents?: string;
+
   @Field()
   @Column({ type: "boolean", default: false, name: "is_verified" })
   isVerified!: boolean;
 
   @Field()
-  @Column({ type: "decimal", precision: 2, scale: 1, default: 0 })
+  @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
   ratings!: number;
 
   @Field()

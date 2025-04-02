@@ -6,7 +6,7 @@ import { logger } from "../utils/logger";
 import { INTERNAL_ERROR_OCCURRED } from "../utils/messages";
 
 export const globalErrorHandler: MiddlewareFn = async (_, next) => {
-  try {    
+  try {
     return await next();
   } catch (error) {
     logger.error("🔥 Error caught:", error);

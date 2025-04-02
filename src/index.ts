@@ -21,7 +21,8 @@ import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
 import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
 import { UploadScalar } from "./types/scalar/UploadScalar";
 import { context } from "./auth/context";
-import { Context } from "./types/context";
+import { authChecker } from "./auth/authChecker";
+import { AdminMutationResolver } from "./resolvers/admin/AdminMutationResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -29,10 +30,8 @@ const createApp = async () => {
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
 
   const schema = await buildSchema({
-    resolvers: [UserMutationResolver, UserQueryResolver, OtpMutationResolver],
-    authChecker: ({ context }: { context: Context }) => {
-      return !!context.user?.userId;
-    },
+    resolvers: [UserMutationResolver, UserQueryResolver, OtpMutationResolver, AdminMutationResolver],
+    authChecker: authChecker,
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
     scalarsMap: [{ type: Upload, scalar: UploadScalar }],

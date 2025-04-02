@@ -54,3 +54,15 @@ export enum S3BucketType {
   IMAGE = "image",
   DOCUMENT = "document",
 }
+
+export enum PanditCategory {
+  POOJA = "POOJA",
+  ASTROLOGY = "ASTROLOGY",
+  VASTU = "VASTU",
+  OTHER = "OTHER",
+}
+
+export enum AdminRole {
+  ADMIN = "ADMIN",
+  SUPERADMIN = "SUPERADMIN",
+}

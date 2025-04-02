@@ -1,7 +1,7 @@
 import { MiddlewareFn } from "type-graphql";
 import jwt from "jsonwebtoken";
 
-import { Context, CustomJwtPayload } from "../types/context";
+import { Context, CustomUserJwtPayload } from "../types/context";
 import { CustomError } from "../utils/customError";
 import { VALID_TOKEN } from "../utils/messages";
 
@@ -18,7 +18,7 @@ export const notLoggedIn: MiddlewareFn<Context> = async ({ context }, next) => {
     const payload = jwt.verify(
       token,
       process.env.JWT_SECRET!
-    ) as CustomJwtPayload;
+    ) as CustomUserJwtPayload;
     context.user = payload;
 
     // 🔴 Token is valid → Stop execution (User is already logged in)

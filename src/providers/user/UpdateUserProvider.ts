@@ -60,7 +60,7 @@ export class UpdateUserProvider {
     });
 
     const jwtToken = generateJwtToken({
-      userId: userData.id,
+      id: userData.id,
       userRole: userData.userRole,
     });
 

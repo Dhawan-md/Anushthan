@@ -9,9 +9,8 @@ export const MISSING_BUCKET_NAME =
 // Token messages
 export const FAILED_TO_GENERATE_TOKEN =
   "Error occurred during token generation.";
-export const INVALID_TOKEN = "Unauthorized: Invalid token.";
+export const INVALID_TOKEN = "Unauthorized: Invalid token or expired token.";
 export const VALID_TOKEN = "Authorized: Valid token.";
-export const EXPIRED_TOKEN = "Unauthorized: Expired token.";
 export const NOT_AUTHENTICATED = "Not authenticated.";
 
 // Password messages
@@ -81,3 +80,10 @@ export const DOCUMENTS_NOT_FOUND = "No document found.";
 export const DOCUMENT_ALREADY_SUBMITTED =
   "Documents have already been submitted. Please wait for further response.";
 export const FILENAME_MISSING = "File upload failed: filename is missing.";
+
+// Admin messages
+export const ADMIN_NOT_FOUND = "Admin not found.";
+export const ADMIN_ALREADY_EXISTS = "Admin already exists.";
+export const SUPERADMIN_ONLY = "Only super admin can perform this action.";
+export const ADMIN_REGISTER_SUCCESS = "Admin registered successfully.";
+export const ADMIN_LOGIN_SUCCESS = "Admin logged in successfully.";

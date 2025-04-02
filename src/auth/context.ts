@@ -1,9 +1,14 @@
 import { Request, Response } from "express";
 import { verify } from "jsonwebtoken";
 
-import { Context, CustomJwtPayload } from "../types/context";
+import {
+  Context,
+  CustomAdminJwtPayload,
+  CustomUserJwtPayload,
+} from "../types/context";
 import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
+import { INVALID_TOKEN } from "../utils/messages";
 
 export const context = ({
   req,
@@ -12,31 +17,51 @@ export const context = ({
   req: Request;
   res: Response;
 }): Context => {
-  let user: CustomJwtPayload | undefined;
+  let user: CustomUserJwtPayload | undefined;
+  let admin: CustomAdminJwtPayload | undefined;
 
   logger.info(
     `🔄 Incoming request from ${req.ip} at ${new Date().toISOString()}`
   );
 
-  const authHeader = req.headers.authorization;
+  const userAuthHeader = req.headers["authorization"];
+  const adminAuthHeader = req.headers["admin-authorization"] as string;
 
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
+  if (userAuthHeader) {
+    const token = userAuthHeader.split(" ")[1];
 
     try {
       if (token && process.env["JWT_SECRET"]) {
         const payload = verify(
           token,
           process.env["JWT_SECRET"]
-        ) as CustomJwtPayload;
+        ) as CustomUserJwtPayload;
 
         user = payload;
       }
     } catch (error) {
       logger.warn("❌ Invalid token:", error);
-      throw new CustomError("Unauthorized: Invalid or expired token");
+      throw new CustomError(INVALID_TOKEN);
     }
   }
 
-  return { req, res, user };
+  if (adminAuthHeader) {
+    const token = adminAuthHeader.split(" ")[1];
+
+    try {
+      if (token && process.env["JWT_SECRET"]) {
+        const payload = verify(
+          token,
+          process.env["JWT_SECRET"]
+        ) as CustomAdminJwtPayload;
+
+        admin = payload;
+      }
+    } catch (error) {
+      logger.warn("❌ Invalid token:", error);
+      throw new CustomError(INVALID_TOKEN);
+    }
+  }
+
+  return { req, res, user, admin };
 };

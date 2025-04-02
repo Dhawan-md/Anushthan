@@ -7,7 +7,7 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { generateUserSecret } from "../../helpers/generateUserSecret";
 import { logger } from "../../utils/logger";
 import { generateOtp } from "../../helpers/generateOtp";
-import { OtpResponse } from "../../types/responses/Otpresponse";
+import { OtpResponse } from "../../types/responses/OtpResponse";
 import {
   EXPIRED_OTP,
   INVALID_OTP,
@@ -90,7 +90,7 @@ export class OtpProvider {
     );
 
     if (!otpData.success) {
-      logger.warn(`❌ ${otpData.message} for ${params.userEmail}`);      
+      logger.warn(`❌ ${otpData.message} for ${params.userEmail}`);
       throw new CustomError(otpData.message);
     }
 
