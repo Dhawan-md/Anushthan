@@ -15,6 +15,13 @@ export enum OtpStatus {
   INACTIVE = "INACTIVE",
 }
 
+export enum PanditStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  SUSPENDED = "suspended",
+}
+
 registerEnumType(UserRole, {
   name: "UserRole",
   description: "Different roles of users in the system",
@@ -28,6 +35,11 @@ registerEnumType(OtpStatus, {
 registerEnumType(OtpType, {
   name: "OtpType",
   description: "Type of OTP (User/Admin)",
+});
+
+registerEnumType(PanditStatus, {
+  name: "PanditStatus",
+  description: "Status of pandit approval",
 });
 
 export enum EmailType {
@@ -53,13 +65,6 @@ export enum EmailTemplate {
 export enum S3BucketType {
   IMAGE = "image",
   DOCUMENT = "document",
-}
-
-export enum PanditCategory {
-  POOJA = "POOJA",
-  ASTROLOGY = "ASTROLOGY",
-  VASTU = "VASTU",
-  OTHER = "OTHER",
 }
 
 export enum AdminRole {

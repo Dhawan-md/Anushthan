@@ -51,6 +51,10 @@ export class UserSignInProvider {
       throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
     }
 
+    if (!params.phoneNumber || params.phoneNumber.trim() === "") {
+      throw new CustomError(PHONE_NUMBER_REQUIRED);
+    }
+
     let uploadedImages: { filePath: string }[] | { filePath: string } = [];
 
     if (params.profileImage) {
@@ -62,9 +66,6 @@ export class UserSignInProvider {
 
     return await this.userSignInRepository.manager.transaction(
       async (transactionalEntityManager) => {
-        if (!params.phoneNumber || params.phoneNumber.trim() === "") {
-          throw new CustomError(PHONE_NUMBER_REQUIRED);
-        }
         const newUser = await transactionalEntityManager.save(User, {
           name: params.name,
           username: params.username,

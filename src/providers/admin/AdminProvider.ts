@@ -42,13 +42,13 @@ export class AdminProvider {
     password: string;
   }): Promise<SingleAdminResponse> {
     logger.info(`🔄Processing register user request for : ${params.email}`);
+    validatePassword(params.password);
     const adminData = await this.getAdminDetailes(params.email);
 
     if (adminData) {
       throw new CustomError(ADMIN_ALREADY_EXISTS);
     }
 
-    validatePassword(params.password);
     const hashedPassword = await hashPassword(params.password);
 
     const admin = this.adminRepository.create({

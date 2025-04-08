@@ -12,6 +12,7 @@ export const FAILED_TO_GENERATE_TOKEN =
 export const INVALID_TOKEN = "Unauthorized: Invalid token or expired token.";
 export const VALID_TOKEN = "Authorized: Valid token.";
 export const NOT_AUTHENTICATED = "Not authenticated.";
+export const UNAUTHORIZED = "Unauthorized: User ID, not found in context";
 
 // Password messages
 export const MIN_PASSWORD_LENGTH =
@@ -90,3 +91,8 @@ export const ADMIN_LOGIN_SUCCESS = "Admin logged in successfully.";
 
 // Service messages
 export const SERVICE_ADDED_SUCCESS = "New service added successfully.";
+export const SERVICE_IDS_FOUND = "Service Ids found successfully.";
+export const SERVICE_NOT_FOUND = "Invalid or missing services."
+
+// Pandit messages
+export const PANDIT_REGISTERED = "Pandit registered successfully.";

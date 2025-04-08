@@ -13,6 +13,7 @@ import {
 import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
 import { Service } from "./Service";
+import { PanditStatus } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -40,11 +41,11 @@ export class Pandit {
   password!: string;
 
   @Field()
-  @Column({ type: "double precision", nullable: true })
+  @Column({ type: "double precision", nullable: true, default:0 })
   latitude?: number;
 
   @Field()
-  @Column({ type: "double precision", nullable: true })
+  @Column({ type: "double precision", nullable: true, default:0 })
   longitude?: number;
 
   @Field()
@@ -55,13 +56,13 @@ export class Pandit {
   @Column({ default: false, name: "is_available" })
   isAvailable!: boolean;
 
-  @Field({ nullable: true })
-  @Column({ name: "documents", nullable: true })
+  @Field()
+  @Column({ name: "documents" })
   documents?: string;
 
-  @Field()
-  @Column({ type: "boolean", default: false, name: "is_verified" })
-  isVerified!: boolean;
+  @Field(() => PanditStatus)
+  @Column({ type: "enum", default: PanditStatus.PENDING, enum: PanditStatus })
+  status!: PanditStatus;
 
   @Field()
   @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })

@@ -23,6 +23,7 @@ import { UploadScalar } from "./types/scalar/UploadScalar";
 import { context } from "./auth/context";
 import { authChecker } from "./auth/authChecker";
 import { AdminMutationResolver } from "./resolvers/admin/AdminMutationResolver";
+import { PanditMutationResolver } from "./resolvers/pandit/PanditMutationResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -30,7 +31,13 @@ const createApp = async () => {
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
 
   const schema = await buildSchema({
-    resolvers: [UserMutationResolver, UserQueryResolver, OtpMutationResolver, AdminMutationResolver],
+    resolvers: [
+      UserMutationResolver,
+      UserQueryResolver,
+      OtpMutationResolver,
+      AdminMutationResolver,
+      PanditMutationResolver
+    ],
     authChecker: authChecker,
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
@@ -46,6 +53,7 @@ const createApp = async () => {
     resolvers,
     logger,
     context,
+    introspection: true,
   });
   await server.start();
   server.applyMiddleware({ app, path: "/graphql" });
