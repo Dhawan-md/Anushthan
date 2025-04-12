@@ -1,23 +1,20 @@
-import { Resolver, Mutation, Arg, UseMiddleware } from "type-graphql";
+import { Resolver, Mutation, Arg } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { UserSignInProvider } from "../../providers/user/UserSignInProvider";
+import { UserAuthProvider } from "../../providers/user/UserSignInProvider";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 import { promiseTimeout } from "../../utils/promiseTimeout";
 import { UpdateUserProvider } from "../../providers/user/UpdateUserProvider";
-import { notLoggedIn } from "../../middlewares/notLoggedIn";
-// import { ForgetPasswordProvider } from "../../providers/user/ForgetPasswordProvider";
-// import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 
 @Service()
 @Resolver()
 export class UserMutationResolver {
   constructor(
-    @Inject(() => UserSignInProvider)
-    private userSignInProvider: UserSignInProvider,
+    @Inject(() => UserAuthProvider)
+    private userAuthProvider: UserAuthProvider,
     @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider // @Inject(() => ForgetPasswordProvider) // private forgetPasswordProvider: ForgetPasswordProvider
+    private updateUserProvider: UpdateUserProvider 
   ) {}
 
   @Mutation(() => SingleUserResponse)
@@ -35,7 +32,7 @@ export class UserMutationResolver {
       resolvedImage = await promiseTimeout(profileImage, 15000);
     }
 
-    const user = await this.userSignInProvider.registerUser({
+    const user = await this.userAuthProvider.registerUser({
       name,
       username,
       userEmail,
@@ -50,41 +47,14 @@ export class UserMutationResolver {
   async loginuser(
     @Arg("userEmail") userEmail: string
   ): Promise<SingleUserResponse> {
-    return this.userSignInProvider.loginUser(userEmail);
+    return this.userAuthProvider.loginUser(userEmail);
   }
 
   @Mutation(() => SingleUserResponse)
-  @UseMiddleware(notLoggedIn)
   async verifyUser(
     @Arg("userEmail") userEmail: string,
     @Arg("otpCode") otpCode: string
   ): Promise<SingleUserResponse> {
     return this.updateUserProvider.verifyUser(userEmail, otpCode);
   }
-
-  // @Mutation(() => SingleUserResponse)
-  // async forgetPassword(
-  //   @Arg("userEmail") userEmail: string
-  // ): Promise<SingleUserResponse> {
-  //   return this.forgetPasswordProvider.forgetPassword(userEmail);
-  // }
-
-  // @Mutation(() => VerifyResetResponse)
-  // async verifyReset(
-  //   @Arg("userEmail") userEmail: string,
-  //   @Arg("otpCode") otpCode: string
-  // ): Promise<VerifyResetResponse> {
-  //   return this.forgetPasswordProvider.verifyResetPassword(userEmail, otpCode);
-  // }
-
-  // @Mutation(() => SingleUserResponse)
-  // async resetPassword(
-  //   @Arg("newPassword") newPassword: string,
-  //   @Arg("otpToken") otpToken: string
-  // ) {
-  //   return this.forgetPasswordProvider.resetPassword({
-  //     newPassword,
-  //     otpToken,
-  //   });
-  // }
 }

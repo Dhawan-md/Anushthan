@@ -5,7 +5,7 @@ import { AdminProvider } from "../../providers/admin/AdminProvider";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
 import { ServiceProvider } from "../../providers/service/ServiceProvider";
-// import { AdminRole } from "../../utils/enums";
+import { Role } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -16,13 +16,13 @@ export class AdminMutationResolver {
   ) {}
 
   @Mutation(() => SingleAdminResponse)
-  @Authorized("SUPERADMIN")
+  @Authorized(Role.SUPERADMIN)
   async registerAdmin(
     @Arg("fullName") fullName: string,
     @Arg("email") email: string,
     @Arg("password") password: string
   ) {
-    return await this.adminProvider.registerAdmin({
+    return this.adminProvider.registerAdmin({
       fullName,
       email,
       password,
@@ -34,18 +34,18 @@ export class AdminMutationResolver {
     @Arg("email") email: string,
     @Arg("password") password: string
   ) {
-    return await this.adminProvider.loginAdmin(email, password);
+    return this.adminProvider.loginAdmin(email, password);
   }
 
   @Mutation(() => SingleServiceResponse)
-  @Authorized("ADMIN")
+  @Authorized(Role.ADMIN)
   async addService(
     @Arg("name") name: string,
-    @Arg("description") description: string,  
+    @Arg("description") description: string,
     @Arg("price") price: number,
     @Arg("duration") duration: number
   ): Promise<SingleServiceResponse> {
-    return await this.serviceProvider.addService({
+    return this.serviceProvider.addService({
       name,
       description,
       price,

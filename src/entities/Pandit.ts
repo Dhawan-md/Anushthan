@@ -27,7 +27,7 @@ export class Pandit {
   @JoinColumn()
   user!: User;
 
-  @Field(() => [Service], { nullable: true })
+  @Field(() => [Service])
   @ManyToMany(() => Service, (service) => service.pandits)
   @JoinTable()
   services: Service[];
@@ -41,11 +41,11 @@ export class Pandit {
   password!: string;
 
   @Field()
-  @Column({ type: "double precision", nullable: true, default:0 })
+  @Column({ type: "double precision", nullable: true, default: 0 })
   latitude?: number;
 
   @Field()
-  @Column({ type: "double precision", nullable: true, default:0 })
+  @Column({ type: "double precision", nullable: true, default: 0 })
   longitude?: number;
 
   @Field()

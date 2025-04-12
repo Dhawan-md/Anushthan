@@ -5,7 +5,11 @@ import { User } from "../../entities/User";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
-import { NO_USER_FOUND, USER_LIST } from "../../utils/messages";
+import {
+  NO_USER_FOUND,
+  USER_ALREADY_EXISTS,
+  USER_LIST,
+} from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
 
 @Service()
@@ -31,11 +35,16 @@ export class UserInfoProvider {
     return new MultipleUserResponse(true, USER_LIST, userList, total);
   }
 
-  async findUser(userEmail: string): Promise<User | null> {
+  async checkUserExists(userEmail: string) {
     logger.info(`🔍 Searching for user with params: ${userEmail}`);
-    return await this.userInfoRepository.findOne({
-      where: { userEmail: userEmail.toLowerCase() },
-    });
+    const isExisting = await this.userInfoRepository
+      .createQueryBuilder("user")
+      .where("user.email = :email", { userEmail })
+      .getExists();
+
+    if (isExisting) {
+      throw new CustomError(USER_ALREADY_EXISTS);
+    }
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {

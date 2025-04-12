@@ -9,6 +9,7 @@ import {
   Index,
   BaseEntity,
 } from "typeorm";
+
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";

@@ -11,7 +11,6 @@ import {
   LOGIN_SUCCESSFUL,
   OTP_GENERATION_FAILED,
   PHONE_NUMBER_REQUIRED,
-  USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
 } from "../../utils/messages";
 import { OtpProvider } from "../otp/OtpProvider";
@@ -22,7 +21,7 @@ import { uploadFiles } from "../../helpers/uploadS3Files";
 import { validateEmail } from "../../utils/validateEmail";
 
 @Service()
-export class UserSignInProvider {
+export class UserAuthProvider {
   private userSignInRepository: Repository<User>;
 
   constructor(
@@ -43,13 +42,7 @@ export class UserSignInProvider {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validateEmail(params.userEmail);
 
-    const isExistingUser = await this.userInfoProvider.findUser(
-      params.userEmail
-    );
-
-    if (isExistingUser) {
-      throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
-    }
+    await this.userInfoProvider.checkUserExists(params.userEmail);
 
     if (!params.phoneNumber || params.phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);

@@ -3,22 +3,23 @@ import { Inject, Service } from "typedi";
 import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
-import { PanditSignInProvider } from "../../providers/pandit/PanditSignInProvider";
+import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
 import { promiseTimeout } from "../../utils/promiseTimeout";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
+import { Role } from "../../utils/enums";
 
 @Service()
 @Resolver()
 export class PanditMutationResolver {
   constructor(
-    @Inject(() => PanditSignInProvider)
-    private panditSignInProvider: PanditSignInProvider
+    @Inject(() => PanditAuthProvider)
+    private panditAuthProvider: PanditAuthProvider
   ) {}
 
   @Mutation(() => SinglePanditResponse)
-  @Authorized("USER")
+  @Authorized(Role.USER)
   async registerPandit(
     @Arg("password") password: string,
     @Arg("documents", () => [GraphQLUpload]) documents: Promise<FileUpload>[],
@@ -40,7 +41,7 @@ export class PanditMutationResolver {
       resolvedDocument.push(doc);
     }
 
-    return await this.panditSignInProvider.registerPandit({
+    return this.panditAuthProvider.registerPandit({
       userId,
       password,
       documents: resolvedDocument,

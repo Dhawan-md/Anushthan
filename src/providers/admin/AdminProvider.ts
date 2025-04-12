@@ -1,10 +1,9 @@
 import { Repository } from "typeorm";
 import { Service } from "typedi";
-import bycrpt from "bcryptjs";
+import bcrypt from "bcryptjs";
 
 import { Admin } from "../../entities/Admin";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
-// import { AdminRole } from "../../utils/enums";
 import { CustomError } from "../../utils/customError";
 import {
   ADMIN_ALREADY_EXISTS,
@@ -27,11 +26,29 @@ export class AdminProvider {
     this.adminRepository = this.repositoryFactory.getRepository(Admin);
   }
 
-  private async getAdminDetailes(email: string) {
-    logger.info(`🔍 Searching for user with params: ${email}`);
+  private async checkAdminExists(email: string) {
+    logger.info(`🔍 Searching for admin with params: ${email}`);
+    const isExisting = await this.adminRepository
+      .createQueryBuilder("admin")
+      .where("admin.email = :email", { email })
+      .getExists();
+
+    if (isExisting) {
+      logger.warn(`❌ Admin found with email: ${email}`);
+      throw new CustomError(ADMIN_ALREADY_EXISTS);
+    }
+  }
+
+  private async getAdminDetails(email: string) {
+    logger.info(`🔍 Searching for admin with params: ${email}`);
     const adminData = await this.adminRepository.findOne({
       where: { email },
     });
+
+    if (!adminData) {
+      logger.warn(`❌ No admin found with email or id: ${email}`);
+      throw new CustomError(ADMIN_NOT_FOUND);
+    }
 
     return adminData;
   }
@@ -43,11 +60,7 @@ export class AdminProvider {
   }): Promise<SingleAdminResponse> {
     logger.info(`🔄Processing register user request for : ${params.email}`);
     validatePassword(params.password);
-    const adminData = await this.getAdminDetailes(params.email);
-
-    if (adminData) {
-      throw new CustomError(ADMIN_ALREADY_EXISTS);
-    }
+    await this.checkAdminExists(params.email);
 
     const hashedPassword = await hashPassword(params.password);
 
@@ -68,13 +81,9 @@ export class AdminProvider {
     password: string
   ): Promise<SingleAdminResponse> {
     logger.info(`🔄Logging in user: ${email}.`);
-    const adminData = await this.getAdminDetailes(email);
+    const adminData = await this.getAdminDetails(email);
 
-    if (!adminData) {
-      throw new CustomError(ADMIN_NOT_FOUND);
-    }
-
-    const isMatching = await bycrpt.compare(password, adminData.password);
+    const isMatching = await bcrypt.compare(password, adminData.password);
     if (!isMatching) {
       throw new CustomError(INVALID_PASSWORD);
     }
@@ -86,7 +95,8 @@ export class AdminProvider {
       },
       "2h"
     );
-    logger.info(`✅ Admin ${email} logged in requested.`);
+
+    logger.info(`✅ Admin ${email} logged in successfully.`);
     return new SingleAdminResponse(true, ADMIN_LOGIN_SUCCESS, null, jwtToken);
   }
 }
