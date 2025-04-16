@@ -1,28 +1,28 @@
 import { Arg, Authorized, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { AdminProvider } from "../../providers/admin/AdminProvider";
+import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
 import { ServiceProvider } from "../../providers/service/ServiceProvider";
-import { Role } from "../../utils/enums";
+import { AdminRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
 export class AdminMutationResolver {
   constructor(
-    @Inject(() => AdminProvider) private adminProvider: AdminProvider,
+    @Inject(() => AdminAuthProvider) private adminAuthProvider: AdminAuthProvider,
     @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider
   ) {}
 
   @Mutation(() => SingleAdminResponse)
-  @Authorized(Role.SUPERADMIN)
+  @Authorized(AdminRole.SUPERADMIN)
   async registerAdmin(
     @Arg("fullName") fullName: string,
     @Arg("email") email: string,
     @Arg("password") password: string
   ) {
-    return this.adminProvider.registerAdmin({
+    return this.adminAuthProvider.registerAdmin({
       fullName,
       email,
       password,
@@ -34,11 +34,11 @@ export class AdminMutationResolver {
     @Arg("email") email: string,
     @Arg("password") password: string
   ) {
-    return this.adminProvider.loginAdmin(email, password);
+    return this.adminAuthProvider.loginAdmin(email, password);
   }
 
   @Mutation(() => SingleServiceResponse)
-  @Authorized(Role.ADMIN)
+  @Authorized(AdminRole.ADMIN)
   async addService(
     @Arg("name") name: string,
     @Arg("description") description: string,

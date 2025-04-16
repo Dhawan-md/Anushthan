@@ -81,6 +81,7 @@ export const DOCUMENTS_NOT_FOUND = "No document found.";
 export const DOCUMENT_ALREADY_SUBMITTED =
   "Documents have already been submitted. Please wait for further response.";
 export const FILENAME_MISSING = "File upload failed: filename is missing.";
+export const FETCH_DOCUMENT_SUCCESS = "Document fetched successfully";
 
 // Admin messages
 export const ADMIN_NOT_FOUND = "Admin not found.";
@@ -97,4 +98,8 @@ export const SERVICE_ALREADY_EXISTS = "Service already exists.";
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";
-export const PANDIT_ALREADY_EXISTS = "Pandit already exists."
+export const PANDIT_ALREADY_EXISTS = "Pandit already exists.";
+export const PANDIT_LIST = "Pandits list.";
+export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
+export const STATUS_UPDATED = "Document status has been updated";
+

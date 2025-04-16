@@ -1,7 +1,7 @@
 import { Resolver, Mutation, Arg } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { UserAuthProvider } from "../../providers/user/UserSignInProvider";
+import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 import { promiseTimeout } from "../../utils/promiseTimeout";

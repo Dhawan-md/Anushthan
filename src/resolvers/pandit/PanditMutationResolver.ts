@@ -8,7 +8,7 @@ import { promiseTimeout } from "../../utils/promiseTimeout";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
-import { Role } from "../../utils/enums";
+import { AdminRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -19,7 +19,7 @@ export class PanditMutationResolver {
   ) {}
 
   @Mutation(() => SinglePanditResponse)
-  @Authorized(Role.USER)
+  @Authorized(AdminRole.USER)
   async registerPandit(
     @Arg("password") password: string,
     @Arg("documents", () => [GraphQLUpload]) documents: Promise<FileUpload>[],

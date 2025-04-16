@@ -19,16 +19,16 @@ import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { logger } from "../../utils/logger";
 
 @Service()
-export class AdminProvider {
-  private adminRepository: Repository<Admin>;
+export class AdminAuthProvider {
+  private adminAuthRepository: Repository<Admin>;
 
   constructor(private repositoryFactory: RepositoryFactory) {
-    this.adminRepository = this.repositoryFactory.getRepository(Admin);
+    this.adminAuthRepository = this.repositoryFactory.getRepository(Admin);
   }
 
   private async checkAdminExists(email: string) {
     logger.info(`🔍 Searching for admin with params: ${email}`);
-    const isExisting = await this.adminRepository
+    const isExisting = await this.adminAuthRepository
       .createQueryBuilder("admin")
       .where("admin.email = :email", { email })
       .getExists();
@@ -41,7 +41,7 @@ export class AdminProvider {
 
   private async getAdminDetails(email: string) {
     logger.info(`🔍 Searching for admin with params: ${email}`);
-    const adminData = await this.adminRepository.findOne({
+    const adminData = await this.adminAuthRepository.findOne({
       where: { email },
     });
 
@@ -64,13 +64,13 @@ export class AdminProvider {
 
     const hashedPassword = await hashPassword(params.password);
 
-    const admin = this.adminRepository.create({
+    const admin = this.adminAuthRepository.create({
       fullName: params.fullName,
       email: params.email,
       password: hashedPassword,
     });
 
-    await this.adminRepository.save(admin);
+    await this.adminAuthRepository.save(admin);
 
     logger.info(`✅ Admin ${params.email} registered successfully.`);
     return new SingleAdminResponse(true, ADMIN_REGISTER_SUCCESS);

@@ -67,7 +67,7 @@ export enum S3BucketType {
   DOCUMENT = "document",
 }
 
-export enum Role {
+export enum AdminRole {
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
   USER = "USER"

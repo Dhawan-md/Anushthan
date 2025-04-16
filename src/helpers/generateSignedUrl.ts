@@ -7,13 +7,13 @@ import {
   S3_INITIALIZATION_FAILED,
   SIGNED_URL_GENERATION_FAILED,
 } from "../utils/messages";
-import { s3BucketType } from "../utils/enums";
+import { S3BucketType } from "../utils/enums";
 import { getBucketName } from "../utils/getBucketName";
 import { logger } from "../utils/logger";
 
 export const generateSignedUrl = async (
   filePath: string,
-  type: s3BucketType
+  type: S3BucketType
 ) => {
   const s3 = await getInitializedS3Client();
 

@@ -1,15 +1,12 @@
 import { Inject, Service } from "typedi";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 
 import { User } from "../../entities/User";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { UserInfoProvider } from "./UserInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
 import { logger } from "../../utils/logger";
-import {
-  LOGIN_SUCCESSFUL,
-  USER_UPDATED,
-} from "../../utils/messages";
+import { LOGIN_SUCCESSFUL, USER_UPDATED } from "../../utils/messages";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { OtpType } from "../../utils/enums";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
@@ -26,20 +23,21 @@ export class UpdateUserProvider {
     this.updateUserRepository = this.repositoryFactory.getRepository(User);
   }
 
-  async updateUser(updatedUserData: Partial<User>, userId: string) {
-    return await this.updateUserRepository.manager.transaction(
-      async (transactionalEnitityManager) => {
-        logger.info(`🔄 Updating user with ID: ${userId}`);
-        const userData = await this.userInfoProvider.getUser({ id: userId });
+  async updateUser(
+    updatedUserData: Partial<User>,
+    userId: string,
+    manager?: EntityManager
+  ) {
+    logger.info(`🔄 Updating user with ID: ${userId}`);
+    const em = manager || this.updateUserRepository.manager;
+    const userData = await this.userInfoProvider.getUser({ id: userId });
 
-        Object.assign(userData, updatedUserData);
+    Object.assign(userData, updatedUserData);
 
-        const updatedUser = await transactionalEnitityManager.save(userData);
+    const updatedUser = await em.save(User, userData);
 
-        logger.info(`✅ Successfully updated user with ID: ${userId}`);
-        return new SingleUserResponse(true, USER_UPDATED, updatedUser);
-      }
-    );
+    logger.info(`✅ Successfully updated user with ID: ${userId}`);
+    return new SingleUserResponse(true, USER_UPDATED, updatedUser);
   }
 
   async verifyUser(

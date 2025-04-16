@@ -22,14 +22,14 @@ import { validateEmail } from "../../utils/validateEmail";
 
 @Service()
 export class UserAuthProvider {
-  private userSignInRepository: Repository<User>;
+  private userAuthRepository: Repository<User>;
 
   constructor(
     private repositoryFactory: RepositoryFactory,
     @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
     @Inject(() => OtpProvider) private otpProvider: OtpProvider
   ) {
-    this.userSignInRepository = this.repositoryFactory.getRepository(User);
+    this.userAuthRepository = this.repositoryFactory.getRepository(User);
   }
 
   async registerUser(params: {
@@ -57,7 +57,7 @@ export class UserAuthProvider {
       );
     }
 
-    return await this.userSignInRepository.manager.transaction(
+    return await this.userAuthRepository.manager.transaction(
       async (transactionalEntityManager) => {
         const newUser = await transactionalEntityManager.save(User, {
           name: params.name,

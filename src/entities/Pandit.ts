@@ -56,9 +56,9 @@ export class Pandit {
   @Column({ default: false, name: "is_available" })
   isAvailable!: boolean;
 
-  @Field()
-  @Column({ name: "documents" })
-  documents?: string;
+  @Field(() => String, { nullable: true })
+  @Column({ type: "text", name: "documents", nullable: true })
+  documents: string | null;
 
   @Field(() => PanditStatus)
   @Column({ type: "enum", default: PanditStatus.PENDING, enum: PanditStatus })
