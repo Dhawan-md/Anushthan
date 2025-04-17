@@ -26,7 +26,7 @@ export class User extends BaseEntity {
   name!: string;
 
   @Field()
-  @Column({ unique: true })
+  @Column({name:"user_email", unique: true })
   @Index()
   userEmail!: string;
 
@@ -36,10 +36,11 @@ export class User extends BaseEntity {
 
   @Field()
   @Column({
-    name: "user_role",
+    name:"user_role",
     type: "enum",
     enum: UserRole,
-    default: UserRole.CUSTOMER,
+    enumName: "user_role",
+    default: UserRole.USER,
   })
   userRole!: UserRole;
 

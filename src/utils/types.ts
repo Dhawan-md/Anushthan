@@ -9,3 +9,13 @@ export type notifyPanditParams = {
   name: string;
   status: PanditStatus;
 };
+
+export type validatePasswordParams = {
+  inputPassword: string;
+  hashedPassword: string;
+};
+
+export type verifyOtpParams = {
+  userEmail: string;
+  otpCode: string;
+};

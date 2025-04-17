@@ -1,13 +1,14 @@
 import { registerEnumType } from "type-graphql";
 
 export enum UserRole {
-  CUSTOMER = "CUSTOMER",
+  USER = "USER",
   PANDIT = "PANDIT",
 }
 
 export enum OtpType {
   USER = "USER",
-  FORGET_PASSWORD = "FORGET_PASSWORD",
+  PANDIT = "PANDIT",
+  FORGET_PASSWORD = "FORGET PASSWORD"
 }
 
 export enum OtpStatus {
@@ -50,6 +51,7 @@ export enum EmailType {
   PANDIT_APPROVED = "Congratulations! documents submitted for pandit verification has been approved",
   PANDIT_SUSPENDED = "Due to some suspicious activities pandit has been suspended.",
   PANDIT_PENDING = "Documents has been submitted. You will receive a response shortly.",
+  PANDIT_LOGGIN = "Please use this otp to log into your account."
 }
 
 export enum EmailTemplate {
@@ -60,6 +62,7 @@ export enum EmailTemplate {
   PANDIT_APPROVED = "panditApproved.html",
   PANDIT_SUSPENDED = "panditSuspended.html",
   PANDIT_PENDING = "panditPending.html",
+  PANDIT_LOGGIN = "panditLoggin.html",
 }
 
 export enum S3BucketType {
@@ -70,5 +73,10 @@ export enum S3BucketType {
 export enum AdminRole {
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
-  USER = "USER"
+  USER = "USER",
+}
+
+export enum EmailName {
+  USER = "User",
+  PANDIT = "Pandit ji",
 }

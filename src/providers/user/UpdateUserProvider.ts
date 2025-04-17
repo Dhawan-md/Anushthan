@@ -8,7 +8,7 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { logger } from "../../utils/logger";
 import { LOGIN_SUCCESSFUL, USER_UPDATED } from "../../utils/messages";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { OtpType } from "../../utils/enums";
+import { OtpType, UserRole } from "../../utils/enums";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 @Service()
@@ -59,7 +59,7 @@ export class UpdateUserProvider {
 
     const jwtToken = generateJwtToken({
       id: userData.id,
-      userRole: userData.userRole,
+      userRole: UserRole.USER,
     });
 
     logger.info(`✅ User ${userData.userEmail} logged in successfully.`);

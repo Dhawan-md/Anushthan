@@ -7,12 +7,20 @@ import { ServiceProvider } from "../service/ServiceProvider";
 import { Pandit } from "../../entities/Pandit";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { uploadFiles } from "../../helpers/uploadS3Files";
-import { EmailType, S3BucketType } from "../../utils/enums";
+import {
+  EmailName,
+  EmailType,
+  OtpType,
+  S3BucketType,
+  UserRole,
+} from "../../utils/enums";
 import { validatePassword } from "../../utils/validatePassword";
 import { hashPassword } from "../../utils/hashPassword";
 import { CustomError } from "../../utils/customError";
 import {
   FILE_UPLOAD_FAIL,
+  INVALID_PASSWORD,
+  LOGIN_SUCCESSFUL,
   PANDIT_REGISTERED,
   SERVICE_NOT_FOUND,
 } from "../../utils/messages";
@@ -20,6 +28,11 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { logger } from "../../utils/logger";
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { PanditInfoProvider } from "./PanditInfoProvider";
+import { validateEmail } from "../../utils/validateEmail";
+import { isSamePassword } from "../../utils/isSamePassword";
+import { OtpProvider } from "../otp/OtpProvider";
+import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { verifyOtpParams } from "../../utils/types";
 
 @Service()
 export class PanditAuthProvider {
@@ -31,7 +44,10 @@ export class PanditAuthProvider {
     private userInfoProvider: UserInfoProvider,
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
-    @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider
+    @Inject(() => ServiceProvider)
+    private serviceProvider: ServiceProvider,
+    @Inject(() => OtpProvider)
+    private otpProvider: OtpProvider
   ) {
     this.panditAuthRepository = this.repositoryFactory.getRepository(Pandit);
   }
@@ -83,5 +99,73 @@ export class PanditAuthProvider {
 
     logger.info(`✅ User ${newPandit.id} registered successfully.`);
     return new SinglePanditResponse(true, PANDIT_REGISTERED, newPandit);
+  }
+
+  async loginPandit(params: {
+    userEmail: string;
+    password: string;
+  }): Promise<SinglePanditResponse> {
+    const { userEmail, password } = params;
+    logger.info(`🔄Logging in pandit: ${userEmail}.`);
+
+    validateEmail(userEmail);
+    validatePassword(password);
+
+    const panditData = await this.panditInfoProvider.getPandit({
+      userEmail: userEmail,
+    });
+
+    await isSamePassword({
+      inputPassword: password,
+      hashedPassword: panditData.password,
+    });
+
+    if (!isSamePassword) {
+      throw new CustomError(INVALID_PASSWORD);
+    }
+
+    const otp = await this.otpProvider.generateAndSaveNewOtp(
+      userEmail,
+      OtpType.PANDIT
+    );
+
+    await sendEmail(
+      userEmail,
+      { name: EmailName.PANDIT, otpCode: otp.otpCode },
+      EmailType.PANDIT_LOGGIN
+    );
+
+    logger.info(`✅ Pandit with ${userEmail} logged in requested.`);
+
+    return new SinglePanditResponse(true, PANDIT_REGISTERED);
+  }
+
+  async verifyPandit(params: verifyOtpParams): Promise<SinglePanditResponse> {
+    const { userEmail, otpCode } = params;
+    logger.info(`🔄 Verification request received for: ${userEmail}`);
+
+    const panditData = await this.panditInfoProvider.getPandit({
+      userEmail,
+    });
+
+    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    await this.otpProvider.verifyOtp({
+      userEmail,
+      otpCode,
+      otpType: OtpType.USER,
+    });
+
+    const jwtToken = generateJwtToken({
+      id: panditData.id,
+      userRole: UserRole.PANDIT,
+    });
+
+    logger.info(`✅ Pandit with ${userEmail} logged in successfully.`);
+    return new SinglePanditResponse(
+      true,
+      LOGIN_SUCCESSFUL,
+      panditData,
+      jwtToken
+    );
   }
 }

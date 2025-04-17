@@ -1,0 +1,69 @@
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f2f2f2;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+      .email-header {
+        text-align: center;
+        background-color: #ffecd1;
+        padding: 15px;
+        border-radius: 8px 8px 0 0;
+      }
+      .email-header h1 {
+        margin: 0;
+        color: #a45c40;
+      }
+      .email-body {
+        padding: 20px;
+        color: #333333;
+      }
+      .otp-box {
+        background-color: #f9f9f9;
+        border: 2px dashed #a45c40;
+        padding: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+        letter-spacing: 2px;
+        color: #a45c40;
+      }
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #999999;
+        padding-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <h1>Namaste Pandit Ji 🙏</h1>
+      </div>
+      <div class="email-body">
+        <p>We received a request to log in to your Pandit account on <strong>Anushthan</strong>.</p>
+        <p>Please use the following One-Time Password (OTP) to complete your login:</p>
+        <div class="otp-box">
+          {{otpCode}}
+        </div>
+        <p>This OTP is valid for the next <strong>{{expiryMinutes}} minutes</strong>. If you did not request this login, you can safely ignore this email.</p>
+      </div>
+      <div class="footer">
+        © {{year}} Anushthan. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>

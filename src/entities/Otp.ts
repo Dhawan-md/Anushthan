@@ -41,6 +41,7 @@ export class Otp {
     name: "status",
     type: "enum",
     enum: OtpStatus,
+    enumName: "status",
     default: OtpStatus.ACTIVE,
   })
   status!: OtpStatus;
@@ -50,6 +51,7 @@ export class Otp {
     name: "otp_type",
     type: "enum",
     enum: OtpType,
+    enumName: "otp_type",
     default: OtpType.USER,
   })
   otpType!: OtpType;

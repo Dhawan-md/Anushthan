@@ -102,4 +102,4 @@ export const PANDIT_ALREADY_EXISTS = "Pandit already exists.";
 export const PANDIT_LIST = "Pandits list.";
 export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
 export const STATUS_UPDATED = "Document status has been updated";
-
+export const PANDIT_UPDATED = "Pandit has been updated.";

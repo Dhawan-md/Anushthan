@@ -83,8 +83,8 @@ export class AdminAuthProvider {
     logger.info(`🔄Logging in user: ${email}.`);
     const adminData = await this.getAdminDetails(email);
 
-    const isMatching = await bcrypt.compare(password, adminData.password);
-    if (!isMatching) {
+    const isValidPassword = await bcrypt.compare(password, adminData.password);
+    if (!isValidPassword) {
       throw new CustomError(INVALID_PASSWORD);
     }
 

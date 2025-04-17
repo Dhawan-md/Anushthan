@@ -112,7 +112,7 @@ export class UserAuthProvider {
       EmailType.ACCOUNT_VERIFICATION
     );
 
-    logger.info(`✅ User ${userData.userEmail} logged in requested.`);
+    logger.info(`✅ User with ${userEmail} logged in requested.`);
 
     return new SingleUserResponse(true, LOGIN_SUCCESSFUL);
   }

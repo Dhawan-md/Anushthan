@@ -26,7 +26,7 @@ export class PanditActionProvider {
 
   async verifyPandit(panditId: string, status: PanditStatus) {
     logger.info(`🔍 Verifying documents for pandit ${panditId}.`);
-    const panditDetails = await this.panditInfoProvider.getPandit(
+    const panditData = await this.panditInfoProvider.getPandit(
       { id: panditId },
       true
     );
@@ -36,24 +36,24 @@ export class PanditActionProvider {
         logger.info(`🔄 Updating status of pandit with ID: ${panditId}`);
 
         if (status === PanditStatus.REJECTED) {
-          panditDetails.documents = null;
+          panditData.documents = null;
         } else if (status === PanditStatus.APPROVED) {
-          panditDetails.user.userRole = UserRole.PANDIT;
+          panditData.user.userRole = UserRole.PANDIT;
           await this.updateUserProvider.updateUser(
-            panditDetails.user,
-            panditDetails.user.id,
+            panditData.user,
+            panditData.user.id,
             transactionalEntityManager
           );
         }
 
-        panditDetails.status = status;
-        await transactionalEntityManager.save(Pandit, panditDetails);
+        panditData.status = status;
+        await transactionalEntityManager.save(Pandit, panditData);
       }
     );
 
     await this.panditInfoProvider.notifyVendor({
-      name: panditDetails.user.name,
-      userEmail: panditDetails.user.userEmail,
+      name: panditData.user.name,
+      userEmail: panditData.user.userEmail,
       status,
     });
 

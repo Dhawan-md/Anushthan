@@ -39,6 +39,7 @@ export class Admin extends BaseEntity {
     name: "admin_role",
     type: "enum",
     enum: AdminRole,
+    enumName: "admin_role",
     default: AdminRole.ADMIN,
   })
   adminRole!: AdminRole;
