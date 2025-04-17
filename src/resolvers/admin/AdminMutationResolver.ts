@@ -5,14 +5,19 @@ import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
 import { ServiceProvider } from "../../providers/service/ServiceProvider";
-import { AdminRole } from "../../utils/enums";
+import { AdminRole, PanditStatus } from "../../utils/enums";
+import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
 
 @Service()
 @Resolver()
 export class AdminMutationResolver {
   constructor(
-    @Inject(() => AdminAuthProvider) private adminAuthProvider: AdminAuthProvider,
-    @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider
+    @Inject(() => AdminAuthProvider)
+    private adminAuthProvider: AdminAuthProvider,
+    @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider,
+    @Inject(() => PanditActionProvider)
+    private panditActionProvider: PanditActionProvider
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -51,5 +56,14 @@ export class AdminMutationResolver {
       price,
       duration,
     });
+  }
+
+  @Mutation(() => SinglePanditResponse)
+  @Authorized(AdminRole.ADMIN)
+  async verifyPandit(
+    @Arg("panditId") panditId: string,
+    @Arg("status") status: PanditStatus
+  ): Promise<SinglePanditResponse> {
+    return this.panditActionProvider.verifyPandit(panditId, status);
   }
 }
