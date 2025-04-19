@@ -31,36 +31,48 @@ export class UserInfoProvider {
       take: limit,
     });
 
+    const totalPages = Math.ceil(total / limit);
+
     logger.info(`✅ Retrieved ${userList.length} users from the database.`);
-    return new MultipleUserResponse(true, USER_LIST, userList, total);
+    return new MultipleUserResponse(
+      true,
+      USER_LIST,
+      userList,
+      total,
+      page,
+      limit,
+      totalPages
+    );
   }
 
   async checkUserExists(userEmail: string) {
-    logger.info(`🔍 Searching for user with params: ${userEmail}`);
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    logger.info(`🔍 Searching for user with params: ${normalizedEmail}`);
+
     const isExisting = await this.userInfoRepository
       .createQueryBuilder("user")
-      .where("user.email = :email", { userEmail })
+      .where("user.email = :email", { normalizedEmail })
       .getExists();
 
     if (isExisting) {
+      logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
       throw new CustomError(USER_ALREADY_EXISTS);
     }
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
+    const normalizedEmail = params.userEmail?.trim().toLowerCase();
     logger.info(
-      `🔍 Searching for user with params: ${params.id || params.userEmail}`
+      `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
+
     const userData = await this.userInfoRepository.findOne({
-      where: [
-        { id: params.id },
-        { userEmail: params.userEmail?.toLowerCase() },
-      ],
+      where: [{ id: params.id }, { userEmail: normalizedEmail }],
     });
 
     if (!userData) {
       logger.warn(
-        `❌ No user found with email or id: ${params.userEmail || params.id}`
+        `❌ No user found with email or id: ${normalizedEmail || params.id}`
       );
       throw new CustomError(NO_USER_FOUND);
     }

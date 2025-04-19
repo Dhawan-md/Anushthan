@@ -1,6 +1,5 @@
 import { Field, ObjectType } from "type-graphql";
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -12,7 +11,7 @@ import { AdminRole } from "../utils/enums";
 
 @ObjectType()
 @Entity()
-export class Admin extends BaseEntity {
+export class Admin {
   @Field()
   @PrimaryGeneratedColumn("uuid", { name: "admin_id" })
   id!: string;

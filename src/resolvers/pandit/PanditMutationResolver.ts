@@ -2,10 +2,13 @@ import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 
-import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
-import { promiseTimeout } from "../../utils/promiseTimeout";
+
+import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+
 import { Context } from "../../types/context";
+
+import { promiseTimeout } from "../../utils/promiseTimeout";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
 import { AdminRole } from "../../utils/enums";

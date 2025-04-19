@@ -1,14 +1,12 @@
 import { Repository } from "typeorm";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import bcrypt from "bcryptjs";
 
 import { Admin } from "../../entities/Admin";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { CustomError } from "../../utils/customError";
 import {
-  ADMIN_ALREADY_EXISTS,
   ADMIN_LOGIN_SUCCESS,
-  ADMIN_NOT_FOUND,
   ADMIN_REGISTER_SUCCESS,
   INVALID_PASSWORD,
 } from "../../utils/messages";
@@ -17,40 +15,18 @@ import { validatePassword } from "../../utils/validatePassword";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { logger } from "../../utils/logger";
+import { AdminInfoProvider } from "./AdminInfoProvider";
 
 @Service()
 export class AdminAuthProvider {
   private adminAuthRepository: Repository<Admin>;
 
-  constructor(private repositoryFactory: RepositoryFactory) {
+  constructor(
+    private repositoryFactory: RepositoryFactory,
+    @Inject(() => AdminInfoProvider)
+    private readonly adminInfoProvider: AdminInfoProvider
+  ) {
     this.adminAuthRepository = this.repositoryFactory.getRepository(Admin);
-  }
-
-  private async checkAdminExists(email: string) {
-    logger.info(`🔍 Searching for admin with params: ${email}`);
-    const isExisting = await this.adminAuthRepository
-      .createQueryBuilder("admin")
-      .where("admin.email = :email", { email })
-      .getExists();
-
-    if (isExisting) {
-      logger.warn(`❌ Admin found with email: ${email}`);
-      throw new CustomError(ADMIN_ALREADY_EXISTS);
-    }
-  }
-
-  private async getAdminDetails(email: string) {
-    logger.info(`🔍 Searching for admin with params: ${email}`);
-    const adminData = await this.adminAuthRepository.findOne({
-      where: { email },
-    });
-
-    if (!adminData) {
-      logger.warn(`❌ No admin found with email or id: ${email}`);
-      throw new CustomError(ADMIN_NOT_FOUND);
-    }
-
-    return adminData;
   }
 
   async registerAdmin(params: {
@@ -58,9 +34,9 @@ export class AdminAuthProvider {
     email: string;
     password: string;
   }): Promise<SingleAdminResponse> {
-    logger.info(`🔄Processing register user request for : ${params.email}`);
+    logger.info(`🔄Processing register admin request for email : ${params.email}`);
     validatePassword(params.password);
-    await this.checkAdminExists(params.email);
+    await this.adminInfoProvider.checkAdminExists(params.email);
 
     const hashedPassword = await hashPassword(params.password);
 
@@ -72,7 +48,7 @@ export class AdminAuthProvider {
 
     await this.adminAuthRepository.save(admin);
 
-    logger.info(`✅ Admin ${params.email} registered successfully.`);
+    logger.info(`✅ Admin with email: ${params.email} registered successfully.`);
     return new SingleAdminResponse(true, ADMIN_REGISTER_SUCCESS);
   }
 
@@ -80,8 +56,8 @@ export class AdminAuthProvider {
     email: string,
     password: string
   ): Promise<SingleAdminResponse> {
-    logger.info(`🔄Logging in user: ${email}.`);
-    const adminData = await this.getAdminDetails(email);
+    logger.info(`🔄Logging in admin with email: ${email}.`);
+    const adminData = await this.adminInfoProvider.getAdminDetails(email);
 
     const isValidPassword = await bcrypt.compare(password, adminData.password);
     if (!isValidPassword) {
@@ -96,7 +72,7 @@ export class AdminAuthProvider {
       "2h"
     );
 
-    logger.info(`✅ Admin ${email} logged in successfully.`);
+    logger.info(`✅ Admin with email: ${email} logged in successfully.`);
     return new SingleAdminResponse(true, ADMIN_LOGIN_SUCCESS, null, jwtToken);
   }
 }

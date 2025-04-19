@@ -6,10 +6,15 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { UserInfoProvider } from "./UserInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
 import { logger } from "../../utils/logger";
-import { LOGIN_SUCCESSFUL, USER_UPDATED } from "../../utils/messages";
+import {
+  LOGIN_SUCCESSFUL,
+  NO_DATA_TO_UPDATE,
+  USER_UPDATED,
+} from "../../utils/messages";
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { OtpType, UserRole } from "../../utils/enums";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { CustomError } from "../../utils/customError";
 
 @Service()
 export class UpdateUserProvider {
@@ -29,6 +34,11 @@ export class UpdateUserProvider {
     manager?: EntityManager
   ) {
     logger.info(`🔄 Updating user with ID: ${userId}`);
+    if (Object.keys(updatedUserData).length === 0) {
+      logger.warn(`⚠️ No fields provided to update for user ${userId}`);
+      throw new CustomError(NO_DATA_TO_UPDATE);
+    }
+
     const em = manager || this.updateUserRepository.manager;
     const userData = await this.userInfoProvider.getUser({ id: userId });
 
@@ -36,6 +46,11 @@ export class UpdateUserProvider {
 
     const updatedUser = await em.save(User, userData);
 
+    logger.info(
+      `📝 Fields updated for user ${userId}: ${Object.keys(
+        updatedUserData
+      ).join(", ")}`
+    );
     logger.info(`✅ Successfully updated user with ID: ${userId}`);
     return new SingleUserResponse(true, USER_UPDATED, updatedUser);
   }

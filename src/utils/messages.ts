@@ -1,4 +1,5 @@
 export const INTERNAL_ERROR_OCCURRED = "Internal error occurred.";
+export const NO_DATA_TO_UPDATE = "No data to update";
 
 // Env messages
 export const MISSING_ENV_VARIABLES =
@@ -95,6 +96,7 @@ export const SERVICE_ADDED_SUCCESS = "New service added successfully.";
 export const SERVICE_IDS_FOUND = "Service Ids found successfully.";
 export const SERVICE_NOT_FOUND = "Invalid or missing services.";
 export const SERVICE_ALREADY_EXISTS = "Service already exists.";
+export const NO_SERVICE_ID_PROVIDED = "No service id provided"
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";

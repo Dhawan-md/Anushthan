@@ -1,27 +1,33 @@
 import { Inject, Service } from "typedi";
 import { verify } from "jsonwebtoken";
 
-import { logger } from "../../utils/logger";
 import { OtpProvider } from "../otp/OtpProvider";
+import { UpdatePanditProvider } from "./UpdatePanditProvider";
+import { PanditInfoProvider } from "./PanditInfoProvider";
+
+import { generateJwtToken } from "../../helpers/generateJwtToken";
+
+import { sendEmail } from "../../service/email/sendEmail";
+
+import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
+
+import { logger } from "../../utils/logger";
 import { EmailName, OtpType } from "../../utils/enums";
 import {
   MISSING_ENV_VARIABLES,
+  NO_PANDIT_FOUND,
   OLD_PASSWORD_ERROR,
   OTP_SENT,
   OTP_VERIFICATION_REQUIRED,
   RESET_PASSWORD_SUCCESS,
 } from "../../utils/messages";
-import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
 import { validatePassword } from "../../utils/validatePassword";
 import { CustomError } from "../../utils/customError";
-import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { hashPassword } from "../../utils/hashPassword";
-import { UpdatePanditProvider } from "./UpdatePanditProvider";
-import { PanditInfoProvider } from "./PanditInfoProvider";
-import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { isSamePassword } from "../../utils/isSamePassword";
+import { VerifyOtpParams } from "../../utils/interfaces";
 
 @Service()
 export class ForgetPasswordProvider {
@@ -38,6 +44,14 @@ export class ForgetPasswordProvider {
       `🔄 Forget password request received for pandit with email: ${userEmail}`
     );
 
+    const isExisting = await this.panditInfoProvider.checkPanditExists({
+      userEmail,
+    });
+
+    if (!isExisting) {
+      throw new CustomError(NO_PANDIT_FOUND);
+    }
+
     const otp = await this.otpProvider.generateAndSaveNewOtp(
       userEmail,
       OtpType.FORGET_PASSWORD
@@ -53,9 +67,11 @@ export class ForgetPasswordProvider {
   }
 
   async verifyResetPassword(
-    userEmail: string,
-    otpCode: string
+    params: VerifyOtpParams
   ): Promise<VerifyResetResponse> {
+    const { userEmail, otpCode } = params;
+    logger.info(`📨 Verifying OTP for email: ${userEmail}`);
+
     const isValidOTp = await this.otpProvider.verifyOtp({
       userEmail,
       otpCode,
@@ -68,7 +84,7 @@ export class ForgetPasswordProvider {
       { panditId: panditData.id },
       "15m"
     );
-
+    
     return new VerifyResetResponse(
       isValidOTp.success,
       isValidOTp.message,
@@ -82,28 +98,28 @@ export class ForgetPasswordProvider {
   }): Promise<SinglePanditResponse> {
     const { newPassword, otpToken } = params;
 
-    if (!process.env["JWT_SECRET"]) {
+    const jwtSecret = process.env["JWT_SECRET"];
+    if (!jwtSecret) {
       throw new CustomError(MISSING_ENV_VARIABLES);
     }
 
-    const payload = verify(otpToken, process.env["JWT_SECRET"]) as {
-      panditId: string;
-    };
-
-    if (!payload.panditId) {
+    let payload: { panditId: string };
+    try {
+      payload = verify(otpToken, jwtSecret) as { panditId: string };
+    } catch (err) {
+      logger.error("❌ Invalid or expired token during resetPassword");
       throw new CustomError(OTP_VERIFICATION_REQUIRED);
     }
 
     const { panditId } = payload;
-    logger.info(
-      `🔄 Password reset request received for pandit with id: ${panditId}`
-    );
+    logger.info(`🔄 Password reset request for panditId: ${panditId}`);
 
     validatePassword(newPassword);
 
     const panditData = await this.panditInfoProvider.getPandit({
       id: panditId,
     });
+
     const isMatching = await isSamePassword({
       inputPassword: newPassword,
       hashedPassword: panditData.password,

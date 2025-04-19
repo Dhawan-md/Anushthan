@@ -2,12 +2,14 @@ import { Arg, Authorized, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
 import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
+import { ServiceProvider } from "../../providers/service/ServiceProvider";
+import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
+
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
-import { ServiceProvider } from "../../providers/service/ServiceProvider";
-import { AdminRole, PanditStatus } from "../../utils/enums";
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
-import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
+
+import { AdminRole, PanditStatus } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -35,6 +37,7 @@ export class AdminMutationResolver {
   }
 
   @Mutation(() => SingleAdminResponse)
+  @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async loginAdmin(
     @Arg("email") email: string,
     @Arg("password") password: string
@@ -43,7 +46,7 @@ export class AdminMutationResolver {
   }
 
   @Mutation(() => SingleServiceResponse)
-  @Authorized(AdminRole.ADMIN)
+  @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async addService(
     @Arg("name") name: string,
     @Arg("description") description: string,
@@ -59,7 +62,7 @@ export class AdminMutationResolver {
   }
 
   @Mutation(() => SinglePanditResponse)
-  @Authorized(AdminRole.ADMIN)
+  @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async verifyPandit(
     @Arg("panditId") panditId: string,
     @Arg("status") status: PanditStatus

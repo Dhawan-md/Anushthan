@@ -7,7 +7,6 @@ import {
   OneToOne,
   UpdateDateColumn,
   Index,
-  BaseEntity,
 } from "typeorm";
 
 import { UserRole } from "../utils/enums";
@@ -16,7 +15,7 @@ import { Otp } from "./Otp";
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class User {
   @Field()
   @PrimaryGeneratedColumn("uuid", { name: "user_id" })
   id!: string;

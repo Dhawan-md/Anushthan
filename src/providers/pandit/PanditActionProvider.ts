@@ -9,6 +9,7 @@ import { logger } from "../../utils/logger";
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { STATUS_UPDATED } from "../../utils/messages";
 import { UpdateUserProvider } from "../user/UpdateUserProvider";
+import { UpdatePanditProvider } from "./UpdatePanditProvider";
 
 @Service()
 export class PanditActionProvider {
@@ -19,7 +20,9 @@ export class PanditActionProvider {
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
     @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider
+    private updateUserProvider: UpdateUserProvider,
+    @Inject(() => UpdatePanditProvider)
+    private updatePanditProvider: UpdatePanditProvider
   ) {
     this.panditActionRepository = this.repositoryFactory.getRepository(Pandit);
   }
@@ -35,19 +38,25 @@ export class PanditActionProvider {
       async (transactionalEntityManager) => {
         logger.info(`🔄 Updating status of pandit with ID: ${panditId}`);
 
+        let updatedPanditFields: Partial<Pandit> = {
+          status,
+        };
+
         if (status === PanditStatus.REJECTED) {
-          panditData.documents = null;
+          updatedPanditFields.documents = null;
         } else if (status === PanditStatus.APPROVED) {
-          panditData.user.userRole = UserRole.PANDIT;
           await this.updateUserProvider.updateUser(
-            panditData.user,
+            { userRole: UserRole.PANDIT },
             panditData.user.id,
             transactionalEntityManager
           );
         }
 
-        panditData.status = status;
-        await transactionalEntityManager.save(Pandit, panditData);
+        await this.updatePanditProvider.updatePandit(
+          updatedPanditFields,
+          panditData.id,
+          transactionalEntityManager
+        );
       }
     );
 
@@ -57,7 +66,7 @@ export class PanditActionProvider {
       status,
     });
 
-    logger.info(`✅ Document verified successfully for pandit ${panditId}.`);
+    logger.info(`✅ Verification complete for pandit ID: ${panditId}`);
     return new SinglePanditResponse(true, STATUS_UPDATED);
   }
 }

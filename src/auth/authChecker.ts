@@ -4,20 +4,13 @@ import { Context } from "../types/context";
 import { AdminRole } from "../utils/enums";
 
 export const authChecker: AuthChecker<Context> = ({ context }, roles) => {
-  
-  if (
-    context.admin &&
-    roles.includes("SUPERADMIN") &&
-    context.admin.adminRole === AdminRole.SUPERADMIN
-  ) {
-    return true; // Super admin
+  const { admin, user } = context;
+
+  if (admin && roles.includes(admin.adminRole)) {
+    return true; // admin
   }
 
-  if (context.admin && roles.includes("ADMIN")) {
-    return true; // Admin
-  }
-
-  if (context.user && roles.includes("USER")) {
+  if (user && roles.includes(AdminRole.USER)) {
     return true; // User
   }
 

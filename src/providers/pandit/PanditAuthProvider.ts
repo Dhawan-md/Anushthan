@@ -1,6 +1,5 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
-import { FileUpload } from "graphql-upload-minimal";
 
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { ServiceProvider } from "../service/ServiceProvider";
@@ -21,6 +20,7 @@ import {
   FILE_UPLOAD_FAIL,
   INVALID_PASSWORD,
   LOGIN_SUCCESSFUL,
+  PANDIT_ALREADY_EXISTS,
   PANDIT_REGISTERED,
   SERVICE_NOT_FOUND,
 } from "../../utils/messages";
@@ -32,7 +32,7 @@ import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 import { OtpProvider } from "../otp/OtpProvider";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
-import { verifyOtpParams } from "../../utils/types";
+import { RegisterPanditParams, VerifyOtpParams } from "../../utils/interfaces";
 
 @Service()
 export class PanditAuthProvider {
@@ -52,25 +52,33 @@ export class PanditAuthProvider {
     this.panditAuthRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
-  async registerPandit(params: {
-    userId: string;
-    password: string;
-    documents: FileUpload[];
-    serviceIds: string[];
-    experience: number;
-    address: string;
-  }): Promise<SinglePanditResponse> {
-    validatePassword(params.password);
-    await this.panditInfoProvider.checkPanditExists(params.userId);
+  async registerPandit(
+    params: RegisterPanditParams
+  ): Promise<SinglePanditResponse> {
+    logger.info(
+      `🔄Processing register Pandit request for user with userId : ${params.userId}`
+    );
+    const { userId, password, documents, serviceIds, experience, address } =
+      params;
 
-    const user = await this.userInfoProvider.getUser({ id: params.userId });
+    validatePassword(password);
+    const isExisting = await this.panditInfoProvider.checkPanditExists({
+      userId,
+    });
 
-    const services = await this.serviceProvider.getServices(params.serviceIds);
+    if (isExisting) {
+      logger.warn(`⚠️ Pandit with userId "${userId}" already exists.`);
+      throw new CustomError(PANDIT_ALREADY_EXISTS);
+    }
 
-    const hashedPassword = await hashPassword(params.password);
+    const user = await this.userInfoProvider.getUser({ id: userId });
+
+    const services = await this.serviceProvider.getServices(serviceIds);
+
+    const hashedPassword = await hashPassword(password);
 
     let uploadedDocuments: { filePath: string }[] | { filePath: string } =
-      await uploadFiles(params.documents, S3BucketType.DOCUMENT);
+      await uploadFiles(documents, S3BucketType.DOCUMENT);
 
     if (!uploadedDocuments) {
       throw new CustomError(FILE_UPLOAD_FAIL);
@@ -83,9 +91,9 @@ export class PanditAuthProvider {
     const newPandit = await this.panditAuthRepository.save({
       user,
       services: services.data,
-      experience: params.experience,
+      experience: experience,
       password: hashedPassword,
-      address: params.address,
+      address: address,
       documents: JSON.stringify(uploadedDocuments.map((file) => file.filePath)),
     });
 
@@ -106,21 +114,21 @@ export class PanditAuthProvider {
     password: string;
   }): Promise<SinglePanditResponse> {
     const { userEmail, password } = params;
-    logger.info(`🔄Logging in pandit: ${userEmail}.`);
+    logger.info(`🔄Logging in pandit with email: ${userEmail}.`);
 
     validateEmail(userEmail);
     validatePassword(password);
 
     const panditData = await this.panditInfoProvider.getPandit({
-      userEmail: userEmail,
+      userEmail,
     });
 
-    await isSamePassword({
+    const isMatching = await isSamePassword({
       inputPassword: password,
       hashedPassword: panditData.password,
     });
 
-    if (!isSamePassword) {
+    if (!isMatching) {
       throw new CustomError(INVALID_PASSWORD);
     }
 
@@ -135,24 +143,26 @@ export class PanditAuthProvider {
       EmailType.PANDIT_LOGGIN
     );
 
-    logger.info(`✅ Pandit with ${userEmail} logged in requested.`);
+    logger.info(`✅ Pandit with email ${userEmail} logged in requested.`);
 
     return new SinglePanditResponse(true, PANDIT_REGISTERED);
   }
 
-  async verifyPandit(params: verifyOtpParams): Promise<SinglePanditResponse> {
+  async verifyPandit(params: VerifyOtpParams): Promise<SinglePanditResponse> {
     const { userEmail, otpCode } = params;
-    logger.info(`🔄 Verification request received for: ${userEmail}`);
+    logger.info(
+      `🔄 Verification request received for pandit with email: ${userEmail}`
+    );
 
     const panditData = await this.panditInfoProvider.getPandit({
       userEmail,
     });
 
-    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    logger.info(`🔍 Verifying OTP for user with email: ${userEmail}`);
     await this.otpProvider.verifyOtp({
       userEmail,
       otpCode,
-      otpType: OtpType.USER,
+      otpType: OtpType.PANDIT,
     });
 
     const jwtToken = generateJwtToken({
