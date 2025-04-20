@@ -30,7 +30,7 @@ import { isSamePassword } from "../../utils/isSamePassword";
 import { VerifyOtpParams } from "../../utils/interfaces";
 
 @Service()
-export class ForgetPasswordProvider {
+export class PanditPasswordProvider {
   constructor(
     @Inject(() => OtpProvider) private otpProvider: OtpProvider,
     @Inject(() => PanditInfoProvider)

@@ -1,15 +1,19 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
-import { Pandit } from "../../entities/Pandit";
-import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { PanditInfoProvider } from "./PanditInfoProvider";
+import { UpdatePanditProvider } from "./UpdatePanditProvider";
+import { UpdateUserProvider } from "../user/UpdateUserProvider";
+
+import { Pandit } from "../../entities/Pandit";
+
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+
 import { PanditStatus, UserRole } from "../../utils/enums";
 import { logger } from "../../utils/logger";
-import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { STATUS_UPDATED } from "../../utils/messages";
-import { UpdateUserProvider } from "../user/UpdateUserProvider";
-import { UpdatePanditProvider } from "./UpdatePanditProvider";
 
 @Service()
 export class PanditActionProvider {

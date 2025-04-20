@@ -1,11 +1,12 @@
 import { Resolver, Mutation, Arg } from "type-graphql";
+import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 
 import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
+
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
+
 import { promiseTimeout } from "../../utils/promiseTimeout";
-import { UpdateUserProvider } from "../../providers/user/UpdateUserProvider";
 
 @Service()
 @Resolver()
@@ -13,8 +14,6 @@ export class UserMutationResolver {
   constructor(
     @Inject(() => UserAuthProvider)
     private userAuthProvider: UserAuthProvider,
-    @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider 
   ) {}
 
   @Mutation(() => SingleUserResponse)
@@ -55,6 +54,6 @@ export class UserMutationResolver {
     @Arg("userEmail") userEmail: string,
     @Arg("otpCode") otpCode: string
   ): Promise<SingleUserResponse> {
-    return this.updateUserProvider.verifyUser(userEmail, otpCode);
+    return this.userAuthProvider.verifyUser(userEmail, otpCode);
   }
 }

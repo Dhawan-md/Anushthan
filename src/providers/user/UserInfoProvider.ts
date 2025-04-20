@@ -2,9 +2,12 @@ import { Repository } from "typeorm";
 import { Service } from "typedi";
 
 import { User } from "../../entities/User";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { logger } from "../../utils/logger";
+
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
+
+import { logger } from "../../utils/logger";
 import {
   NO_USER_FOUND,
   USER_ALREADY_EXISTS,

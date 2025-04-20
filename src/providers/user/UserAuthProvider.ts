@@ -1,11 +1,22 @@
+import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
-import { User } from "../../entities/User";
-import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { logger } from "../../utils/logger";
 import { UserInfoProvider } from "./UserInfoProvider";
+import { OtpProvider } from "../otp/OtpProvider";
+
+import { User } from "../../entities/User";
+
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { uploadFiles } from "../../helpers/uploadS3Files";
+
+import { sendEmail } from "../../service/email/sendEmail";
+
+import { SingleUserResponse } from "../../types/responses/UserResponse";
+
+import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 import {
   LOGIN_SUCCESSFUL,
@@ -13,11 +24,7 @@ import {
   PHONE_NUMBER_REQUIRED,
   USER_REGISTERED,
 } from "../../utils/messages";
-import { OtpProvider } from "../otp/OtpProvider";
-import { sendEmail } from "../../service/email/sendEmail";
-import { EmailType, OtpType, S3BucketType } from "../../utils/enums";
-import { FileUpload } from "graphql-upload-minimal";
-import { uploadFiles } from "../../helpers/uploadS3Files";
+import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
 
 @Service()
@@ -115,5 +122,31 @@ export class UserAuthProvider {
     logger.info(`✅ User with ${userEmail} logged in requested.`);
 
     return new SingleUserResponse(true, LOGIN_SUCCESSFUL);
+  }
+
+  async verifyUser(
+    userEmail: string,
+    otpCode: string
+  ): Promise<SingleUserResponse> {
+    logger.info(`🔄 Verification request received for: ${userEmail}`);
+
+    const userData = await this.userInfoProvider.getUser({
+      userEmail,
+    });
+
+    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    await this.otpProvider.verifyOtp({
+      userEmail,
+      otpCode,
+      otpType: OtpType.USER,
+    });
+
+    const jwtToken = generateJwtToken({
+      id: userData.id,
+      userRole: UserRole.USER,
+    });
+
+    logger.info(`✅ User ${userData.userEmail} logged in successfully.`);
+    return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
   }
 }

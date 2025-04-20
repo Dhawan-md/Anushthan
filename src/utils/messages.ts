@@ -100,6 +100,7 @@ export const NO_SERVICE_ID_PROVIDED = "No service id provided"
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";
+export const PANDIT_LOGIN_REQUESTED = "Pandit login requested. Otp sent.";
 export const PANDIT_ALREADY_EXISTS = "Pandit already exists.";
 export const PANDIT_LIST = "Pandits list.";
 export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";

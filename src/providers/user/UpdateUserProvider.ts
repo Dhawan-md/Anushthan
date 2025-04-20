@@ -1,19 +1,16 @@
 import { Inject, Service } from "typedi";
 import { EntityManager, Repository } from "typeorm";
 
-import { User } from "../../entities/User";
-import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { UserInfoProvider } from "./UserInfoProvider";
-import { OtpProvider } from "../otp/OtpProvider";
-import { logger } from "../../utils/logger";
-import {
-  LOGIN_SUCCESSFUL,
-  NO_DATA_TO_UPDATE,
-  USER_UPDATED,
-} from "../../utils/messages";
+
+import { User } from "../../entities/User";
+
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { OtpType, UserRole } from "../../utils/enums";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
+
+import { logger } from "../../utils/logger";
+import { NO_DATA_TO_UPDATE, USER_UPDATED } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
 
 @Service()
@@ -22,8 +19,7 @@ export class UpdateUserProvider {
 
   constructor(
     private repositoryFactory: RepositoryFactory,
-    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
-    @Inject(() => OtpProvider) private otpProvider: OtpProvider
+    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
   ) {
     this.updateUserRepository = this.repositoryFactory.getRepository(User);
   }
@@ -53,31 +49,5 @@ export class UpdateUserProvider {
     );
     logger.info(`✅ Successfully updated user with ID: ${userId}`);
     return new SingleUserResponse(true, USER_UPDATED, updatedUser);
-  }
-
-  async verifyUser(
-    userEmail: string,
-    otpCode: string
-  ): Promise<SingleUserResponse> {
-    logger.info(`🔄 Verification request received for: ${userEmail}`);
-
-    const userData = await this.userInfoProvider.getUser({
-      userEmail,
-    });
-
-    logger.info(`🔍 Verifying OTP for ${userEmail}`);
-    await this.otpProvider.verifyOtp({
-      userEmail,
-      otpCode,
-      otpType: OtpType.USER,
-    });
-
-    const jwtToken = generateJwtToken({
-      id: userData.id,
-      userRole: UserRole.USER,
-    });
-
-    logger.info(`✅ User ${userData.userEmail} logged in successfully.`);
-    return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
   }
 }

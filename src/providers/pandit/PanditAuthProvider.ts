@@ -3,9 +3,20 @@ import { Repository } from "typeorm";
 
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { ServiceProvider } from "../service/ServiceProvider";
+import { PanditInfoProvider } from "./PanditInfoProvider";
+import { OtpProvider } from "../otp/OtpProvider";
+
 import { Pandit } from "../../entities/Pandit";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
 import { uploadFiles } from "../../helpers/uploadS3Files";
+import { generateJwtToken } from "../../helpers/generateJwtToken";
+
+import { sendEmail } from "../../service/email/sendEmail";
+
+import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+
 import {
   EmailName,
   EmailType,
@@ -21,17 +32,13 @@ import {
   INVALID_PASSWORD,
   LOGIN_SUCCESSFUL,
   PANDIT_ALREADY_EXISTS,
+  PANDIT_LOGIN_REQUESTED,
   PANDIT_REGISTERED,
   SERVICE_NOT_FOUND,
 } from "../../utils/messages";
-import { sendEmail } from "../../service/email/sendEmail";
 import { logger } from "../../utils/logger";
-import { SinglePanditResponse } from "../../types/responses/PanditResponse";
-import { PanditInfoProvider } from "./PanditInfoProvider";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
-import { OtpProvider } from "../otp/OtpProvider";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { RegisterPanditParams, VerifyOtpParams } from "../../utils/interfaces";
 
 @Service()
@@ -145,7 +152,7 @@ export class PanditAuthProvider {
 
     logger.info(`✅ Pandit with email ${userEmail} logged in requested.`);
 
-    return new SinglePanditResponse(true, PANDIT_REGISTERED);
+    return new SinglePanditResponse(true, PANDIT_LOGIN_REQUESTED);
   }
 
   async verifyPandit(params: VerifyOtpParams): Promise<SinglePanditResponse> {
