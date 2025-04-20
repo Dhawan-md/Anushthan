@@ -147,7 +147,7 @@ export class PanditAuthProvider {
     await sendEmail(
       userEmail,
       { name: EmailName.PANDIT, otpCode: otp.otpCode },
-      EmailType.PANDIT_LOGGIN
+      EmailType.PANDIT_LOGIN
     );
 
     logger.info(`✅ Pandit with email ${userEmail} logged in requested.`);

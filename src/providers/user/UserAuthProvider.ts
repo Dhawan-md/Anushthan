@@ -19,6 +19,7 @@ import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 import {
+  LOGIN_REQUESTED,
   LOGIN_SUCCESSFUL,
   OTP_GENERATION_FAILED,
   PHONE_NUMBER_REQUIRED,
@@ -48,9 +49,8 @@ export class UserAuthProvider {
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validateEmail(params.userEmail);
-
+    
     await this.userInfoProvider.checkUserExists(params.userEmail);
-
     if (!params.phoneNumber || params.phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
     }
@@ -69,7 +69,7 @@ export class UserAuthProvider {
         const newUser = await transactionalEntityManager.save(User, {
           name: params.name,
           username: params.username,
-          userEmail: params.userEmail.toLowerCase(),
+          userEmail: params.userEmail.trim().toLowerCase(),
           phoneNumber: params.phoneNumber,
           profileImage: JSON.stringify(
             uploadedImages.map((images) => images.filePath)
@@ -121,7 +121,7 @@ export class UserAuthProvider {
 
     logger.info(`✅ User with ${userEmail} logged in requested.`);
 
-    return new SingleUserResponse(true, LOGIN_SUCCESSFUL);
+    return new SingleUserResponse(true, LOGIN_REQUESTED);
   }
 
   async verifyUser(

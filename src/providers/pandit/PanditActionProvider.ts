@@ -31,7 +31,7 @@ export class PanditActionProvider {
     this.panditActionRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
-  async verifyPandit(panditId: string, status: PanditStatus) {
+  async setPanditApprovalStatus(panditId: string, status: PanditStatus) {
     logger.info(`🔍 Verifying documents for pandit ${panditId}.`);
     const panditData = await this.panditInfoProvider.getPandit(
       { id: panditId },

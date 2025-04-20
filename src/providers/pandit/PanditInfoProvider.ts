@@ -37,13 +37,20 @@ export class PanditInfoProvider {
 
   async getAllPandits(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    status?: PanditStatus
   ): Promise<MultiplePanditResponse> {
-    logger.info(`🔄 Fetching pandits for page ${page} with limit ${limit}`);
+    logger.info(
+      `🔄 Fetching pandits for page ${page} with limit ${limit}, status: ${
+        status || "ALL"
+      }`
+    );
 
     const [panditList, total] = await this.panditInfoRepository.findAndCount({
+      where: status ? { status } : {},
       skip: (page - 1) * limit,
       take: limit,
+      relations: ["services", "user"],
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -122,7 +129,7 @@ export class PanditInfoProvider {
 
     let signedUrls = await Promise.all(
       parsedFilePathArray.map((filePath: string) => {
-        generateSignedUrl(filePath, S3BucketType.DOCUMENT);
+        return generateSignedUrl(filePath, S3BucketType.DOCUMENT);
       })
     );
 

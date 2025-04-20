@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   Column,
   CreateDateColumn,
@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+
 import { Pandit } from "./Pandit";
 
 @ObjectType()
@@ -20,15 +21,15 @@ export class Service {
   @Column({ unique: true })
   name!: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   @Column({ type: "text", nullable: true })
   description: string | null;
 
-  @Field()
+  @Field(() => Int)
   @Column({ type: "int" })
   price!: number;
 
-  @Field()
+  @Field(() => Int)
   @Column({ type: "int", default: 30 })
   duration!: number;
 

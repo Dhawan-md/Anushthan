@@ -15,6 +15,7 @@ import {
   SERVICE_ADDED_SUCCESS,
   SERVICE_ALREADY_EXISTS,
   SERVICE_IDS_FOUND,
+  SERVICE_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
@@ -41,6 +42,33 @@ export class ServiceProvider {
       logger.warn(`⚠️ Service with name "${name}" already exists.`);
       throw new CustomError(SERVICE_ALREADY_EXISTS);
     }
+  }
+
+  async getAllServices(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<MultipleServiceResponse> {
+    logger.info(`🔄 Fetching services for page ${page} with limit ${limit}`);
+
+    const [serviceList, total] = await this.serviceRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    logger.info(
+      `✅ Retrieved ${serviceList.length} services from the database.`
+    );
+    return new MultipleServiceResponse(
+      true,
+      SERVICE_LIST,
+      serviceList,
+      total,
+      page,
+      limit,
+      totalPages
+    );
   }
 
   async addService(params: AddServiceParams): Promise<SingleServiceResponse> {
@@ -71,7 +99,7 @@ export class ServiceProvider {
     });
 
     if (!services || services.length !== serviceIds.length) {
-      validateFoundIds(services, serviceIds, "Invalid Ids:");
+      validateFoundIds(services, serviceIds, "Invalid Service Ids");
     }
 
     logger.info(`✅ Successfully fetched ${services.length} service(s)`);

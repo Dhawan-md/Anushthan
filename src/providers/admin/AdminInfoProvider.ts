@@ -20,7 +20,7 @@ export class AdminInfoProvider {
       logger.info(`🔍 Searching for admin with email: ${normalizedEmail}`);
       const isExisting = await this.adminInfoRepository
         .createQueryBuilder("admin")
-        .where("admin.email = :email", { normalizedEmail })
+        .where("admin.email = :email", { email: normalizedEmail })
         .getExists();
   
       if (isExisting) {

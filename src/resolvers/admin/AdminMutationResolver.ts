@@ -37,7 +37,6 @@ export class AdminMutationResolver {
   }
 
   @Mutation(() => SingleAdminResponse)
-  @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async loginAdmin(
     @Arg("email") email: string,
     @Arg("password") password: string
@@ -53,6 +52,8 @@ export class AdminMutationResolver {
     @Arg("price") price: number,
     @Arg("duration") duration: number
   ): Promise<SingleServiceResponse> {
+    console.log("something");
+
     return this.serviceProvider.addService({
       name,
       description,
@@ -63,10 +64,10 @@ export class AdminMutationResolver {
 
   @Mutation(() => SinglePanditResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
-  async verifyPandit(
+  async setPanditApprovalStatus(
     @Arg("panditId") panditId: string,
     @Arg("status") status: PanditStatus
   ): Promise<SinglePanditResponse> {
-    return this.panditActionProvider.verifyPandit(panditId, status);
+    return this.panditActionProvider.setPanditApprovalStatus(panditId, status);
   }
 }

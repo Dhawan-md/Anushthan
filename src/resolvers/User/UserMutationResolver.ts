@@ -43,7 +43,7 @@ export class UserMutationResolver {
   }
 
   @Mutation(() => SingleUserResponse)
-  async loginuser(
+  async loginUser(
     @Arg("userEmail") userEmail: string
   ): Promise<SingleUserResponse> {
     return this.userAuthProvider.loginUser(userEmail);

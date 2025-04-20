@@ -8,6 +8,8 @@ export const getEmailTypeByOtpType = (otpType: OtpType): EmailType => {
       return EmailType.ACCOUNT_VERIFICATION;
     case OtpType.FORGET_PASSWORD:
       return EmailType.FORGET_PASSWORD;
+    case OtpType.PANDIT:
+      return EmailType.PANDIT_LOGIN;
 
     default:
       throw new CustomError(INVALID_OTP_TYPE);

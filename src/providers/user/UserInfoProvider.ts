@@ -53,14 +53,14 @@ export class UserInfoProvider {
     logger.info(`🔍 Searching for user with params: ${normalizedEmail}`);
 
     const isExisting = await this.userInfoRepository
-      .createQueryBuilder("user")
-      .where("user.email = :email", { normalizedEmail })
+      .createQueryBuilder("u")
+      .where("u.user_email = :email", { email: normalizedEmail })
       .getExists();
 
     if (isExisting) {
       logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
       throw new CustomError(USER_ALREADY_EXISTS);
-    }
+    }    
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {

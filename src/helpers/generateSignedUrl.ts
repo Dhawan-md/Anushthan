@@ -14,7 +14,7 @@ import { logger } from "../utils/logger";
 export const generateSignedUrl = async (
   filePath: string,
   type: S3BucketType
-) => {
+): Promise<string> => {
   const s3 = await getInitializedS3Client();
 
   if (!s3) {

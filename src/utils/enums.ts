@@ -51,7 +51,7 @@ export enum EmailType {
   PANDIT_APPROVED = "Congratulations! documents submitted for pandit verification has been approved",
   PANDIT_SUSPENDED = "Due to some suspicious activities pandit has been suspended.",
   PANDIT_PENDING = "Documents has been submitted. You will receive a response shortly.",
-  PANDIT_LOGGIN = "Please use this otp to log into your account."
+  PANDIT_LOGIN = "Please use this otp to log into your account."
 }
 
 export enum EmailTemplate {
@@ -62,7 +62,7 @@ export enum EmailTemplate {
   PANDIT_APPROVED = "panditApproved.html",
   PANDIT_SUSPENDED = "panditSuspended.html",
   PANDIT_PENDING = "panditPending.html",
-  PANDIT_LOGGIN = "panditLoggin.html",
+  PANDIT_LOGIN = "panditLoggin.html",
 }
 
 export enum S3BucketType {

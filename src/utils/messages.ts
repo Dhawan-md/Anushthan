@@ -43,7 +43,7 @@ export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
 export const LOGIN_SUCCESSFUL = "Login successful.";
-export const LOGIN_REQUESTED = "Login requested.";
+export const LOGIN_REQUESTED = "Login requested. Otp has been sent.";
 export const PHONE_NUMBER_REQUIRED =
   "Phone Number Required! Phone number field cannot be empty.";
 
@@ -96,7 +96,8 @@ export const SERVICE_ADDED_SUCCESS = "New service added successfully.";
 export const SERVICE_IDS_FOUND = "Service Ids found successfully.";
 export const SERVICE_NOT_FOUND = "Invalid or missing services.";
 export const SERVICE_ALREADY_EXISTS = "Service already exists.";
-export const NO_SERVICE_ID_PROVIDED = "No service id provided"
+export const NO_SERVICE_ID_PROVIDED = "No service id provided";
+export const SERVICE_LIST = "Services list.";
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";
