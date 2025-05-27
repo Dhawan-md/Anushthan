@@ -26,6 +26,7 @@ import {
   NotifyPanditParams,
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
+import { GetAllPanditsDto } from "../../types/dtos/Admin";
 
 @Service()
 export class PanditInfoProvider {
@@ -36,10 +37,9 @@ export class PanditInfoProvider {
   }
 
   async getAllPandits(
-    page: number = 1,
-    limit: number = 10,
-    status?: PanditStatus
+    params: GetAllPanditsDto
   ): Promise<MultiplePanditResponse> {
+    const { page = 1, limit = 10, status } = params;
     logger.info(
       `🔄 Fetching pandits for page ${page} with limit ${limit}, status: ${
         status || "ALL"

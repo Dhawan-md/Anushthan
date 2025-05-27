@@ -1,4 +1,3 @@
-import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
@@ -27,6 +26,11 @@ import {
 } from "../../utils/messages";
 import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
+import {
+  LoginUserDto,
+  RegisterUserDto,
+  VerifyUserDto,
+} from "../../types/dtos/User";
 
 @Service()
 export class UserAuthProvider {
@@ -40,16 +44,10 @@ export class UserAuthProvider {
     this.userAuthRepository = this.repositoryFactory.getRepository(User);
   }
 
-  async registerUser(params: {
-    name: string;
-    username: string;
-    userEmail: string;
-    phoneNumber: string;
-    profileImage?: FileUpload | null;
-  }): Promise<SingleUserResponse> {
+  async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
     validateEmail(params.userEmail);
-    
+
     await this.userInfoProvider.checkUserExists(params.userEmail);
     if (!params.phoneNumber || params.phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
@@ -99,7 +97,9 @@ export class UserAuthProvider {
     );
   }
 
-  async loginUser(userEmail: string): Promise<SingleUserResponse> {
+  async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
+    const { userEmail } = params;
+
     logger.info(`🔄Logging in user: ${userEmail}.`);
     validateEmail(userEmail);
 
@@ -124,10 +124,9 @@ export class UserAuthProvider {
     return new SingleUserResponse(true, LOGIN_REQUESTED);
   }
 
-  async verifyUser(
-    userEmail: string,
-    otpCode: string
-  ): Promise<SingleUserResponse> {
+  async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
+    const { userEmail, otpCode } = params;
+    
     logger.info(`🔄 Verification request received for: ${userEmail}`);
 
     const userData = await this.userInfoProvider.getUser({

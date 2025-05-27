@@ -1,5 +1,6 @@
 import { Arg, Authorized, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
+import { plainToInstance } from "class-transformer";
 
 import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
 import { ServiceProvider } from "../../providers/service/ServiceProvider";
@@ -9,7 +10,15 @@ import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 
-import { AdminRole, PanditStatus } from "../../utils/enums";
+import { AdminRole } from "../../utils/enums";
+import { RegisterAdminInput } from "../../types/inputTypes/admin/RegisterAdminInput";
+import {
+  AddServiceDto,
+  RegisterAdminDto,
+  SetPanditApprovalStatusDto,
+} from "../../types/dtos/Admin";
+import { AddServiceInput } from "../../types/inputTypes/admin/AddServiceInput";
+import { SetPanditApprovalStatusInput } from "../../types/inputTypes/admin/SetPanditApprovalStatusInput";
 
 @Service()
 @Resolver()
@@ -24,50 +33,36 @@ export class AdminMutationResolver {
 
   @Mutation(() => SingleAdminResponse)
   @Authorized(AdminRole.SUPERADMIN)
-  async registerAdmin(
-    @Arg("fullName") fullName: string,
-    @Arg("email") email: string,
-    @Arg("password") password: string
-  ) {
-    return this.adminAuthProvider.registerAdmin({
-      fullName,
-      email,
-      password,
-    });
+  async registerAdmin(@Arg("data") data: RegisterAdminInput) {
+    const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
+
+    return this.adminAuthProvider.registerAdmin(dto);
   }
 
   @Mutation(() => SingleAdminResponse)
-  async loginAdmin(
-    @Arg("email") email: string,
-    @Arg("password") password: string
-  ) {
-    return this.adminAuthProvider.loginAdmin(email, password);
+  async loginAdmin(@Arg("data") data: RegisterAdminInput) {
+    const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
+
+    return this.adminAuthProvider.loginAdmin(dto);
   }
 
   @Mutation(() => SingleServiceResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async addService(
-    @Arg("name") name: string,
-    @Arg("description") description: string,
-    @Arg("price") price: number,
-    @Arg("duration") duration: number
+    @Arg("data") data: AddServiceInput
   ): Promise<SingleServiceResponse> {
-    console.log("something");
+    const dto = plainToInstance(AddServiceDto, data);
 
-    return this.serviceProvider.addService({
-      name,
-      description,
-      price,
-      duration,
-    });
+    return this.serviceProvider.addService(dto);
   }
 
   @Mutation(() => SinglePanditResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async setPanditApprovalStatus(
-    @Arg("panditId") panditId: string,
-    @Arg("status") status: PanditStatus
+    @Arg("data") data: SetPanditApprovalStatusInput
   ): Promise<SinglePanditResponse> {
-    return this.panditActionProvider.setPanditApprovalStatus(panditId, status);
+    const dto = plainToInstance(SetPanditApprovalStatusDto, data);
+
+    return this.panditActionProvider.setPanditApprovalStatus(dto);
   }
 }

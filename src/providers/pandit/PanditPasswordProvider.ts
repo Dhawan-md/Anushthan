@@ -27,7 +27,11 @@ import { validatePassword } from "../../utils/validatePassword";
 import { CustomError } from "../../utils/customError";
 import { hashPassword } from "../../utils/hashPassword";
 import { isSamePassword } from "../../utils/isSamePassword";
-import { VerifyOtpParams } from "../../utils/interfaces";
+import {
+  ForgetPasswordDto,
+  ResetPasswordDto,
+  VerifyResetPasswordDto,
+} from "../../types/dtos/pandit";
 
 @Service()
 export class PanditPasswordProvider {
@@ -39,7 +43,10 @@ export class PanditPasswordProvider {
     private updatePanditProvider: UpdatePanditProvider
   ) {}
 
-  async forgetPassword(userEmail: string): Promise<SinglePanditResponse> {
+  async forgetPassword(
+    params: ForgetPasswordDto
+  ): Promise<SinglePanditResponse> {
+    const { userEmail } = params;
     logger.info(
       `🔄 Forget password request received for pandit with email: ${userEmail}`
     );
@@ -67,7 +74,7 @@ export class PanditPasswordProvider {
   }
 
   async verifyResetPassword(
-    params: VerifyOtpParams
+    params: VerifyResetPasswordDto
   ): Promise<VerifyResetResponse> {
     const { userEmail, otpCode } = params;
     logger.info(`📨 Verifying OTP for email: ${userEmail}`);
@@ -84,7 +91,7 @@ export class PanditPasswordProvider {
       { panditId: panditData.id },
       "15m"
     );
-    
+
     return new VerifyResetResponse(
       isValidOTp.success,
       isValidOTp.message,
@@ -92,10 +99,7 @@ export class PanditPasswordProvider {
     );
   }
 
-  async resetPassword(params: {
-    newPassword: string;
-    otpToken: string;
-  }): Promise<SinglePanditResponse> {
+  async resetPassword(params: ResetPasswordDto): Promise<SinglePanditResponse> {
     const { newPassword, otpToken } = params;
 
     const jwtSecret = process.env["JWT_SECRET"];

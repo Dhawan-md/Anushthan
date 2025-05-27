@@ -23,6 +23,7 @@ import { OtpToken } from "../../types/globalTypes";
 import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
 import { User } from "../../entities/User";
+import { ResendOtpDto } from "../../types/dtos/otp";
 
 @Service()
 export class OtpProvider {
@@ -58,10 +59,8 @@ export class OtpProvider {
     return new OtpResponse(true, OTP_SENT, otpData);
   }
 
-  async resendOtp(
-    userEmail: string,
-    otpType: OtpType = OtpType.USER
-  ): Promise<OtpResponse> {
+  async resendOtp(params: ResendOtpDto): Promise<OtpResponse> {
+    const { userEmail, otpType = OtpType.USER } = params;
     logger.info(`🔄 Resending ${otpType} OTP for ${userEmail}.`);
 
     const newOtp = await this.generateAndSaveNewOtp(userEmail, otpType);

@@ -39,7 +39,8 @@ import {
 import { logger } from "../../utils/logger";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
-import { RegisterPanditParams, VerifyOtpParams } from "../../utils/interfaces";
+import { RegisterPanditParams } from "../../utils/interfaces";
+import { LoginPanditDto, VerifyPanditDto } from "../../types/dtos/pandit";
 
 @Service()
 export class PanditAuthProvider {
@@ -116,10 +117,7 @@ export class PanditAuthProvider {
     return new SinglePanditResponse(true, PANDIT_REGISTERED, newPandit);
   }
 
-  async loginPandit(params: {
-    userEmail: string;
-    password: string;
-  }): Promise<SinglePanditResponse> {
+  async loginPandit(params: LoginPanditDto): Promise<SinglePanditResponse> {
     const { userEmail, password } = params;
     logger.info(`🔄Logging in pandit with email: ${userEmail}.`);
 
@@ -155,7 +153,7 @@ export class PanditAuthProvider {
     return new SinglePanditResponse(true, PANDIT_LOGIN_REQUESTED);
   }
 
-  async verifyPandit(params: VerifyOtpParams): Promise<SinglePanditResponse> {
+  async verifyPandit(params: VerifyPanditDto): Promise<SinglePanditResponse> {
     const { userEmail, otpCode } = params;
     logger.info(
       `🔄 Verification request received for pandit with email: ${userEmail}`

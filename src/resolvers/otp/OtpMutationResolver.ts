@@ -5,7 +5,9 @@ import { OtpProvider } from "../../providers/otp/OtpProvider";
 
 import { OtpResponse } from "../../types/responses/OtpResponse";
 
-import { OtpType } from "../../utils/enums";
+import { ResendOtpInput } from "../../types/inputTypes/otp/ResendOtpInput";
+import { plainToInstance } from "class-transformer";
+import { ResendOtpDto } from "../../types/dtos/otp";
 
 @Service()
 @Resolver()
@@ -14,9 +16,10 @@ export class OtpMutationResolver {
 
   @Mutation(() => OtpResponse)
   async resendOtp(
-    @Arg("userEmail") userEmail: string,
-    @Arg("otpType") otpType: OtpType
-  ) {
-    return this.otpProvider.resendOtp(userEmail, otpType);
+    @Arg("data", () => ResendOtpInput) data: ResendOtpInput
+  ): Promise<OtpResponse> {
+    const dto = plainToInstance(ResendOtpDto, data);
+
+    return this.otpProvider.resendOtp(dto);
   }
 }
