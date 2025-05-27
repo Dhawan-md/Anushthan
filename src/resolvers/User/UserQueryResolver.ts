@@ -1,20 +1,16 @@
-import { Query, Resolver } from "type-graphql";
-import { Inject, Service } from "typedi";
+// import { Query, Resolver } from "type-graphql";
+// import { Inject, Service } from "typedi";
 
-import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
-import { MultipleUserResponse } from "../../types/responses/UserResponse";
+// import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
 
-@Service()
-@Resolver()
-export class UserQueryResolver {
-  constructor(
-    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
-  ) {}
+// import { MultipleUserResponse } from "../../types/responses/UserResponse";
 
-  @Query(() => MultipleUserResponse)
-  async getAllUsers(): Promise<MultipleUserResponse> {
-    const users = await this.userInfoProvider.getAllUsers();
+// @Service()
+// @Resolver()
+// export class UserQueryResolver {
+//   constructor(
+//     @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
+//   ) {}
 
-    return users;
-  }
-}
+
+// }

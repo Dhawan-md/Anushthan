@@ -2,10 +2,17 @@ import { Repository } from "typeorm";
 import { Service } from "typedi";
 
 import { User } from "../../entities/User";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { logger } from "../../utils/logger";
+
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
-import { NO_USER_FOUND, USER_LIST } from "../../utils/messages";
+
+import { logger } from "../../utils/logger";
+import {
+  NO_USER_FOUND,
+  USER_ALREADY_EXISTS,
+  USER_LIST,
+} from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
 
 @Service()
@@ -27,31 +34,48 @@ export class UserInfoProvider {
       take: limit,
     });
 
+    const totalPages = Math.ceil(total / limit);
+
     logger.info(`✅ Retrieved ${userList.length} users from the database.`);
-    return new MultipleUserResponse(true, USER_LIST, userList, total);
+    return new MultipleUserResponse(
+      true,
+      USER_LIST,
+      userList,
+      total,
+      page,
+      limit,
+      totalPages
+    );
   }
 
-  async findUser(userEmail: string): Promise<User | null> {
-    logger.info(`🔍 Searching for user with params: ${userEmail}`);
-    return await this.userInfoRepository.findOne({
-      where: { userEmail: userEmail.toLowerCase() },
-    });
+  async checkUserExists(userEmail: string) {
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    logger.info(`🔍 Searching for user with params: ${normalizedEmail}`);
+
+    const isExisting = await this.userInfoRepository
+      .createQueryBuilder("u")
+      .where("u.user_email = :email", { email: normalizedEmail })
+      .getExists();
+
+    if (isExisting) {
+      logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
+      throw new CustomError(USER_ALREADY_EXISTS);
+    }    
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
+    const normalizedEmail = params.userEmail?.trim().toLowerCase();
     logger.info(
-      `🔍 Searching for user with params: ${params.id || params.userEmail}`
+      `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
+
     const userData = await this.userInfoRepository.findOne({
-      where: [
-        { id: params.id },
-        { userEmail: params.userEmail?.toLowerCase() },
-      ],
+      where: [{ id: params.id }, { userEmail: normalizedEmail }],
     });
 
     if (!userData) {
       logger.warn(
-        `❌ No user found with email or id: ${params.userEmail || params.id}`
+        `❌ No user found with email or id: ${normalizedEmail || params.id}`
       );
       throw new CustomError(NO_USER_FOUND);
     }

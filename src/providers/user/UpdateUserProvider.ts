@@ -1,20 +1,17 @@
 import { Inject, Service } from "typedi";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
+
+import { UserInfoProvider } from "./UserInfoProvider";
 
 import { User } from "../../entities/User";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { UserInfoProvider } from "./UserInfoProvider";
-import { OtpProvider } from "../otp/OtpProvider";
-import { logger } from "../../utils/logger";
-import {
-  USER_ALREADY_VERIFIED,
-  USER_UPDATED,
-  USER_VERIFIED_SUCCESS,
-} from "../../utils/messages";
+
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { EmailType, OtpType } from "../../utils/enums";
-import { sendEmail } from "../../service/email/sendEmail";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
+
+import { logger } from "../../utils/logger";
+import { NO_DATA_TO_UPDATE, USER_UPDATED } from "../../utils/messages";
+import { CustomError } from "../../utils/customError";
 
 @Service()
 export class UpdateUserProvider {
@@ -22,69 +19,35 @@ export class UpdateUserProvider {
 
   constructor(
     private repositoryFactory: RepositoryFactory,
-    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
-    @Inject(() => OtpProvider) private otpProvider: OtpProvider
+    @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider
   ) {
     this.updateUserRepository = this.repositoryFactory.getRepository(User);
   }
 
-  async updateUser(updatedUserData: Partial<User>, userId: string) {
-    return await this.updateUserRepository.manager.transaction(
-      async (transactionalEnitityManager) => {
-        logger.info(`🔄 Updating user with ID: ${userId}`);
-        const userData = await this.userInfoProvider.getUser({ id: userId });
-
-        Object.assign(userData, updatedUserData);
-
-        const updatedUser = await transactionalEnitityManager.save(userData);
-
-        logger.info(`✅ Successfully updated user with ID: ${userId}`);
-        return new SingleUserResponse(true, USER_UPDATED, updatedUser);
-      }
-    );
-  }
-
-  async verifyUser(
-    userEmail: string,
-    otpCode: string
-  ): Promise<SingleUserResponse> {
-    logger.info(`🔄 Verification request received for: ${userEmail}`);
-
-    const userData = await this.userInfoProvider.getUser({
-      userEmail,
-    });
-
-    if (userData.isVerified) {
-      logger.info(`✅ User ${userEmail} is already verified`);
-      await this.otpProvider.disableOtp(userData.id);
-      return new SingleUserResponse(true, USER_ALREADY_VERIFIED);
+  async updateUser(
+    updatedUserData: Partial<User>,
+    userId: string,
+    manager?: EntityManager
+  ) {
+    logger.info(`🔄 Updating user with ID: ${userId}`);
+    if (Object.keys(updatedUserData).length === 0) {
+      logger.warn(`⚠️ No fields provided to update for user ${userId}`);
+      throw new CustomError(NO_DATA_TO_UPDATE);
     }
 
-    logger.info(`🔍 Verifying OTP for ${userEmail}`);
-    await this.otpProvider.verifyOtp({
-      userEmail,
-      otpCode,
-      otpType: OtpType.USER,
-    });
+    const em = manager || this.updateUserRepository.manager;
+    const userData = await this.userInfoProvider.getUser({ id: userId });
 
-    logger.info(`📧 Sending verification email to ${userEmail}`);
-    await sendEmail(
-      userData.userEmail,
-      { name: userData.name },
-      EmailType.ACCOUNT_VERIFIED
+    Object.assign(userData, updatedUserData);
+
+    const updatedUser = await em.save(User, userData);
+
+    logger.info(
+      `📝 Fields updated for user ${userId}: ${Object.keys(
+        updatedUserData
+      ).join(", ")}`
     );
-
-    // Update user to set isVerified to true
-    userData.isVerified = true;
-    await this.updateUser(userData, userData.id);
-
-    const jwtToken = generateJwtToken({
-      userId: userData.id,
-      isVerified: userData.isVerified,
-      userRole: userData.userRole,
-    });
-
-    logger.info(`✅ User ${userEmail} successfully verified`);
-    return new SingleUserResponse(true, USER_VERIFIED_SUCCESS, null, jwtToken);
+    logger.info(`✅ Successfully updated user with ID: ${userId}`);
+    return new SingleUserResponse(true, USER_UPDATED, updatedUser);
   }
 }

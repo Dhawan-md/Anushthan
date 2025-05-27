@@ -1,61 +1,58 @@
+import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
-import bcrypt from "bcryptjs";
+
+import { UserInfoProvider } from "./UserInfoProvider";
+import { OtpProvider } from "../otp/OtpProvider";
 
 import { User } from "../../entities/User";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { generateJwtToken } from "../../helpers/generateJwtToken";
+import { uploadFiles } from "../../helpers/uploadS3Files";
+
+import { sendEmail } from "../../service/email/sendEmail";
+
 import { SingleUserResponse } from "../../types/responses/UserResponse";
+
 import { logger } from "../../utils/logger";
-import { validatePassword } from "../../utils/validatePassword";
-import { UserInfoProvider } from "./UserInfoProvider";
 import { CustomError } from "../../utils/customError";
 import {
-  INVALID_PASSWORD,
+  LOGIN_REQUESTED,
   LOGIN_SUCCESSFUL,
   OTP_GENERATION_FAILED,
   PHONE_NUMBER_REQUIRED,
-  USER_EMAIL_ALREADY_EXISTS,
   USER_REGISTERED,
 } from "../../utils/messages";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
-import { OtpProvider } from "../otp/OtpProvider";
-import { sendEmail } from "../../service/email/sendEmail";
-import { EmailType, S3BucketType } from "../../utils/enums";
-import { FileUpload } from "graphql-upload-minimal";
-import { uploadFiles } from "../../helpers/uploadS3Files";
+import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
-import { hashPassword } from "../../utils/hashPassword";
 
 @Service()
-export class UserSignInProvider {
-  private userSignInRepository: Repository<User>;
+export class UserAuthProvider {
+  private userAuthRepository: Repository<User>;
 
   constructor(
     private repositoryFactory: RepositoryFactory,
     @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
     @Inject(() => OtpProvider) private otpProvider: OtpProvider
   ) {
-    this.userSignInRepository = this.repositoryFactory.getRepository(User);
+    this.userAuthRepository = this.repositoryFactory.getRepository(User);
   }
 
   async registerUser(params: {
     name: string;
     username: string;
     userEmail: string;
-    password: string;
     phoneNumber: string;
     profileImage?: FileUpload | null;
   }): Promise<SingleUserResponse> {
     logger.info(`🔄Processing register user request for : ${params.userEmail}`);
-    validatePassword(params.password);
     validateEmail(params.userEmail);
-
-    const isExistingUser = await this.userInfoProvider.findUser(
-      params.userEmail
-    );
-
-    if (isExistingUser) {
-      throw new CustomError(USER_EMAIL_ALREADY_EXISTS);
+    
+    await this.userInfoProvider.checkUserExists(params.userEmail);
+    if (!params.phoneNumber || params.phoneNumber.trim() === "") {
+      throw new CustomError(PHONE_NUMBER_REQUIRED);
     }
 
     let uploadedImages: { filePath: string }[] | { filePath: string } = [];
@@ -67,30 +64,17 @@ export class UserSignInProvider {
       );
     }
 
-    const hashedPassword = await hashPassword(params.password);
-    return await this.userSignInRepository.manager.transaction(
+    return await this.userAuthRepository.manager.transaction(
       async (transactionalEntityManager) => {
-        if (!params.phoneNumber || params.phoneNumber.trim() === "") {
-          throw new CustomError(PHONE_NUMBER_REQUIRED);
-        }
         const newUser = await transactionalEntityManager.save(User, {
           name: params.name,
           username: params.username,
-          userEmail: params.userEmail.toLowerCase(),
-          password: hashedPassword,
+          userEmail: params.userEmail.trim().toLowerCase(),
           phoneNumber: params.phoneNumber,
-          profileImage:
-            JSON.stringify(uploadedImages.map((images) => images.filePath))
+          profileImage: JSON.stringify(
+            uploadedImages.map((images) => images.filePath)
+          ),
         });
-
-        const jwtToken = generateJwtToken(
-          {
-            userId: newUser.id,
-            isVerified: newUser.isVerified,
-            userRole: newUser.userRole,
-          },
-          "24h"
-        );
 
         const otpData = await this.otpProvider.saveOtp(
           newUser,
@@ -110,37 +94,59 @@ export class UserSignInProvider {
           EmailType.ACCOUNT_VERIFICATION
         );
         logger.info(`✅ User ${newUser.id} registered successfully.`);
-        return new SingleUserResponse(true, USER_REGISTERED, newUser, jwtToken);
+        return new SingleUserResponse(true, USER_REGISTERED, newUser);
       }
     );
   }
 
-  async loginUser(
-    userEmail: string,
-    password: string
-  ): Promise<SingleUserResponse> {
+  async loginUser(userEmail: string): Promise<SingleUserResponse> {
     logger.info(`🔄Logging in user: ${userEmail}.`);
     validateEmail(userEmail);
 
     const userData = await this.userInfoProvider.getUser({ userEmail });
 
-    const isValidPassword = await bcrypt.compare(password, userData.password);
-
-    if (!isValidPassword) {
-      throw new CustomError(INVALID_PASSWORD);
-    }
-
-    const jwtToken = generateJwtToken(
-      {
-        userId: userData.id,
-        isVerified: userData.isVerified,
-        userRole: userData.userRole,
-      },
-      "24h"
+    const otp = await this.otpProvider.generateAndSaveNewOtp(
+      userEmail,
+      OtpType.USER
     );
 
-    logger.info(`✅ User ${userData.username} logged in successfully.`);
+    await sendEmail(
+      userEmail,
+      {
+        name: userData.name,
+        otpCode: otp.otpCode,
+      },
+      EmailType.ACCOUNT_VERIFICATION
+    );
 
+    logger.info(`✅ User with ${userEmail} logged in requested.`);
+
+    return new SingleUserResponse(true, LOGIN_REQUESTED);
+  }
+
+  async verifyUser(
+    userEmail: string,
+    otpCode: string
+  ): Promise<SingleUserResponse> {
+    logger.info(`🔄 Verification request received for: ${userEmail}`);
+
+    const userData = await this.userInfoProvider.getUser({
+      userEmail,
+    });
+
+    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    await this.otpProvider.verifyOtp({
+      userEmail,
+      otpCode,
+      otpType: OtpType.USER,
+    });
+
+    const jwtToken = generateJwtToken({
+      id: userData.id,
+      userRole: UserRole.USER,
+    });
+
+    logger.info(`✅ User ${userData.userEmail} logged in successfully.`);
     return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
   }
 }

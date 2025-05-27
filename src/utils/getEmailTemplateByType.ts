@@ -18,6 +18,8 @@ export const getEmailTemplateByType = (emailType: EmailType): EmailTemplate => {
       return EmailTemplate.PANDIT_SUSPENDED;
     case EmailType.PANDIT_PENDING:
       return EmailTemplate.PANDIT_PENDING;
+    case EmailType.PANDIT_LOGIN:
+      return EmailTemplate.PANDIT_LOGIN;
     default:
       throw new CustomError(NO_TEMPLATE_FOUND);
   }

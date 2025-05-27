@@ -7,19 +7,15 @@ import {
   OneToOne,
   UpdateDateColumn,
   Index,
-  BeforeInsert,
-  BeforeUpdate,
-  BaseEntity,
 } from "typeorm";
+
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";
-import { CustomError } from "../utils/customError";
-import { PHONE_NUMBER_REQUIRED } from "../utils/messages";
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class User {
   @Field()
   @PrimaryGeneratedColumn("uuid", { name: "user_id" })
   id!: string;
@@ -29,11 +25,7 @@ export class User extends BaseEntity {
   name!: string;
 
   @Field()
-  @Column()
-  username!: string;
-
-  @Field()
-  @Column({ unique: true })
+  @Column({name:"user_email", unique: true })
   @Index()
   userEmail!: string;
 
@@ -41,31 +33,18 @@ export class User extends BaseEntity {
   @Column({ unique: true, name: "phone_number" })
   phoneNumber!: string;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  validatePhoneNumber() {
-    if (!this.phoneNumber || this.phoneNumber.trim() === "") {
-      console.log("woked");
-
-      throw new CustomError(PHONE_NUMBER_REQUIRED);
-    }
-  }
-
-  @Field()
-  @Column()
-  password!: string;
-
   @Field()
   @Column({
-    name: "user_role",
+    name:"user_role",
     type: "enum",
     enum: UserRole,
-    default: UserRole.CUSTOMER,
+    enumName: "user_role",
+    default: UserRole.USER,
   })
   userRole!: UserRole;
 
   @Field({ nullable: true })
-  @Column({ name: "profileImage", nullable: true })
+  @Column({ name: "profile_image", nullable: true })
   profileImage?: string;
 
   @Field()
@@ -75,10 +54,6 @@ export class User extends BaseEntity {
   @Field()
   @OneToOne(() => Otp, (otp) => otp.user)
   otp!: Otp;
-
-  @Field()
-  @Column({ default: false, name: "is_verified" })
-  isVerified!: boolean;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

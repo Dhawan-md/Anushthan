@@ -9,7 +9,7 @@ export const generateJwtToken = <T extends Object>(
   data: T,
   expiresIn: string = "24h"
 ): { token: string; expiresIn: number } => {
-  logger.info(`🔄 Generating jwt token.`);
+  logger.info(`🔐 Generating jwt token.`);
 
   const payload: Record<string, any> = { ...data };
   const token = sign(payload, process.env.JWT_SECRET as string, {
@@ -21,7 +21,7 @@ export const generateJwtToken = <T extends Object>(
   if (!decodedToken || !decodedToken.exp || !decodedToken.iat) {
     throw new CustomError(FAILED_TO_GENERATE_TOKEN);
   }
-  logger.info(`✅ Jwt token generated successfully.`);
+  logger.info(`🔑 Jwt token generated successfully.`);
   return {
     token,
     expiresIn: (decodedToken.exp - decodedToken.iat) / 3600,

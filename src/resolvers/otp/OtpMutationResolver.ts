@@ -2,7 +2,9 @@ import { Arg, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
 import { OtpProvider } from "../../providers/otp/OtpProvider";
-import { OtpResponse } from "../../types/responses/Otpresponse";
+
+import { OtpResponse } from "../../types/responses/OtpResponse";
+
 import { OtpType } from "../../utils/enums";
 
 @Service()

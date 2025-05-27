@@ -7,6 +7,8 @@ import { Otp } from "../entities/Otp";
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { logger } from "../utils/logger";
+import { Service } from "../entities/Service";
+import { Admin } from "../entities/Admin";
 
 dotenv.config();
 
@@ -17,7 +19,7 @@ export const AppDataSource = new DataSource({
   username: process.env["DB_USER"],
   password: process.env["DB_PASSWORD"],
   database: process.env["DB_NAME"],
-  entities: [User, Pandit, Otp],
+  entities: [User, Pandit, Otp, Admin, Service],
   synchronize: process.env["NODE_ENV"] !== "production",
 });
 

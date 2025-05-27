@@ -1,4 +1,5 @@
 export const INTERNAL_ERROR_OCCURRED = "Internal error occurred.";
+export const NO_DATA_TO_UPDATE = "No data to update";
 
 // Env messages
 export const MISSING_ENV_VARIABLES =
@@ -9,7 +10,10 @@ export const MISSING_BUCKET_NAME =
 // Token messages
 export const FAILED_TO_GENERATE_TOKEN =
   "Error occurred during token generation.";
-export const INVALID_TOKEN = "Unauthorized: Invalid or expired token.";
+export const INVALID_TOKEN = "Unauthorized: Invalid token or expired token.";
+export const VALID_TOKEN = "Authorized: Valid token.";
+export const NOT_AUTHENTICATED = "Not authenticated.";
+export const UNAUTHORIZED = "Unauthorized: User ID, not found in context";
 
 // Password messages
 export const MIN_PASSWORD_LENGTH =
@@ -32,13 +36,14 @@ export const USER_REGISTERED = "User registered.";
 export const USER_FOUND = "User found.";
 export const USER_LIST = "Users list.";
 export const NO_USER_FOUND = "No user with this ID or email found.";
-export const USER_EMAIL_ALREADY_EXISTS = "User with this email already exists.";
+export const USER_ALREADY_EXISTS = "User with this email already exists.";
 export const ERROR_FETCHING_USER_DATA =
   "Error occurred while fetching user data.";
 export const USER_UPDATED = "User has been updated.";
 export const USER_ALREADY_VERIFIED = "User is already verified.";
 export const USER_VERIFIED_SUCCESS = "User verified successfully.";
 export const LOGIN_SUCCESSFUL = "Login successful.";
+export const LOGIN_REQUESTED = "Login requested. Otp has been sent.";
 export const PHONE_NUMBER_REQUIRED =
   "Phone Number Required! Phone number field cannot be empty.";
 
@@ -77,3 +82,28 @@ export const DOCUMENTS_NOT_FOUND = "No document found.";
 export const DOCUMENT_ALREADY_SUBMITTED =
   "Documents have already been submitted. Please wait for further response.";
 export const FILENAME_MISSING = "File upload failed: filename is missing.";
+export const FETCH_DOCUMENT_SUCCESS = "Document fetched successfully";
+
+// Admin messages
+export const ADMIN_NOT_FOUND = "Admin not found.";
+export const ADMIN_ALREADY_EXISTS = "Admin already exists.";
+export const SUPERADMIN_ONLY = "Only super admin can perform this action.";
+export const ADMIN_REGISTER_SUCCESS = "Admin registered successfully.";
+export const ADMIN_LOGIN_SUCCESS = "Admin logged in successfully.";
+
+// Service messages
+export const SERVICE_ADDED_SUCCESS = "New service added successfully.";
+export const SERVICE_IDS_FOUND = "Service Ids found successfully.";
+export const SERVICE_NOT_FOUND = "Invalid or missing services.";
+export const SERVICE_ALREADY_EXISTS = "Service already exists.";
+export const NO_SERVICE_ID_PROVIDED = "No service id provided";
+export const SERVICE_LIST = "Services list.";
+
+// Pandit messages
+export const PANDIT_REGISTERED = "Pandit registered successfully.";
+export const PANDIT_LOGIN_REQUESTED = "Pandit login requested. Otp sent.";
+export const PANDIT_ALREADY_EXISTS = "Pandit already exists.";
+export const PANDIT_LIST = "Pandits list.";
+export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
+export const STATUS_UPDATED = "Document status has been updated";
+export const PANDIT_UPDATED = "Pandit has been updated.";

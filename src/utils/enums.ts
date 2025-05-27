@@ -1,18 +1,26 @@
 import { registerEnumType } from "type-graphql";
 
 export enum UserRole {
-  CUSTOMER = "CUSTOMER",
+  USER = "USER",
   PANDIT = "PANDIT",
 }
 
 export enum OtpType {
   USER = "USER",
-  FORGET_PASSWORD = "FORGET_PASSWORD",
+  PANDIT = "PANDIT",
+  FORGET_PASSWORD = "FORGET PASSWORD"
 }
 
 export enum OtpStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
+}
+
+export enum PanditStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  SUSPENDED = "suspended",
 }
 
 registerEnumType(UserRole, {
@@ -30,6 +38,11 @@ registerEnumType(OtpType, {
   description: "Type of OTP (User/Admin)",
 });
 
+registerEnumType(PanditStatus, {
+  name: "PanditStatus",
+  description: "Status of pandit approval",
+});
+
 export enum EmailType {
   ACCOUNT_VERIFICATION = "Please verify your account.",
   ACCOUNT_VERIFIED = "Account has been verified.",
@@ -38,6 +51,7 @@ export enum EmailType {
   PANDIT_APPROVED = "Congratulations! documents submitted for pandit verification has been approved",
   PANDIT_SUSPENDED = "Due to some suspicious activities pandit has been suspended.",
   PANDIT_PENDING = "Documents has been submitted. You will receive a response shortly.",
+  PANDIT_LOGIN = "Please use this otp to log into your account."
 }
 
 export enum EmailTemplate {
@@ -48,9 +62,21 @@ export enum EmailTemplate {
   PANDIT_APPROVED = "panditApproved.html",
   PANDIT_SUSPENDED = "panditSuspended.html",
   PANDIT_PENDING = "panditPending.html",
+  PANDIT_LOGIN = "panditLoggin.html",
 }
 
 export enum S3BucketType {
   IMAGE = "image",
   DOCUMENT = "document",
+}
+
+export enum AdminRole {
+  ADMIN = "ADMIN",
+  SUPERADMIN = "SUPERADMIN",
+  USER = "USER",
+}
+
+export enum EmailName {
+  USER = "User",
+  PANDIT = "Pandit ji",
 }

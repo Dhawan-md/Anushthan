@@ -1,16 +1,21 @@
 import { Request, Response } from "express";
 import { JwtPayload } from "jsonwebtoken";
 
-import { UserRole } from "../utils/enums";
+import { AdminRole, UserRole } from "../utils/enums";
 
-export interface CustomJwtPayload extends JwtPayload {
-  userId: string;
-  isVerified: string;
+export interface CustomUserJwtPayload extends JwtPayload {
+  id: string;
   userRole: UserRole;
+}
+
+export interface CustomAdminJwtPayload extends JwtPayload {
+  adminId: string;
+  adminRole: AdminRole;
 }
 
 export interface Context {
   req: Request;
   res: Response;
-  user?: CustomJwtPayload | undefined
+  user?: CustomUserJwtPayload | undefined;
+  admin?: CustomAdminJwtPayload | undefined;
 }

@@ -6,10 +6,14 @@ import {
   CreateDateColumn,
   JoinColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
 
 import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
+import { Service } from "./Service";
+import { PanditStatus } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -23,20 +27,25 @@ export class Pandit {
   @JoinColumn()
   user!: User;
 
-  @Field()
-  @Column()
-  category!: string;
+  @Field(() => [Service])
+  @ManyToMany(() => Service, (service) => service.pandits)
+  @JoinTable()
+  services: Service[];
 
   @Field()
   @Column({ type: "int", default: 0 })
   experience!: number;
 
   @Field()
-  @Column({ type: "double precision", nullable: true })
+  @Column()
+  password!: string;
+
+  @Field()
+  @Column({ type: "double precision", nullable: true, default: 0 })
   latitude?: number;
 
   @Field()
-  @Column({ type: "double precision", nullable: true })
+  @Column({ type: "double precision", nullable: true, default: 0 })
   longitude?: number;
 
   @Field()
@@ -47,12 +56,16 @@ export class Pandit {
   @Column({ default: false, name: "is_available" })
   isAvailable!: boolean;
 
-  @Field()
-  @Column({ type: "boolean", default: false, name: "documents_verified" })
-  documentsVerified!: boolean;
+  @Field(() => String, { nullable: true })
+  @Column({ type: "text", name: "documents", nullable: true })
+  documents: string | null;
+
+  @Field(() => PanditStatus)
+  @Column({ type: "enum", default: PanditStatus.PENDING, enum: PanditStatus })
+  status!: PanditStatus;
 
   @Field()
-  @Column({ type: "decimal", precision: 2, scale: 1, default: 0 })
+  @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
   ratings!: number;
 
   @Field()
