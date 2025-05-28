@@ -40,7 +40,7 @@ import { logger } from "../../utils/logger";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 import { RegisterPanditParams } from "../../utils/interfaces";
-import { LoginPanditDto, VerifyPanditDto } from "../../types/dtos/pandit";
+import { LoginPanditDto, VerifyPanditDto } from "../../types/dtos/Pandit";
 
 @Service()
 export class PanditAuthProvider {

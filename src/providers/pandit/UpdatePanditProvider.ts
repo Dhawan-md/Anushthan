@@ -54,4 +54,6 @@ export class UpdatePanditProvider {
     logger.info(`✅ Successfully updated pandit with ID: ${panditId}`);
     return new SinglePanditResponse(true, PANDIT_UPDATED, updatedPandit);
   }
+
+  
 }

@@ -24,7 +24,7 @@ import {
   ResetPasswordDto,
   VerifyPanditDto,
   VerifyResetPasswordDto,
-} from "../../types/dtos/pandit";
+} from "../../types/dtos/Pandit";
 import { plainToInstance } from "class-transformer";
 
 @Service()

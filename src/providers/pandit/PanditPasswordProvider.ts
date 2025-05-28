@@ -31,7 +31,7 @@ import {
   ForgetPasswordDto,
   ResetPasswordDto,
   VerifyResetPasswordDto,
-} from "../../types/dtos/pandit";
+} from "../../types/dtos/Pandit";
 
 @Service()
 export class PanditPasswordProvider {
