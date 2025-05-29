@@ -35,7 +35,7 @@ export class PanditActionProvider {
   async setPanditApprovalStatus(params: SetPanditApprovalStatusDto) {
     const { panditId, status } = params;
     logger.info(`🔍 Verifying documents for pandit ${panditId}.`);
-    
+
     const panditData = await this.panditInfoProvider.getPandit(
       { id: panditId },
       true
@@ -50,6 +50,11 @@ export class PanditActionProvider {
         };
 
         if (status === PanditStatus.REJECTED) {
+          if (panditData.documents) {
+            await this.updatePanditProvider.deleteDocument(
+              panditData.documents
+            );
+          }
           updatedPanditFields.documents = null;
         } else if (status === PanditStatus.APPROVED) {
           await this.updateUserProvider.updateUser(

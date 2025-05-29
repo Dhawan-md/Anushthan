@@ -12,6 +12,9 @@ import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { logger } from "../../utils/logger";
 import { NO_DATA_TO_UPDATE, PANDIT_UPDATED } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
+import { getBucketName } from "../../utils/getBucketName";
+import { S3BucketType } from "../../utils/enums";
+import { deleteS3File } from "../../helpers/deleteS3file";
 
 @Service()
 export class UpdatePanditProvider {
@@ -55,5 +58,17 @@ export class UpdatePanditProvider {
     return new SinglePanditResponse(true, PANDIT_UPDATED, updatedPandit);
   }
 
-  
+  async deleteDocument(filePathArray: string): Promise<void> {
+    logger.info(`🔍 Fetching pandit documents from S3.`);
+    let parsedFilePathArray = JSON.parse(filePathArray);
+    const bucketName = getBucketName(S3BucketType.DOCUMENT);
+
+    await Promise.all(
+      parsedFilePathArray.map((filePath: string) => {
+        return deleteS3File(bucketName, filePath);
+      })
+    );
+
+    logger.info(`✅ Retrieved pandit documents from S3.`);
+  }
 }

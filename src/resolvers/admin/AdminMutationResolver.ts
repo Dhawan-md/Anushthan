@@ -19,6 +19,7 @@ import {
 } from "../../types/dtos/Admin";
 import { AddServiceInput } from "../../types/inputTypes/admin/AddServiceInput";
 import { SetPanditApprovalStatusInput } from "../../types/inputTypes/admin/SetPanditApprovalStatusInput";
+import { LoginAdminInput } from "../../types/inputTypes/admin/LoginAdminInput";
 
 @Service()
 @Resolver()
@@ -40,7 +41,7 @@ export class AdminMutationResolver {
   }
 
   @Mutation(() => SingleAdminResponse)
-  async loginAdmin(@Arg("data") data: RegisterAdminInput) {
+  async loginAdmin(@Arg("data") data: LoginAdminInput) {
     const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
 
     return this.adminAuthProvider.loginAdmin(dto);

@@ -39,8 +39,7 @@ import {
 import { logger } from "../../utils/logger";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
-import { RegisterPanditParams } from "../../utils/interfaces";
-import { LoginPanditDto, VerifyPanditDto } from "../../types/dtos/Pandit";
+import { LoginPanditDto, RegisterPanditDto, VerifyPanditDto } from "../../types/dtos/Pandit";
 
 @Service()
 export class PanditAuthProvider {
@@ -61,7 +60,7 @@ export class PanditAuthProvider {
   }
 
   async registerPandit(
-    params: RegisterPanditParams
+    params: RegisterPanditDto
   ): Promise<SinglePanditResponse> {
     logger.info(
       `🔄Processing register Pandit request for user with userId : ${params.userId}`
@@ -158,7 +157,8 @@ export class PanditAuthProvider {
     logger.info(
       `🔄 Verification request received for pandit with email: ${userEmail}`
     );
-
+    console.log(userEmail);
+    
     const panditData = await this.panditInfoProvider.getPandit({
       userEmail,
     });
