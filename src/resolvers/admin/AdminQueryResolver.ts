@@ -10,7 +10,12 @@ import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
 
-import { AdminRole, PanditStatus } from "../../utils/enums";
+import { AdminRole } from "../../utils/enums";
+import { GetAllPanditsInput } from "../../types/inputTypes/admin/GetAllPanditsInput";
+import { plainToInstance } from "class-transformer";
+import { GetAllPanditsDto, PaginationDto } from "../../types/dtos/Admin";
+import { PaginationInput } from "../../types/inputTypes/admin/PaginationInput";
+import { GetDocumentInput } from "../../types/inputTypes/admin/GetDocumentInput";
 
 @Service()
 @Resolver()
@@ -27,38 +32,38 @@ export class AminQueryResolver {
   @Query(() => MultiplePanditResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async getAllPandits(
-    @Arg("page", { nullable: true }) page?: number,
-    @Arg("limit", { nullable: true }) limit?: number,
-    @Arg("status", { nullable: true }) status?: PanditStatus
+    @Arg("data", () => GetAllPanditsInput, { nullable: true })
+    data?: GetAllPanditsInput
   ): Promise<MultiplePanditResponse> {
-    return this.panditInfoProvider.getAllPandits(page, limit, status);
+    const dto = plainToInstance(GetAllPanditsDto, data || {});
+    return this.panditInfoProvider.getAllPandits(dto);
   }
 
   @Query(() => MultipleUserResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async getAllUsers(
-    @Arg("page", { nullable: true }) page?: number,
-    @Arg("limit", { nullable: true }) limit?: number
+    @Arg("data", () => PaginationInput, { nullable: true })
+    data?: PaginationInput
   ): Promise<MultipleUserResponse> {
-    const users = await this.userInfoProvider.getAllUsers(page, limit);
-
-    return users;
+    const dto = plainToInstance(PaginationDto, data || {});
+    return this.userInfoProvider.getAllUsers(dto);
   }
 
   @Query(() => MultipleServiceResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async getAllServices(
-    @Arg("page", { nullable: true }) page?: number,
-    @Arg("limit", { nullable: true }) limit?: number
+    @Arg("data", () => PaginationInput, { nullable: true })
+    data?: PaginationInput
   ): Promise<MultipleServiceResponse> {
-    return this.serviceProvider.getAllServices(page, limit);
+    const dto = plainToInstance(PaginationDto, data || {});
+    return this.serviceProvider.getAllServices(dto);
   }
 
   @Query(() => MultipleDocumentResponse)
   @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
   async getDocument(
-    @Arg("filePathArray") filePathArray: string
+    @Arg("data") data: GetDocumentInput
   ): Promise<MultipleDocumentResponse> {
-    return this.panditInfoProvider.getDocument(filePathArray);
+    return this.panditInfoProvider.getDocument(data.filePathArray);
   }
 }

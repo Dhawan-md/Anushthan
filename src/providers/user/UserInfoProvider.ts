@@ -14,6 +14,7 @@ import {
   USER_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
+import { PaginationDto } from "../../types/dtos/Admin";
 
 @Service()
 export class UserInfoProvider {
@@ -23,10 +24,8 @@ export class UserInfoProvider {
     this.userInfoRepository = this.repositoryFactory.getRepository(User);
   }
 
-  async getAllUsers(
-    page: number = 1,
-    limit: number = 10
-  ): Promise<MultipleUserResponse> {
+  async getAllUsers(params: PaginationDto): Promise<MultipleUserResponse> {
+    const { page = 1, limit = 1 } = params;
     logger.info(`🔄 Fetching users for page ${page} with limit ${limit}`);
 
     const [userList, total] = await this.userInfoRepository.findAndCount({
@@ -60,7 +59,7 @@ export class UserInfoProvider {
     if (isExisting) {
       logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
       throw new CustomError(USER_ALREADY_EXISTS);
-    }    
+    }
   }
 
   async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
@@ -68,11 +67,11 @@ export class UserInfoProvider {
     logger.info(
       `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
-
+    
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { userEmail: normalizedEmail }],
     });
-
+    
     if (!userData) {
       logger.warn(
         `❌ No user found with email or id: ${normalizedEmail || params.id}`

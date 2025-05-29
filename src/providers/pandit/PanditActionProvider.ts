@@ -14,6 +14,7 @@ import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { PanditStatus, UserRole } from "../../utils/enums";
 import { logger } from "../../utils/logger";
 import { STATUS_UPDATED } from "../../utils/messages";
+import { SetPanditApprovalStatusDto } from "../../types/dtos/Admin";
 
 @Service()
 export class PanditActionProvider {
@@ -31,8 +32,10 @@ export class PanditActionProvider {
     this.panditActionRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
-  async setPanditApprovalStatus(panditId: string, status: PanditStatus) {
+  async setPanditApprovalStatus(params: SetPanditApprovalStatusDto) {
+    const { panditId, status } = params;
     logger.info(`🔍 Verifying documents for pandit ${panditId}.`);
+
     const panditData = await this.panditInfoProvider.getPandit(
       { id: panditId },
       true
@@ -47,6 +50,11 @@ export class PanditActionProvider {
         };
 
         if (status === PanditStatus.REJECTED) {
+          if (panditData.documents) {
+            await this.updatePanditProvider.deleteDocument(
+              panditData.documents
+            );
+          }
           updatedPanditFields.documents = null;
         } else if (status === PanditStatus.APPROVED) {
           await this.updateUserProvider.updateUser(

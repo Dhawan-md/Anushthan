@@ -20,7 +20,7 @@ import {
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
 import { validateFoundIds } from "../../utils/validateFoundIds";
-import { AddServiceParams } from "../../utils/interfaces";
+import { AddServiceDto, PaginationDto } from "../../types/dtos/Admin";
 
 @Service()
 export class ServiceProvider {
@@ -45,9 +45,9 @@ export class ServiceProvider {
   }
 
   async getAllServices(
-    page: number = 1,
-    limit: number = 10
+    params: PaginationDto
   ): Promise<MultipleServiceResponse> {
+    const { page = 1, limit = 10 } = params;
     logger.info(`🔄 Fetching services for page ${page} with limit ${limit}`);
 
     const [serviceList, total] = await this.serviceRepository.findAndCount({
@@ -71,7 +71,7 @@ export class ServiceProvider {
     );
   }
 
-  async addService(params: AddServiceParams): Promise<SingleServiceResponse> {
+  async addService(params: AddServiceDto): Promise<SingleServiceResponse> {
     const { name } = params;
     logger.info(`📩 Received request to add new service: ${name}`);
 
