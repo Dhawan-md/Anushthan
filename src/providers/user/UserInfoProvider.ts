@@ -67,7 +67,6 @@ export class UserInfoProvider {
     logger.info(
       `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
-    console.log(normalizedEmail);
     
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { userEmail: normalizedEmail }],

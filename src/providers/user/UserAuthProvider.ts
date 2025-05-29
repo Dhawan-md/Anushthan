@@ -128,7 +128,6 @@ export class UserAuthProvider {
     const { userEmail, otpCode } = params;
     
     logger.info(`🔄 Verification request received for: ${userEmail}`);
-    console.log(userEmail);
     
     const userData = await this.userInfoProvider.getUser({
       userEmail,

@@ -125,7 +125,6 @@ export class PanditInfoProvider {
 
   async getDocument(filePathArray: string): Promise<MultipleDocumentResponse> {
     logger.info(`🔍 Fetching pandit documents from S3.`);
-    console.log(filePathArray);
     let parsedFilePathArray = JSON.parse(filePathArray);
     
     let signedUrls = await Promise.all(

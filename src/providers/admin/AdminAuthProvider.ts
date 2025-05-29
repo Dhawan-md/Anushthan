@@ -16,7 +16,7 @@ import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { logger } from "../../utils/logger";
 import { AdminInfoProvider } from "./AdminInfoProvider";
-import { RegisterAdminDto } from "../../types/dtos/Admin";
+import { LoginAdminDto, RegisterAdminDto } from "../../types/dtos/Admin";
 
 @Service()
 export class AdminAuthProvider {
@@ -53,7 +53,7 @@ export class AdminAuthProvider {
     return new SingleAdminResponse(true, ADMIN_REGISTER_SUCCESS);
   }
 
-  async loginAdmin(params: RegisterAdminDto): Promise<SingleAdminResponse> {
+  async loginAdmin(params: LoginAdminDto): Promise<SingleAdminResponse> {
     const { email, password } = params;
     logger.info(`🔄Logging in admin with email: ${email}.`);
     

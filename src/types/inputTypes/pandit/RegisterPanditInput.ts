@@ -19,3 +19,4 @@ export class RegisterPanditInput {
   @Field()
   address: string;
 }
+
