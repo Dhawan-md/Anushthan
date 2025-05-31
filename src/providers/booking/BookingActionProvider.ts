@@ -29,6 +29,20 @@ export class BookingActionProvider {
   async placeBooking(params: placeBookingDto): Promise<SingleBookingResponse> {
     logger.info(`📥 Placing a new booking for userId: ${params.userId}`);
 
+    const isDuplicate = await this.bookingInfoProvider.isDuplicateBooking(
+      params
+    );
+
+    if (isDuplicate) {
+      logger.warn(
+        `⚠️ Duplicate booking attempt detected for userId: ${params.userId}`
+      );
+      return new SingleBookingResponse(
+        false,
+        "You already have a pending booking for these services at this time."
+      );
+    }
+
     const booking = await this.bookingActionRepository.save({
       ...params,
       estimatedTime: 100,

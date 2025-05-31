@@ -1,5 +1,6 @@
 import { Service } from "typedi";
 import { Repository } from "typeorm";
+import isEqual from "lodash/isEqual";
 
 import { Booking } from "../../entities/Booking";
 
@@ -8,8 +9,9 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
-import { MyBookingsDto } from "../../types/dtos/booking";
+import { MyBookingsDto, placeBookingDto } from "../../types/dtos/booking";
 import { CustomError } from "../../utils/customError";
+import { BookingStatus } from "../../utils/enums";
 
 @Service()
 export class BookingInfoProvider {
@@ -63,5 +65,27 @@ export class BookingInfoProvider {
     logger.info(`✅ Found booking details for ID: ${id}`);
 
     return bookingDetails;
+  }
+
+  async isDuplicateBooking(params: placeBookingDto): Promise<boolean> {
+    logger.info(
+      `🔍 Checking for duplicate booking for userId: ${params.userId}`
+    );
+
+    const possibleConflicts = await this.BookingInfoRepository.find({
+      where: {
+        userId: params.userId,
+        scheduledTime: params.scheduledTime,
+        status: BookingStatus.PENDING,
+      },
+    });
+
+    logger.info(
+      `📋 Found ${possibleConflicts.length} existing pending bookings at the same time.`
+    );
+
+    return possibleConflicts.some((b) =>
+      isEqual([...(b.serviceIds || [])].sort(), [...params.serviceIds].sort())
+    );
   }
 }
