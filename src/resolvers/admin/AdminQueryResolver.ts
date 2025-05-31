@@ -14,7 +14,7 @@ import { AdminRole } from "../../utils/enums";
 import { GetAllPanditsInput } from "../../types/inputTypes/admin/GetAllPanditsInput";
 import { plainToInstance } from "class-transformer";
 import { GetAllPanditsDto, PaginationDto } from "../../types/dtos/Admin";
-import { PaginationInput } from "../../types/inputTypes/admin/PaginationInput";
+import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { GetDocumentInput } from "../../types/inputTypes/admin/GetDocumentInput";
 
 @Service()

@@ -25,7 +25,7 @@ export class UserInfoProvider {
   }
 
   async getAllUsers(params: PaginationDto): Promise<MultipleUserResponse> {
-    const { page = 1, limit = 1 } = params;
+    const { page = 1, limit = 10 } = params;
     logger.info(`🔄 Fetching users for page ${page} with limit ${limit}`);
 
     const [userList, total] = await this.userInfoRepository.findAndCount({

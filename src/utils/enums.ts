@@ -8,7 +8,7 @@ export enum UserRole {
 export enum OtpType {
   USER = "USER",
   PANDIT = "PANDIT",
-  FORGET_PASSWORD = "FORGET PASSWORD"
+  FORGET_PASSWORD = "FORGET PASSWORD",
 }
 
 export enum OtpStatus {
@@ -22,6 +22,15 @@ export enum PanditStatus {
   REJECTED = "rejected",
   SUSPENDED = "suspended",
 }
+
+export enum BookingStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+registerEnumType(BookingStatus, { name: "BookingStatus" });
 
 registerEnumType(UserRole, {
   name: "UserRole",
@@ -51,7 +60,7 @@ export enum EmailType {
   PANDIT_APPROVED = "Congratulations! documents submitted for pandit verification has been approved",
   PANDIT_SUSPENDED = "Due to some suspicious activities pandit has been suspended.",
   PANDIT_PENDING = "Documents has been submitted. You will receive a response shortly.",
-  PANDIT_LOGIN = "Please use this otp to log into your account."
+  PANDIT_LOGIN = "Please use this otp to log into your account.",
 }
 
 export enum EmailTemplate {

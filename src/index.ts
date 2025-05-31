@@ -28,6 +28,7 @@ import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
 import { AdminMutationResolver } from "./resolvers/admin/AdminMutationResolver";
 import { PanditMutationResolver } from "./resolvers/pandit/PanditMutationResolver";
 import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
+import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -40,7 +41,8 @@ const createApp = async () => {
       OtpMutationResolver,
       AdminMutationResolver,
       PanditMutationResolver,
-      AminQueryResolver
+      AminQueryResolver,
+      BookingMutationResolver
     ],
     authChecker: authChecker,
     container: Container,

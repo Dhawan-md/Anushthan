@@ -46,6 +46,7 @@ export const LOGIN_SUCCESSFUL = "Login successful.";
 export const LOGIN_REQUESTED = "Login requested. Otp has been sent.";
 export const PHONE_NUMBER_REQUIRED =
   "Phone Number Required! Phone number field cannot be empty.";
+export const USER_ONLY = "Only Users can perform this action.";
 
 // OTP messages
 export const VALID_OTP = "OTP is valid.";
@@ -107,3 +108,4 @@ export const PANDIT_LIST = "Pandits list.";
 export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
 export const STATUS_UPDATED = "Document status has been updated";
 export const PANDIT_UPDATED = "Pandit has been updated.";
+export const PANDIT_ONLY = "Only Pandit can perform this action.";
