@@ -3,6 +3,8 @@ import { Repository } from "typeorm";
 
 import { Booking } from "../../entities/Booking";
 
+import { BookingInfoProvider } from "./BookingInfoProvider";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { logger } from "../../utils/logger";
@@ -10,7 +12,6 @@ import { logger } from "../../utils/logger";
 import { SingleBookingResponse } from "../../types/responses/BookingResponse";
 import { acceptBookingDto, placeBookingDto } from "../../types/dtos/booking";
 import { BookingStatus } from "../../utils/enums";
-import { BookingInfoProvider } from "./BookingInfoProvider";
 import { CustomError } from "../../utils/customError";
 
 @Service()
@@ -37,8 +38,8 @@ export class BookingActionProvider {
       logger.warn(
         `⚠️ Duplicate booking attempt detected for userId: ${params.userId}`
       );
-      return new SingleBookingResponse(
-        false,
+      
+      throw new CustomError(
         "You already have a pending booking for these services at this time."
       );
     }

@@ -72,6 +72,11 @@ export class BookingInfoProvider {
       `🔍 Checking for duplicate booking for userId: ${params.userId}`
     );
 
+    if (!params.serviceIds || params.serviceIds.length === 0) {
+      logger.warn(`⚠️ No serviceIds provided for duplicate check.`);
+      throw new CustomError("No serviceIds provided for duplicate check.");
+    }
+
     const possibleConflicts = await this.BookingInfoRepository.find({
       where: {
         userId: params.userId,
@@ -84,8 +89,19 @@ export class BookingInfoProvider {
       `📋 Found ${possibleConflicts.length} existing pending bookings at the same time.`
     );
 
-    return possibleConflicts.some((b) =>
-      isEqual([...(b.serviceIds || [])].sort(), [...params.serviceIds].sort())
-    );
+    const sortedInputIds = [...params.serviceIds].sort();
+
+    const hasDuplicate = possibleConflicts.some((b) => {
+      const existingIds = [...(b.serviceIds || [])].sort();
+      const isMatch = isEqual(existingIds, sortedInputIds);
+      if (isMatch) {
+        logger.info(
+          `⚠️ Duplicate booking found with serviceIds: ${existingIds}`
+        );
+      }
+      return isMatch;
+    });
+
+    return hasDuplicate;
   }
 }

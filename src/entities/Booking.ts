@@ -1,4 +1,3 @@
-// entities/Booking.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,13 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Field, ObjectType, ID } from "type-graphql";
+import { Field, ObjectType } from "type-graphql";
 import { BookingStatus } from "../utils/enums";
 
 @ObjectType()
 @Entity()
 export class Booking {
-  @Field(() => ID)
+  @Field()
   @PrimaryGeneratedColumn("uuid")
   id: string;
 

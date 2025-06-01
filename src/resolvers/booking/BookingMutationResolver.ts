@@ -5,8 +5,8 @@ import {
   Arg,
   Ctx,
   Authorized,
-  // Query,
 } from "type-graphql";
+import { plainToInstance } from "class-transformer";
 
 import { BookingActionProvider } from "../../providers/booking/BookingActionProvider";
 
@@ -22,7 +22,6 @@ import {
 } from "../../utils/messages";
 import { UserRole } from "../../utils/enums";
 import { acceptBookingDto, placeBookingDto } from "../../types/dtos/booking";
-import { plainToInstance } from "class-transformer";
 
 @Service()
 @Resolver()

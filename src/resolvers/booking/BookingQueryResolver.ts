@@ -28,6 +28,7 @@ export class BookingQueryResolver {
     @Ctx() ctx: Context
   ): Promise<MultipleBookingResponse> {
     const userId = ctx.user?.id;
+    
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
     const dto: MyBookingsDto = plainToInstance(MyBookingsDto, {
