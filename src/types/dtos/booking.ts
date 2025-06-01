@@ -1,8 +1,8 @@
-import { PaginationDto } from "./Admin";
+import { PaginationDto } from "./Pagination";
 
 export class placeBookingDto {
   serviceIds: string[];
-  scheduledTime: Date;
+  timeSlot: Date;
   location: string;
   totalPrice: number;
   userId: string;
@@ -14,5 +14,5 @@ export class acceptBookingDto {
 }
 
 export class MyBookingsDto extends PaginationDto {
-  id: string
+  id: string;
 }

@@ -36,8 +36,8 @@ export class Booking {
   status: BookingStatus;
 
   @Field()
-  @Column({ name: "scheduled_time" })
-  scheduledTime: Date;
+  @Column({ name: "time_slot" })
+  timeSlot: Date;
 
   @Field()
   @Column("float", { name: "total_price" })

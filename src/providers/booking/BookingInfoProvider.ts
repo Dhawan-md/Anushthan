@@ -80,7 +80,7 @@ export class BookingInfoProvider {
     const possibleConflicts = await this.BookingInfoRepository.find({
       where: {
         userId: params.userId,
-        scheduledTime: params.scheduledTime,
+        timeSlot: params.timeSlot,
         status: BookingStatus.PENDING,
       },
     });

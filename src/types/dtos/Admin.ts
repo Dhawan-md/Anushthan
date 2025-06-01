@@ -1,4 +1,5 @@
 import { PanditStatus } from "../../utils/enums";
+import { PaginationDto } from "./Pagination";
 
 export class RegisterAdminDto {
   fullName: string;
@@ -16,16 +17,12 @@ export class AddServiceDto {
   description: string;
   price: number;
   duration: number;
+  categoryId: string;
 }
 
 export class SetPanditApprovalStatusDto {
   panditId: string;
   status: PanditStatus;
-}
-
-export class PaginationDto {
-  page?: number;
-  limit?: number;
 }
 
 export class GetAllPanditsDto extends PaginationDto {

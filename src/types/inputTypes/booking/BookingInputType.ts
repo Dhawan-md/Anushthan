@@ -6,7 +6,7 @@ export class BookingInput {
   serviceIds: string[];
 
   @Field()
-  scheduledTime: Date;
+  timeSlot: Date;
 
   @Field()
   location: string;

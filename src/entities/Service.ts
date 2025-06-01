@@ -3,12 +3,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
 import { Pandit } from "./Pandit";
+import { Category } from "./Category";
 
 @ObjectType()
 @Entity()
@@ -36,6 +39,11 @@ export class Service {
   @Field(() => [Pandit], { nullable: true })
   @ManyToMany(() => Pandit, (pandit) => pandit.services)
   pandits!: Pandit[];
+
+  @Field(() => Category)
+  @ManyToOne(() => Category, (category) => category.services)
+  @JoinColumn({ name: "category_id" }) // Optional: customize DB column name
+  category!: Category;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

@@ -14,7 +14,7 @@ import {
   USER_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
-import { PaginationDto } from "../../types/dtos/Admin";
+import { PaginationDto } from "../../types/dtos/Pagination";
 
 @Service()
 export class UserInfoProvider {

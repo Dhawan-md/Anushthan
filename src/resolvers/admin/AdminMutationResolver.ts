@@ -3,7 +3,7 @@ import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
 import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
-import { ServiceProvider } from "../../providers/service/ServiceProvider";
+import { ServiceActionProvider } from "../../providers/service/ServiceActionProvider";
 import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
 
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
@@ -17,9 +17,12 @@ import {
   RegisterAdminDto,
   SetPanditApprovalStatusDto,
 } from "../../types/dtos/Admin";
-import { AddServiceInput } from "../../types/inputTypes/admin/AddServiceInput";
+import { AddServiceInput } from "../../types/inputTypes/service/AddServiceInput";
 import { SetPanditApprovalStatusInput } from "../../types/inputTypes/admin/SetPanditApprovalStatusInput";
 import { LoginAdminInput } from "../../types/inputTypes/admin/LoginAdminInput";
+import { CategoryActionProvier } from "../../providers/category/CategoryActionProvider";
+import { SingleCategoryResponse } from "../../types/responses/CategoryResponse";
+import { AddCategoryInput } from "../../types/inputTypes/category/AddCategoryInput";
 
 @Service()
 @Resolver()
@@ -27,9 +30,11 @@ export class AdminMutationResolver {
   constructor(
     @Inject(() => AdminAuthProvider)
     private adminAuthProvider: AdminAuthProvider,
-    @Inject(() => ServiceProvider) private serviceProvider: ServiceProvider,
+    @Inject(() => ServiceActionProvider) private serviceProvider: ServiceActionProvider,
     @Inject(() => PanditActionProvider)
-    private panditActionProvider: PanditActionProvider
+    private panditActionProvider: PanditActionProvider,
+    @Inject(() => CategoryActionProvier)
+    private categoryActionProvider: CategoryActionProvier
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -55,6 +60,15 @@ export class AdminMutationResolver {
     const dto = plainToInstance(AddServiceDto, data);
 
     return this.serviceProvider.addService(dto);
+  }
+
+  @Mutation(() => SingleCategoryResponse)
+  @Authorized([AdminRole.SUPERADMIN, AdminRole.ADMIN])
+  async addCategory(
+    @Arg("data") data: AddCategoryInput
+  ): Promise<SingleCategoryResponse> {
+    
+    return this.categoryActionProvider.addCategory(data.name);
   }
 
   @Mutation(() => SinglePanditResponse)

@@ -5,35 +5,32 @@ import { Service as ServiceEntity } from "../../entities/Service";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import {
-  MultipleServiceResponse,
-  SingleServiceResponse,
-} from "../../types/responses/ServiceResponse";
+import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 
+import { validateFoundIds } from "../../utils/validateFoundIds";
+import { logger } from "../../utils/logger";
+
+import { CustomError } from "../../utils/customError";
 import {
   NO_SERVICE_ID_PROVIDED,
-  SERVICE_ADDED_SUCCESS,
   SERVICE_ALREADY_EXISTS,
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
-import { CustomError } from "../../utils/customError";
-import { logger } from "../../utils/logger";
-import { validateFoundIds } from "../../utils/validateFoundIds";
-import { AddServiceDto, PaginationDto } from "../../types/dtos/Admin";
+import { GetServiceDto } from "../../types/dtos/service";
 
 @Service()
-export class ServiceProvider {
-  private serviceRepository: Repository<ServiceEntity>;
+export class ServiceInfoProvider {
+  private serviceInfoRepository: Repository<ServiceEntity>;
 
   constructor(private repositoryFactory: RepositoryFactory) {
-    this.serviceRepository =
+    this.serviceInfoRepository =
       this.repositoryFactory.getRepository(ServiceEntity);
   }
 
-  private async checkServiceExists(name: string) {
+  async checkServiceExists(name: string) {
     logger.info(`🔍 Searching for service with name: ${name}`);
-    const isExisting = await this.serviceRepository
+    const isExisting = await this.serviceInfoRepository
       .createQueryBuilder("service")
       .where("LOWER(service.name) = :name", { name: name.toLowerCase() })
       .getExists();
@@ -45,12 +42,12 @@ export class ServiceProvider {
   }
 
   async getAllServices(
-    params: PaginationDto
+    params: GetServiceDto
   ): Promise<MultipleServiceResponse> {
     const { page = 1, limit = 10 } = params;
     logger.info(`🔄 Fetching services for page ${page} with limit ${limit}`);
 
-    const [serviceList, total] = await this.serviceRepository.findAndCount({
+    const [serviceList, total] = await this.serviceInfoRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -71,20 +68,6 @@ export class ServiceProvider {
     );
   }
 
-  async addService(params: AddServiceDto): Promise<SingleServiceResponse> {
-    const { name } = params;
-    logger.info(`📩 Received request to add new service: ${name}`);
-
-    await this.checkServiceExists(name);
-
-    const service = this.serviceRepository.create(params);
-
-    await this.serviceRepository.save(service);
-
-    logger.info(`✅ New service added: ${service.name} (ID: ${service.id})`);
-    return new SingleServiceResponse(true, SERVICE_ADDED_SUCCESS, service);
-  }
-
   async getServices(serviceIds: string[]): Promise<MultipleServiceResponse> {
     logger.info(
       `📩 Received request to fetch services with IDs: ${serviceIds.join(", ")}`
@@ -94,7 +77,7 @@ export class ServiceProvider {
       throw new CustomError(NO_SERVICE_ID_PROVIDED);
     }
 
-    const services = await this.serviceRepository.find({
+    const services = await this.serviceInfoRepository.find({
       where: { id: In(serviceIds) },
     });
 
