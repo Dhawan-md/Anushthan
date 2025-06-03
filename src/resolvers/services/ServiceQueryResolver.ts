@@ -6,8 +6,9 @@ import { ServiceInfoProvider } from "../../providers/service/ServiceInfoProvider
 
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 
-import { GetServiceInput } from "../../types/inputTypes/service/GetServiceInput";
-import { GetServiceDto } from "../../types/dtos/service";
+import { GetServicesInput } from "../../types/inputTypes/service/GetServiceInput";
+import { GetServicesDto } from "../../types/dtos/service";
+import { AdminRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -17,13 +18,14 @@ export class ServiceQueryResolver {
     private serviceInfoProvider: ServiceInfoProvider
   ) {}
 
+  @Authorized(AdminRole.USER)
   @Query(() => MultipleServiceResponse)
-  @Authorized()
-  async getServices(
-    @Arg("data", () => GetServiceInput, { nullable: true })
-    data?: GetServiceInput
+  async getAllServices(
+    @Arg("data", () => GetServicesInput, { nullable: true })
+    data?: GetServicesInput
   ): Promise<MultipleServiceResponse> {
-    const dto = plainToInstance(GetServiceDto, data || {});
+    const dto = plainToInstance(GetServicesDto, data || {});
+
     return this.serviceInfoProvider.getAllServices(dto);
   }
 }

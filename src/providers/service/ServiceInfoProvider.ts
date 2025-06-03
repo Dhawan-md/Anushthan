@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { In, Repository } from "typeorm";
+import { FindOptionsWhere, In, Repository } from "typeorm";
 
 import { Service as ServiceEntity } from "../../entities/Service";
 
@@ -17,7 +17,7 @@ import {
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
-import { GetServiceDto } from "../../types/dtos/service";
+import { GetServicesDto } from "../../types/dtos/service";
 
 @Service()
 export class ServiceInfoProvider {
@@ -42,12 +42,42 @@ export class ServiceInfoProvider {
   }
 
   async getAllServices(
-    params: GetServiceDto
+    params: GetServicesDto
   ): Promise<MultipleServiceResponse> {
-    const { page = 1, limit = 10 } = params;
+    const { page = 1, limit = 10, filters } = params;
     logger.info(`🔄 Fetching services for page ${page} with limit ${limit}`);
 
+    const where: FindOptionsWhere<ServiceEntity> = {};
+
+    if (filters) {
+      // category filter
+      if (filters.categoryId) {
+        where.category = {
+          id: filters.categoryId,
+        };
+      }
+
+      // Duration filtering
+      // if(filters.minDuration && filters.maxDuration){
+      //   where.price = Between(filters.minDuration, filters.maxDuration)
+      // }else if(filters.minDuration){
+      //   where.duration = MoreThanOrEqual(filters.minDuration);
+      // }
+      // else if(filters.maxDuration){
+      //   where.duration = LessThanOrEqual(filters.maxDuration)
+      // }
+
+      // Price Filtering
+      // if (filters.minPrice !== undefined && filters.maxPrice !== undefined) {
+      //   where.price = Between(filters.minPrice, filters.maxPrice);
+      // } else if (filters.minPrice !== undefined) {
+      //   where.price = MoreThanOrEqual(filters.minPrice);
+      // } else if (filters.maxPrice !== undefined) {
+      //   where.price = LessThanOrEqual(filters.maxPrice);
+      // }
+    }
     const [serviceList, total] = await this.serviceInfoRepository.findAndCount({
+      where,
       skip: (page - 1) * limit,
       take: limit,
     });

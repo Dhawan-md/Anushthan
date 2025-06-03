@@ -4,7 +4,7 @@ import { PaginationInput } from "../PaginationInput";
 import { FiltersInput } from "./FiltersInput";
 
 @InputType()
-export class GetServiceInput extends PaginationInput {
+export class GetServicesInput extends PaginationInput {
   @Field(() => FiltersInput, { nullable: true })
   filters?: FiltersInput;
 }

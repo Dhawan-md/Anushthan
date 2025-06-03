@@ -30,6 +30,7 @@ import { PanditMutationResolver } from "./resolvers/pandit/PanditMutationResolve
 import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
+import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -44,7 +45,8 @@ const createApp = async () => {
       PanditMutationResolver,
       AminQueryResolver,
       BookingMutationResolver,
-      ServiceQueryResolver
+      ServiceQueryResolver,
+      CategoryQueryResolver
     ],
     authChecker: authChecker,
     container: Container,
