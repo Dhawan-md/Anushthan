@@ -5,8 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Field, ObjectType } from "type-graphql";
-import { BookingStatus } from "../utils/enums";
+import { Field, Float, Int, ObjectType } from "type-graphql";
+import { BookingStatus, PaymentMethod } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -15,8 +15,8 @@ export class Booking {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Field({ nullable: true })
-  @Column({ name: "user_id", nullable: true })
+  @Field()
+  @Column({ name: "user_id" })
   userId: string;
 
   @Field({ nullable: true })
@@ -32,20 +32,57 @@ export class Booking {
   location: string;
 
   @Field(() => BookingStatus)
-  @Column({ type: "enum", enum: BookingStatus, default: BookingStatus.PENDING })
+  @Column({
+    type: "enum",
+    enum: BookingStatus,
+    default: BookingStatus.PENDING,
+  })
   status: BookingStatus;
 
   @Field()
-  @Column({ name: "time_slot" })
+  @Column({ name: "time_slot", type: "timestamp" })
   timeSlot: Date;
 
-  @Field()
+  @Field(() => Float)
   @Column("float", { name: "total_price" })
   totalPrice: number;
 
-  @Field()
+  @Field(() => Int)
   @Column({ name: "estimated_time" })
   estimatedTime: number;
+
+  @Field()
+  @Column({ default: false })
+  paid: boolean;
+
+  @Field(() => PaymentMethod)
+  @Column({
+    name: "payment_method",
+    type: "enum",
+    enum: PaymentMethod,
+    default: PaymentMethod.UPI
+  })
+  paymentMethod: PaymentMethod; // Consider using enum
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  transactionId?: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: "timestamp" })
+  cancelledAt?: Date;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: "timestamp" })
+  completedAt?: Date;
+
+  @Field({ nullable: true })
+  @Column("float", { nullable: true })
+  rating?: number;
+
+  @Field({ nullable: true })
+  @Column("text", { nullable: true })
+  review?: string;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })
@@ -54,4 +91,8 @@ export class Booking {
   @Field()
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
+
+  @Field({ nullable: true })
+  @Column({ name: "cancellation_id", nullable: true })
+  cancellationId?: string;
 }

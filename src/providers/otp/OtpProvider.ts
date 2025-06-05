@@ -23,7 +23,7 @@ import { OtpToken } from "../../types/globalTypes";
 import { sendEmail } from "../../service/email/sendEmail";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
 import { User } from "../../entities/User";
-import { ResendOtpDto } from "../../types/dtos/otp";
+import { ResendOtpDto } from "../../types/dtos/Otp";
 
 @Service()
 export class OtpProvider {

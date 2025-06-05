@@ -11,8 +11,8 @@ import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 import { Context } from "../../types/context";
 import { promiseTimeout } from "../../utils/promiseTimeout";
 import { CustomError } from "../../utils/customError";
-import { PANDIT_ALREADY_EXISTS, UNAUTHORIZED } from "../../utils/messages";
-import { AdminRole, UserRole } from "../../utils/enums";
+import { UNAUTHORIZED } from "../../utils/messages";
+import { UserRole } from "../../utils/enums";
 import { RegisterPanditInput } from "../../types/inputTypes/pandit/RegisterPanditInput";
 import { LoginPanditInput } from "../../types/inputTypes/pandit/LoginPanditInput";
 import { EmailInput } from "../../types/inputTypes/EmailInput";
@@ -38,17 +38,14 @@ export class PanditMutationResolver {
   ) {}
 
   @Mutation(() => SinglePanditResponse)
-  @Authorized(AdminRole.USER)
+  @Authorized(UserRole.USER)
   async registerPandit(
     @Arg("data") data: RegisterPanditInput,
     @Ctx() ctx: Context
   ): Promise<SinglePanditResponse> {
     const userId = ctx.user?.id;
-    const userRole = ctx.user?.userRole;
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
-    if (userRole === UserRole.PANDIT)
-      throw new CustomError(PANDIT_ALREADY_EXISTS);
 
     const resolvedDocument: FileUpload[] = [];
     for (const docPromise of data.documents) {

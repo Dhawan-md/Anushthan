@@ -1,27 +1,23 @@
 import { Inject, Service } from "typedi";
-import {
-  Resolver,
-  Mutation,
-  Arg,
-  Ctx,
-  Authorized,
-} from "type-graphql";
+import { Resolver, Mutation, Arg, Ctx, Authorized } from "type-graphql";
 import { plainToInstance } from "class-transformer";
 
 import { BookingActionProvider } from "../../providers/booking/BookingActionProvider";
 
-import { BookingInput } from "../../types/inputTypes/booking/BookingInputType";
+import { PlaceBookingInput } from "../../types/inputTypes/booking/PlaceBookingInputType";
 import { Context } from "../../types/context";
 import { SingleBookingResponse } from "../../types/responses/BookingResponse";
 
 import { CustomError } from "../../utils/customError";
-import {
-  UNAUTHORIZED,
-  USER_ALREADY_EXISTS,
-  USER_ONLY,
-} from "../../utils/messages";
+import { UNAUTHORIZED } from "../../utils/messages";
 import { UserRole } from "../../utils/enums";
-import { acceptBookingDto, placeBookingDto } from "../../types/dtos/booking";
+import {
+  AcceptBookingDto,
+  CancelPanditBookingDto,
+  CancelUserBookingDto,
+  PlaceBookingDto,
+} from "../../types/dtos/booking";
+import { CancelUserBookingInput } from "../../types/inputTypes/booking/CancelUserBooking";
 
 @Service()
 @Resolver()
@@ -31,20 +27,18 @@ export class BookingMutationResolver {
     private bookingActionProvider: BookingActionProvider
   ) {}
 
-  @Authorized("USER")
+  @Authorized(UserRole.USER)
   @Mutation(() => SingleBookingResponse)
   async placeBooking(
-    @Arg("data") data: BookingInput,
+    @Arg("data") data: PlaceBookingInput,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const userId = ctx.user?.id;
-    const userRole = ctx.user?.userRole;
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
-    if (userRole === UserRole.PANDIT) throw new CustomError(USER_ONLY);
 
     // TODO: push to real-time queue/socket for Pandits to accept
-    const dto: placeBookingDto = plainToInstance(placeBookingDto, {
+    const dto: PlaceBookingDto = plainToInstance(PlaceBookingDto, {
       ...data,
       userId,
     });
@@ -52,24 +46,63 @@ export class BookingMutationResolver {
     return this.bookingActionProvider.placeBooking(dto);
   }
 
-  @Authorized("PANDIT")
   @Mutation(() => SingleBookingResponse)
+  @Authorized(UserRole.PANDIT)
   async acceptBooking(
     @Arg("bookingId") bookingId: string,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const panditId = ctx.user?.id;
-    const userRole = ctx.user?.userRole;
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
-    if (userRole === UserRole.USER) throw new CustomError(USER_ALREADY_EXISTS);
-    
+
     // TODO: notify user via socket or pubsub
-    const dto: acceptBookingDto = plainToInstance(acceptBookingDto, {
+    const dto: AcceptBookingDto = plainToInstance(AcceptBookingDto, {
       bookingId,
       panditId,
     });
 
     return this.bookingActionProvider.acceptBooking(dto);
+  }
+
+  @Mutation(() => SingleBookingResponse)
+  @Authorized(UserRole.PANDIT)
+  async cancelBookingPandit(
+    @Arg("bookingId") bookingId: string,
+    @Ctx() ctx: Context
+  ): Promise<SingleBookingResponse> {
+    const panditId = ctx.user?.id;
+
+    if (!panditId) throw new CustomError(UNAUTHORIZED);
+
+    // TODO: notify user via socket or pubsub
+    const dto: CancelPanditBookingDto = plainToInstance(
+      CancelPanditBookingDto,
+      {
+        bookingId,
+        panditId,
+      }
+    );
+
+    return this.bookingActionProvider.acceptBooking(dto);
+  }
+
+  @Mutation(() => SingleBookingResponse)
+  @Authorized(UserRole.USER)
+  async cancelBookingUser(
+    @Arg("data") data: CancelUserBookingInput,
+    @Ctx() ctx: Context
+  ): Promise<SingleBookingResponse> {
+    const userId = ctx.user?.id;
+
+    if (!userId) throw new CustomError(UNAUTHORIZED);
+
+    // TODO: notify user via socket or pubsub
+    const dto: CancelUserBookingDto = plainToInstance(CancelUserBookingDto, {
+      ...data,
+      userId,
+    });
+
+    return this.bookingActionProvider.cancelUserBooking(dto);
   }
 }

@@ -8,7 +8,7 @@ import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 
 import { GetServicesInput } from "../../types/inputTypes/service/GetServiceInput";
 import { GetServicesDto } from "../../types/dtos/service";
-import { AdminRole } from "../../utils/enums";
+import { UserRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -18,7 +18,7 @@ export class ServiceQueryResolver {
     private serviceInfoProvider: ServiceInfoProvider
   ) {}
 
-  @Authorized(AdminRole.USER)
+  @Authorized(UserRole.USER)
   @Query(() => MultipleServiceResponse)
   async getAllServices(
     @Arg("data", () => GetServicesInput, { nullable: true })

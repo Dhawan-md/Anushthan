@@ -13,6 +13,7 @@ import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { Category } from "../entities/Category";
+import { CancelledBooking } from "../entities/CancelledBooking";
 
 dotenv.config();
 
@@ -23,7 +24,7 @@ export const AppDataSource = new DataSource({
   username: process.env["DB_USER"],
   password: process.env["DB_PASSWORD"],
   database: process.env["DB_NAME"],
-  entities: [User, Pandit, Otp, Admin, Service, Booking, Category],
+  entities: [User, Pandit, Otp, Admin, Service, Booking, Category, CancelledBooking],
   synchronize: process.env["NODE_ENV"] !== "production",
 });
 

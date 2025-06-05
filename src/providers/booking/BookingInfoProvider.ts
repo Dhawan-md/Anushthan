@@ -9,7 +9,7 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
-import { MyBookingsDto, placeBookingDto } from "../../types/dtos/booking";
+import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/booking";
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
 
@@ -67,7 +67,7 @@ export class BookingInfoProvider {
     return bookingDetails;
   }
 
-  async isDuplicateBooking(params: placeBookingDto): Promise<boolean> {
+  async isDuplicateBooking(params: PlaceBookingDto): Promise<boolean> {
     logger.info(
       `🔍 Checking for duplicate booking for userId: ${params.userId}`
     );

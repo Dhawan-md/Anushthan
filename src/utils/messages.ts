@@ -115,4 +115,9 @@ export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";
 export const CATEGORY_ALREADY_EXISTS = "Category already exists.";
 export const CATEGORY_LIST = "Categories list.";
 
-
+//Booking Messages
+export const BOOKING_UPDATED = "Booking edited successfully.";
+export const BOOKING_LIST = "Bookings list.";
+export const BOOKING_PLACED = "Booking placed successfully.";
+export const BOOKING_ACCEPTED = "Booking accepted.";
+export const BOOKING_CANCELLED = "Booking has been cancelled.";

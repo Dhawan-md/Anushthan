@@ -4,17 +4,29 @@ export enum UserRole {
   USER = "USER",
   PANDIT = "PANDIT",
 }
+registerEnumType(UserRole, {
+  name: "UserRole",
+  description: "Different roles of users in the system",
+});
 
 export enum OtpType {
   USER = "USER",
   PANDIT = "PANDIT",
   FORGET_PASSWORD = "FORGET PASSWORD",
 }
+registerEnumType(OtpType, {
+  name: "OtpType",
+  description: "Type of OTP (User/Admin)",
+});
 
 export enum OtpStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
+registerEnumType(OtpStatus, {
+  name: "OtpStatus", // ✅ GraphQL name
+  description: "Status of the OTP",
+});
 
 export enum PanditStatus {
   PENDING = "pending",
@@ -22,6 +34,10 @@ export enum PanditStatus {
   REJECTED = "rejected",
   SUSPENDED = "suspended",
 }
+registerEnumType(PanditStatus, {
+  name: "PanditStatus",
+  description: "Status of pandit approval",
+});
 
 export enum BookingStatus {
   PENDING = "PENDING",
@@ -32,24 +48,16 @@ export enum BookingStatus {
 }
 registerEnumType(BookingStatus, { name: "BookingStatus" });
 
-registerEnumType(UserRole, {
-  name: "UserRole",
-  description: "Different roles of users in the system",
-});
-
-registerEnumType(OtpStatus, {
-  name: "OtpStatus", // ✅ GraphQL name
-  description: "Status of the OTP",
-});
-
-registerEnumType(OtpType, {
-  name: "OtpType",
-  description: "Type of OTP (User/Admin)",
-});
-
-registerEnumType(PanditStatus, {
-  name: "PanditStatus",
-  description: "Status of pandit approval",
+export enum PaymentMethod {
+  UPI = "UPI",
+  CARD = "CARD",
+  CASH = "CASH",
+  WALLET = "WALLET",
+  NET_BANKING = "NET_BANKING",
+}
+registerEnumType(PaymentMethod, {
+  name: "PaymentMethod", // this name will show up in GraphQL schema
+  description: "Available payment methods",
 });
 
 export enum EmailType {
@@ -82,7 +90,6 @@ export enum S3BucketType {
 export enum AdminRole {
   ADMIN = "ADMIN",
   SUPERADMIN = "SUPERADMIN",
-  USER = "USER",
 }
 
 export enum EmailName {

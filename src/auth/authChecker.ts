@@ -1,7 +1,6 @@
 import { AuthChecker } from "type-graphql";
 
 import { Context } from "../types/context";
-import { AdminRole } from "../utils/enums";
 
 export const authChecker: AuthChecker<Context> = ({ context }, roles) => {
   const { admin, user } = context;
@@ -10,7 +9,7 @@ export const authChecker: AuthChecker<Context> = ({ context }, roles) => {
     return true; // admin
   }
 
-  if (user && roles.includes(AdminRole.USER)) {
+  if (user && roles.includes(user.userRole)) {
     return true; // User
   }
 

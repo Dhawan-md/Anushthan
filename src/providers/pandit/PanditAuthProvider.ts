@@ -161,7 +161,6 @@ export class PanditAuthProvider {
     logger.info(
       `🔄 Verification request received for pandit with email: ${userEmail}`
     );
-    console.log(userEmail);
 
     const panditData = await this.panditInfoProvider.getPandit({
       userEmail,

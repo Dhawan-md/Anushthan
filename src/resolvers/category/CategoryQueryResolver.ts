@@ -7,7 +7,7 @@ import { CategoryInfoProvider } from "../../providers/category/CategoryInfoProvi
 import { MultipleCategoryResponse } from "../../types/responses/CategoryResponse";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { PaginationDto } from "../../types/dtos/Pagination";
-import { AdminRole } from "../../utils/enums";
+import { UserRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -17,7 +17,7 @@ export class CategoryQueryResolver {
     private categoryInfoProvider: CategoryInfoProvider
   ) {}
 
-  @Authorized(AdminRole.USER)
+  @Authorized(UserRole.USER)
   @Query(() => MultipleCategoryResponse)
   async getAllCategories(@Arg("data") data: PaginationInput) {
     const dto = plainToInstance(PaginationDto, data);
