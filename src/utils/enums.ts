@@ -96,3 +96,16 @@ export enum EmailName {
   USER = "User",
   PANDIT = "Pandit ji",
 }
+
+export enum UserCancellationReason {
+  USER_CHANGED_MIND = "User changed their mind",
+  PANDIT_UNAVAILABLE = "Could not find a Pandit was unavailable",
+  LOCATION_ISSUE = "Issue with the location",
+  DUPLICATE_BOOKING = "Duplicate booking made",
+  OTHER = "Other reason",
+}
+
+registerEnumType(UserCancellationReason, {
+  name: "UserCancellationReason", // this name will appear in the GraphQL schema
+  description: "Reason provided by user for cancelling a booking",
+});

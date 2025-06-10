@@ -1,5 +1,9 @@
 import { PaginationDto } from "./Pagination";
-import { PaymentMethod } from "../../utils/enums";
+import {
+  PaymentMethod,
+  UserCancellationReason,
+  UserRole,
+} from "../../utils/enums";
 
 export class PlaceBookingDto {
   userId: string;
@@ -23,11 +27,16 @@ export class AcceptBookingDto extends BookingActionDto {
 
 export class CancelPanditBookingDto extends BookingActionDto {
   panditId: string;
+  confirmFee?: boolean;
+  cancelReason: UserCancellationReason;
+  customReason?: string;
 }
 
 export class CancelUserBookingDto extends BookingActionDto {
   userId: string;
-  confirmFee?: boolean
+  confirmFee?: boolean;
+  cancelReason: UserCancellationReason;
+  customReason?: string;
 }
 
 export class MyBookingsDto extends PaginationDto {
@@ -36,6 +45,13 @@ export class MyBookingsDto extends PaginationDto {
 
 export class CreateCancellationFeeDto {
   userId: string;
+  panditId?: string;
   bookingId: string;
-  amount: number;
+  penaltyAmount: number;
+  refundAmount: number;
+  cancelledBy: UserRole;
+  isPenaltyApplied;
+  cancelReason: UserCancellationReason;
+  customReason?: string;
+  cancelledAt: Date;
 }

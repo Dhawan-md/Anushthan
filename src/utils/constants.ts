@@ -1,0 +1,2 @@
+//Booking 
+const CANCELLATION_WINDOW_HOURS = 6;

@@ -15,10 +15,10 @@ import { BookingStatus } from "../../utils/enums";
 
 @Service()
 export class BookingInfoProvider {
-  private BookingInfoRepository: Repository<Booking>;
+  private bookingInfoRepository: Repository<Booking>;
 
   constructor(private repositoryFactory: RepositoryFactory) {
-    this.BookingInfoRepository = this.repositoryFactory.getRepository(Booking);
+    this.bookingInfoRepository = this.repositoryFactory.getRepository(Booking);
   }
 
   async myBookings(params: MyBookingsDto): Promise<MultipleBookingResponse> {
@@ -27,7 +27,7 @@ export class BookingInfoProvider {
       `📦 Fetching bookings for user/pandit ID: ${id} | Page: ${page}, Limit: ${limit}`
     );
 
-    const [bookingList, total] = await this.BookingInfoRepository.findAndCount({
+    const [bookingList, total] = await this.bookingInfoRepository.findAndCount({
       where: [{ userId: id }, { panditId: id }],
       skip: (page - 1) * limit,
       take: limit,
@@ -53,7 +53,7 @@ export class BookingInfoProvider {
   async getBookingDetails(id: string): Promise<Booking> {
     logger.info(`🔍 Fetching booking details for booking ID: ${id}`);
 
-    const bookingDetails = await this.BookingInfoRepository.findOne({
+    const bookingDetails = await this.bookingInfoRepository.findOne({
       where: { id },
     });
 
@@ -77,7 +77,7 @@ export class BookingInfoProvider {
       throw new CustomError("No serviceIds provided for duplicate check.");
     }
 
-    const possibleConflicts = await this.BookingInfoRepository.find({
+    const possibleConflicts = await this.bookingInfoRepository.find({
       where: {
         userId: params.userId,
         timeSlot: params.timeSlot,
@@ -103,5 +103,20 @@ export class BookingInfoProvider {
     });
 
     return hasDuplicate;
+  }
+
+  async isPendingAmount(userId: string): Promise<void> {
+    logger.info(
+      `🔍 Checking if their is some pending amount from previous bookings`
+    );
+
+    const booking = await this.bookingInfoRepository.findOne({
+      where: { userId, paid: false },
+    });
+    if (!!booking) {
+      throw new CustomError(
+        `An amount of ${booking.totalPrice} is pending from your previous booking with booking Id: ${booking.id}. Go to orders and clear the due before placing a new booking.`
+      );
+    }
   }
 }

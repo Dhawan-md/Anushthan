@@ -1,5 +1,7 @@
 import { InputType, Field } from "type-graphql";
 
+import { UserCancellationReason } from "../../../utils/enums";
+
 @InputType()
 export class CancelUserBookingInput {
   @Field()
@@ -7,4 +9,10 @@ export class CancelUserBookingInput {
 
   @Field({ nullable: true })
   confirmFee: boolean;
+
+  @Field(() => UserCancellationReason)
+  cancelReason: UserCancellationReason;
+
+  @Field({ nullable: true })
+  customReason?: string;
 }
