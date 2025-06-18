@@ -17,7 +17,7 @@ import {
   RESEND_OTP_SUCCESS,
   VALID_OTP,
 } from "../../utils/messages";
-import { OtpStatus, OtpType } from "../../utils/enums";
+import { ActiveStatus, OtpType } from "../../utils/enums";
 import { CustomError } from "../../utils/customError";
 import { OtpToken } from "../../types/globalTypes";
 import { sendEmail } from "../../service/email/sendEmail";
@@ -115,7 +115,7 @@ export class OtpProvider {
   async disableOtp(userEmail: string) {
     await this.otpRepository.update(
       { userEmail: userEmail.toLowerCase() },
-      { status: OtpStatus.INACTIVE }
+      { status: ActiveStatus.INACTIVE }
     );
   }
 
@@ -138,7 +138,7 @@ export class OtpProvider {
 
     await this.otpRepository.update(
       { id: existingOtp.data.id },
-      { ...newOtp, status: OtpStatus.ACTIVE, otpType }
+      { ...newOtp, status: ActiveStatus.ACTIVE, otpType }
     );
 
     logger.info(
@@ -169,7 +169,7 @@ export class OtpProvider {
       throw new CustomError(NO_OTP_FOUND);
     }
     const isOtpActive =
-      otpData.expiresAt > new Date() && otpData.status === OtpStatus.ACTIVE;
+      otpData.expiresAt > new Date() && otpData.status === ActiveStatus.ACTIVE;
 
     const isOtpValid = otpData.otpType === otpType;
 

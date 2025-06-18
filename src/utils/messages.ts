@@ -99,6 +99,8 @@ export const SERVICE_NOT_FOUND = "Invalid or missing services.";
 export const SERVICE_ALREADY_EXISTS = "Service already exists.";
 export const NO_SERVICE_ID_PROVIDED = "No service id provided";
 export const SERVICE_LIST = "Services list.";
+export const SERVICE_DOES_NOT_BELONG_TO_THIS_CATEGORY =
+  "One or more selected services do not belong to the specified category.";
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";
@@ -120,4 +122,8 @@ export const BOOKING_UPDATED = "Booking edited successfully.";
 export const BOOKING_LIST = "Bookings list.";
 export const BOOKING_PLACED = "Booking placed successfully.";
 export const BOOKING_ACCEPTED = "Booking accepted.";
-export const BOOKING_CANCELLED = "Booking has been cancelled.";
+export const BOOKING_CANCELLED_USER = "Booking has been cancelled by user.";
+export const BOOKING_CANCELLED_PANDIT = "Booking has been cancelled by pandit.";
+
+//Transaction Message
+export const NO_TRANSACTION_FOUND = "No transaction found.";

@@ -3,7 +3,7 @@ import { InputType, Field } from "type-graphql";
 import { UserCancellationReason } from "../../../utils/enums";
 
 @InputType()
-export class CancelUserBookingInput {
+export class CancelBookingInput {
   @Field()
   bookingId: string;
 

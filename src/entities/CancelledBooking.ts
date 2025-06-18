@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { UserCancellationReason, UserRole } from "../utils/enums";
+import { ActiveStatus, UserCancellationReason, UserRole } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -28,12 +28,8 @@ export class CancelledBooking {
   bookingId!: string;
 
   @Field(() => Float)
-  @Column("float", { name: "penalty_amount" })
-  penaltyAmount!: number;
-
-  @Field(() => Float)
-  @Column("float", { name: "refund_amount" })
-  refundAmount!: number;
+  @Column("float")
+  amount!: number;
 
   @Field(() => UserRole)
   @Column({
@@ -53,7 +49,11 @@ export class CancelledBooking {
 
   @Field()
   @Column({ default: false, name: "is_penalty_applied" })
-  isPenaltyApplied: boolean;
+  isPenaltyApplied!: boolean;
+
+  @Field(() => ActiveStatus)
+  @Column({ type: "enum", enum: ActiveStatus, default: ActiveStatus.ACTIVE })
+  status!: ActiveStatus;
 
   @Field(() => Date)
   @CreateDateColumn({ name: "cancelled_at" })

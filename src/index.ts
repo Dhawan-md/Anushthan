@@ -31,6 +31,7 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
+import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
 
 const createApp = async () => {
   const app: Application = express();
@@ -46,7 +47,7 @@ const createApp = async () => {
       AminQueryResolver,
       BookingMutationResolver,
       ServiceQueryResolver,
-      CategoryQueryResolver
+      CategoryQueryResolver,
     ],
     authChecker: authChecker,
     container: Container,
@@ -67,6 +68,33 @@ const createApp = async () => {
   });
   await server.start();
   server.applyMiddleware({ app, path: "/graphql" });
+
+  app.get("/test-payment/:orderId", (req, res) => {
+    const { orderId } = req.params;
+    const html = `
+  <form>
+    <script
+      src="https://checkout.razorpay.com/v1/checkout.js"
+      data-key="${process.env.RAZORPAY_KEY_ID}"
+      data-order_id="${orderId}"
+      data-amount="50000"
+      data-currency="INR"
+      data-name="Test App"
+      data-description="Test Payment"
+      data-prefill.name="Test User"
+      data-prefill.email="test@example.com"
+      data-prefill.contact="9999999999"
+      data-theme.color="#3399cc"
+    ></script>
+  </form>`;
+    res.send(html);
+  });
+
+  app.post(
+    "/api/razorpay/webhook",
+    express.raw({ type: "application/json" }), // Important for signature check
+    razorpayWebhookHandler
+  );
 
   return app;
 };

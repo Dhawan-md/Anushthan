@@ -19,13 +19,13 @@ registerEnumType(OtpType, {
   description: "Type of OTP (User/Admin)",
 });
 
-export enum OtpStatus {
+export enum ActiveStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
 }
-registerEnumType(OtpStatus, {
-  name: "OtpStatus", // ✅ GraphQL name
-  description: "Status of the OTP",
+registerEnumType(ActiveStatus, {
+  name: "activeStatus", // ✅ GraphQL name
+  description: "Status of the entry",
 });
 
 export enum PanditStatus {
@@ -104,8 +104,28 @@ export enum UserCancellationReason {
   DUPLICATE_BOOKING = "Duplicate booking made",
   OTHER = "Other reason",
 }
-
 registerEnumType(UserCancellationReason, {
   name: "UserCancellationReason", // this name will appear in the GraphQL schema
   description: "Reason provided by user for cancelling a booking",
 });
+
+export enum TransactionType {
+  PAYMENT = "PAYMENT",
+  REFUND = "REFUND",
+}
+registerEnumType(TransactionType, { name: "TransactionType" });
+
+export enum TransactionStatus {
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+}
+registerEnumType(TransactionStatus, { name: "TransactionStatus" });
+
+export enum RefundReason {
+  CANCELLATION = "CANCELLATION",
+  SERVICE_ISSUE = "SERVICE_ISSUE",
+  DUPLICATE_PAYMENT = "DUPLICATE_PAYMENT",
+  OTHER = "OTHER",
+}
+

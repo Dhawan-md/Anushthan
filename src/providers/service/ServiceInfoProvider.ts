@@ -14,6 +14,7 @@ import { CustomError } from "../../utils/customError";
 import {
   NO_SERVICE_ID_PROVIDED,
   SERVICE_ALREADY_EXISTS,
+  SERVICE_DOES_NOT_BELONG_TO_THIS_CATEGORY,
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
@@ -117,5 +118,23 @@ export class ServiceInfoProvider {
 
     logger.info(`✅ Successfully fetched ${services.length} service(s)`);
     return new MultipleServiceResponse(true, SERVICE_IDS_FOUND, services);
+  }
+
+  async doServicesBelongToCategory(
+    serviceIds: string[],
+    categoryId: string
+  ): Promise<void> {
+    const count = await this.serviceInfoRepository.count({
+      where: { id: In(serviceIds), category: { id: categoryId } },
+      relations: ["category"],
+    });
+
+    // Check if all services exist and belong to the given category
+    if (count !== serviceIds.length) {
+      logger.warn(
+        `⚠️ Some services do not belong to category ${categoryId}. Expected ${serviceIds.length}, found ${count}.`
+      );
+      throw new CustomError(SERVICE_DOES_NOT_BELONG_TO_THIS_CATEGORY);
+    }
   }
 }

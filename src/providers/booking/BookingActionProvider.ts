@@ -1,5 +1,5 @@
 import { Inject, Service } from "typedi";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 
 import { Booking } from "../../entities/Booking";
 
@@ -16,16 +16,28 @@ import {
   CancelUserBookingDto,
   PlaceBookingDto,
 } from "../../types/dtos/booking";
-import { BookingStatus, UserRole } from "../../utils/enums";
+import {
+  ActiveStatus,
+  BookingStatus,
+  UserCancellationReason,
+  UserRole,
+} from "../../utils/enums";
 import { CustomError } from "../../utils/customError";
 import {
   BOOKING_ACCEPTED,
-  BOOKING_CANCELLED,
+  BOOKING_CANCELLED_PANDIT,
+  BOOKING_CANCELLED_USER,
   BOOKING_PLACED,
   INTERNAL_ERROR_OCCURRED,
 } from "../../utils/messages";
 import { UpdateBookingProvider } from "./UpdateBookingProvider";
 import { CancelBookingProvider } from "./CancelBookingProvider";
+import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
+import { CancelledBooking } from "../../entities/CancelledBooking";
+import { CANCELLATION_WINDOW_HOURS } from "../../utils/constants";
+import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
+import { RazorpayProvider } from "../razorpay/razorpayProvider";
+import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -38,16 +50,29 @@ export class BookingActionProvider {
     @Inject(() => UpdateBookingProvider)
     private updateBookingProvider: UpdateBookingProvider,
     @Inject(() => CancelBookingProvider)
-    private cancelBookingProvider: CancelBookingProvider
+    private cancelBookingProvider: CancelBookingProvider,
+    @Inject(() => ServiceInfoProvider)
+    private serviceInfoProvider: ServiceInfoProvider,
+    @Inject(() => TransactionActionProvider)
+    private transactionActionProvider: TransactionActionProvider,
+    @Inject(() => UpdateTransactionProvider)
+    private updateTransactionProvider: UpdateTransactionProvider,
+    @Inject(() => RazorpayProvider)
+    private razorpayProvider: RazorpayProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
   }
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
-    logger.info(`📥 Placing a new booking for userId: ${params.userId}`);
+    const { serviceIds, categoryId, userId, paid, totalPrice } = params;
+    logger.info(`📥 Placing a new booking for userId: ${userId}`);
 
-    await this.bookingInfoProvider.isPendingAmount(params.userId);
+    await this.bookingInfoProvider.isPendingAmount(userId);
+    await this.serviceInfoProvider.doServicesBelongToCategory(
+      serviceIds,
+      categoryId
+    );
 
     const isDuplicate = await this.bookingInfoProvider.isDuplicateBooking(
       params
@@ -67,6 +92,28 @@ export class BookingActionProvider {
       ...params,
       status: BookingStatus.PENDING,
     });
+
+    if (paid) {
+      const transaction =
+        await this.transactionActionProvider.createTransaction({
+          userId,
+          userRole: UserRole.USER,
+          bookingId: booking.id,
+          amount: totalPrice,
+        });
+
+      const order = await this.razorpayProvider.createRazorpayOrder({
+        amount: totalPrice,
+        transactionId: transaction.id,
+        userId,
+      });
+      console.log(order, "razor");
+
+      await this.updateTransactionProvider.updateTransaction({
+        updatedTransactionData: { orderId: order.id },
+        transactionId: transaction.id,
+      });
+    }
 
     logger.info(`✅ Booking placed with ID: ${booking.id}`);
 
@@ -139,32 +186,20 @@ export class BookingActionProvider {
             `❌ Cancelling this booking will incur a 100% fee of ₹${feeAmount}. Please confirm.`
           );
         }
+        const penaltyAmount = isPenalty ? feeAmount : 0;
 
-        const cancelledBooking =
-          await this.cancelBookingProvider.createCancellationFee({
-            userId,
-            panditId: booking.panditId,
-            bookingId,
-            penaltyAmount: isPenalty ? feeAmount : 0,
-            refundAmount:
-              booking.status === BookingStatus.PENDING ? feeAmount : 0,
-            cancelledBy: UserRole.USER,
-            isPenaltyApplied: isPenalty,
-            cancelReason,
-            customReason,
-            cancelledAt: new Date(),
-          });
-
-        await this.updateBookingProvider.updateBooking(
-          {
-            status: BookingStatus.CANCELLED,
-            cancellationId: cancelledBooking.id,
-          },
+        await this.performCancellation({
+          userId,
+          panditId: booking.panditId,
           bookingId,
-          transactionalEntityManager
-        );
+          cancelledBy: UserRole.USER,
+          amount: penaltyAmount,
+          cancelReason,
+          customReason,
+          transactionalEntityManager,
+        });
 
-        return new SingleBookingResponse(true, BOOKING_CANCELLED);
+        return new SingleBookingResponse(true, BOOKING_CANCELLED_USER);
       }
     );
   }
@@ -190,8 +225,8 @@ export class BookingActionProvider {
     const now = new Date();
     const diffHours =
       (booking.timeSlot.getTime() - now.getTime()) / (1000 * 60 * 60);
-    const isPenalty = diffHours < CANCELLATION_WINDOW_HOURS;
-    if (isPenalty && !confirmFee) {
+    const isLateCancellation = diffHours < CANCELLATION_WINDOW_HOURS;
+    if (isLateCancellation && !confirmFee) {
       throw new CustomError(
         `Cannot cancel booking less than ${CANCELLATION_WINDOW_HOURS} hours before the scheduled time. A cancellation fee will be charged.`
       );
@@ -199,29 +234,16 @@ export class BookingActionProvider {
 
     return await this.bookingActionRepository.manager.transaction(
       async (transactionalEntityManager) => {
-        const cancelledBooking =
-          await this.cancelBookingProvider.createCancellationFee({
-            userId: booking.userId,
-            panditId,
-            bookingId,
-            penaltyAmount: diffHours < CANCELLATION_WINDOW_HOURS ? 100 : 0,
-            refundAmount: booking.paid ? booking.totalPrice : 0, // refund amount if paid
-            cancelledBy: UserRole.PANDIT,
-            cancelReason,
-            customReason,
-            isPenaltyApplied: diffHours < CANCELLATION_WINDOW_HOURS,
-            cancelledAt: now,
-          });
-
-        await this.updateBookingProvider.updateBooking(
-          {
-            status: BookingStatus.CANCELLED,
-            cancelledAt: now,
-            cancellationId: cancelledBooking.id,
-          },
+        await this.performCancellation({
+          userId: booking.userId,
+          panditId,
           bookingId,
-          transactionalEntityManager
-        );
+          cancelledBy: UserRole.PANDIT,
+          amount: isLateCancellation ? 100 : 0,
+          cancelReason,
+          customReason,
+          transactionalEntityManager,
+        });
 
         // TODO: Implement refund logic if booking.paid === true
         // if (booking.paid) {
@@ -241,12 +263,66 @@ export class BookingActionProvider {
         //   `You have cancelled booking ${booking.id}. A penalty has been applied.`
         // );
 
+        logger.info(
+          `Booking ${bookingId} cancelled by pandit ${panditId}, penalty: ₹${100}`
+        );
         return new SingleBookingResponse(
           true,
-          "Booking cancelled successfully by pandit",
+          BOOKING_CANCELLED_PANDIT,
           booking
         );
       }
     );
   }
+
+  private async performCancellation({
+    userId,
+    panditId,
+    bookingId,
+    cancelledBy,
+    amount,
+    cancelReason,
+    customReason,
+    transactionalEntityManager,
+  }: {
+    userId: string;
+    panditId?: string;
+    bookingId: string;
+    cancelledBy: UserRole;
+    amount: number;
+    cancelReason: UserCancellationReason;
+    customReason?: string;
+    transactionalEntityManager: EntityManager;
+  }): Promise<CancelledBooking> {
+    const cancelledBooking =
+      await this.cancelBookingProvider.createCancellationFee({
+        userId,
+        panditId,
+        bookingId,
+        amount,
+        cancelledBy,
+        cancelReason,
+        customReason,
+        cancelledAt: new Date(),
+        isPenaltyApplied: amount > 0,
+        status: amount > 0 ? ActiveStatus.ACTIVE : ActiveStatus.INACTIVE,
+      });
+
+    await this.updateBookingProvider.updateBooking(
+      {
+        status: BookingStatus.CANCELLED,
+        cancellationId: cancelledBooking.id,
+        cancelledAt: cancelledBooking.cancelledAt,
+      },
+      bookingId,
+      transactionalEntityManager
+    );
+
+    return cancelledBooking;
+  }
+
+  //   async applyProviderPenalty(panditId: string, amount: number) {
+  //     await this.panditRepo.increment({ id: panditId }, "ratings", -0.2); // Example penalty
+  //     logger.warn(`Penalty applied to pandit ${panditId}, amount ₹${amount}`);
+  //   }
 }

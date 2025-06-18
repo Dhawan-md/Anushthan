@@ -1,5 +1,6 @@
 import { PaginationDto } from "./Pagination";
 import {
+  ActiveStatus,
   PaymentMethod,
   UserCancellationReason,
   UserRole,
@@ -8,6 +9,7 @@ import {
 export class PlaceBookingDto {
   userId: string;
   serviceIds: string[];
+  categoryId: string;
   location: string;
   timeSlot: Date;
   totalPrice: number;
@@ -47,11 +49,11 @@ export class CreateCancellationFeeDto {
   userId: string;
   panditId?: string;
   bookingId: string;
-  penaltyAmount: number;
-  refundAmount: number;
+  amount: number;
   cancelledBy: UserRole;
   isPenaltyApplied;
   cancelReason: UserCancellationReason;
   customReason?: string;
   cancelledAt: Date;
+  status: ActiveStatus;
 }

@@ -1,2 +1,2 @@
 //Booking 
-const CANCELLATION_WINDOW_HOURS = 6;
+export const CANCELLATION_WINDOW_HOURS = 6;

@@ -17,7 +17,7 @@ import {
   CancelUserBookingDto,
   PlaceBookingDto,
 } from "../../types/dtos/booking";
-import { CancelUserBookingInput } from "../../types/inputTypes/booking/CancelUserBooking";
+import { CancelBookingInput } from "../../types/inputTypes/booking/CancelUserBooking";
 
 @Service()
 @Resolver()
@@ -68,7 +68,7 @@ export class BookingMutationResolver {
   @Mutation(() => SingleBookingResponse)
   @Authorized(UserRole.PANDIT)
   async cancelBookingPandit(
-    @Arg("bookingId") bookingId: string,
+    @Arg("data") data: CancelBookingInput,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const panditId = ctx.user?.id;
@@ -79,23 +79,22 @@ export class BookingMutationResolver {
     const dto: CancelPanditBookingDto = plainToInstance(
       CancelPanditBookingDto,
       {
-        bookingId,
+        ...data,
         panditId,
       }
     );
 
-    return this.bookingActionProvider.acceptBooking(dto);
+    return this.bookingActionProvider.cancelBookingByPandit(dto);
   }
 
   @Mutation(() => SingleBookingResponse)
   @Authorized(UserRole.USER)
   async cancelBookingUser(
-    @Arg("data") data: CancelUserBookingInput,
+    @Arg("data") data: CancelBookingInput,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const userId = ctx.user?.id;
     console.log(data);
-    
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 

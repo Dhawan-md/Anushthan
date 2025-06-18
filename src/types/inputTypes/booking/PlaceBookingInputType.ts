@@ -7,6 +7,9 @@ export class PlaceBookingInput {
   serviceIds: string[];
 
   @Field()
+  categoryId: string;
+
+  @Field()
   location: string;
 
   @Field()

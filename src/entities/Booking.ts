@@ -4,9 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from "typeorm";
 import { Field, Float, Int, ObjectType } from "type-graphql";
 import { BookingStatus, PaymentMethod } from "../utils/enums";
+import { Transaction } from "./Transaction";
 
 @ObjectType()
 @Entity()
@@ -26,6 +28,10 @@ export class Booking {
   @Field(() => [String])
   @Column("text", { array: true, name: "service_ids" })
   serviceIds: string[];
+
+  @Field()
+  @Column({ name: "category_id" })
+  categoryId: string;
 
   @Field()
   @Column()
@@ -55,18 +61,17 @@ export class Booking {
   @Column({ default: false })
   paid: boolean;
 
-  @Field(() => PaymentMethod)
+  @Field(() => PaymentMethod, { nullable: true })
   @Column({
     name: "payment_method",
     type: "enum",
     enum: PaymentMethod,
-    default: PaymentMethod.UPI
+    nullable: true,
   })
-  paymentMethod: PaymentMethod; // Consider using enum
+  paymentMethod?: PaymentMethod; // Consider using enum
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  transactionId?: string;
+  @OneToMany(() => Transaction, (transaction) => transaction.booking)
+  transactions?: Transaction[];
 
   @Field({ nullable: true })
   @Column({ nullable: true, type: "timestamp" })
