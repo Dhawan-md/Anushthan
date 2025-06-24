@@ -127,3 +127,6 @@ export const BOOKING_CANCELLED_PANDIT = "Booking has been cancelled by pandit.";
 
 //Transaction Message
 export const NO_TRANSACTION_FOUND = "No transaction found.";
+
+//Refund Message
+export const NO_REFUND_FOUND = "No refund found.";

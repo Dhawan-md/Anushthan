@@ -7,6 +7,7 @@ import { logger } from "../../utils/logger";
 import { getAllBookingTransactions } from "../../types/dtos/transaction";
 import { CustomError } from "../../utils/customError";
 import { NO_TRANSACTION_FOUND } from "../../utils/messages";
+import { TransactionStatus, TransactionType } from "../../utils/enums";
 
 @Service()
 export class TransactionInfoProvider {
@@ -67,5 +68,28 @@ export class TransactionInfoProvider {
     }
 
     return transactionData;
+  }
+
+  async getPaymentTransaction(params: {
+    bookingId: string;
+    userId: string;
+  }): Promise<Transaction> {
+    const transaction = await this.transactionInfoRepository.findOne({
+      where: {
+        bookingId: params.bookingId,
+        userId: params.userId,
+        type: TransactionType.PAYMENT_INCOMING,
+        status: TransactionStatus.SUCCESS, // Only refund successful payments!
+      },
+      order: {
+        createdAt: "DESC", // latest one first
+      },
+    });
+
+    if (!transaction) {
+      throw new CustomError("No transaction found");
+    }
+
+    return transaction;
   }
 }

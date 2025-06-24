@@ -2,7 +2,8 @@ import express from "express";
 import crypto from "crypto";
 import Container from "typedi";
 import { UpdateTransactionProvider } from "../../providers/transaction/UpdateTransactionProvider";
-import { TransactionStatus } from "../../utils/enums";
+import { RefundStatus, TransactionStatus } from "../../utils/enums";
+import { UpdateRefundProvider } from "../../providers/refund/UpdateRefundProvider";
 
 const RAZORPAY_WEBHOOK_SECRET = process.env["RAZORPAY_KEY_SECRET"]; // You will set this in Razorpay dashboard when configuring webhook
 
@@ -16,6 +17,8 @@ export const razorpayWebhookHandler = async (
 ) => {
   const payload = JSON.parse(req.body.toString("utf8"));
   const signature = req.headers["x-razorpay-signature"] as string;
+
+  console.log("📨 Incoming webhook:", JSON.stringify(payload, null, 2));
 
   const expectedSignature = crypto
     .createHmac("sha256", RAZORPAY_WEBHOOK_SECRET)
@@ -57,6 +60,37 @@ export const razorpayWebhookHandler = async (
         console.error("❌ Failed to update transaction:", err);
         return res.status(500).json({ error: "Failed to update transaction" });
       }
+    } else if (payload.event === "refund.processed") {
+      const refundData = payload.payload.refund.entity;
+      const refundReferenceId = refundData.id; // Razorpay refund ID
+      const paymentId = refundData.payment_id;
+      const amount = refundData.amount / 100; // Convert to rupees
+      const refundNotes = payload.payload.refund.entity.notes;
+
+      console.log("✅ Refund processed!", refundReferenceId, paymentId, amount);
+
+      const updateRefundProvider = Container.get(UpdateRefundProvider);
+      const updateTransactionProvider = Container.get(
+        UpdateTransactionProvider
+      );
+
+      const refund = await updateRefundProvider.updateRefund({
+        updatedRefundData: {
+          status: RefundStatus.SUCCESS,
+          refundedAt: new Date(),
+          refundReferenceId: refundReferenceId,
+        },
+        refundId: refundNotes.refundId,
+      });
+
+      await updateTransactionProvider.updateTransaction({
+        updatedTransactionData: {
+          isRefunded: true, // Save Razorpay paymentId
+        },
+        transactionId: refund.data?.transactionId,
+      });
+
+      console.log("✅ Refund and transaction updated to SUCCESS!");
     }
 
     res.status(200).json({ received: true });

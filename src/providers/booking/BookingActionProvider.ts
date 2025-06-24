@@ -19,6 +19,8 @@ import {
 import {
   ActiveStatus,
   BookingStatus,
+  PaymentType,
+  RefundReason,
   UserCancellationReason,
   UserRole,
 } from "../../utils/enums";
@@ -36,8 +38,11 @@ import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
 import { CancelledBooking } from "../../entities/CancelledBooking";
 import { CANCELLATION_WINDOW_HOURS } from "../../utils/constants";
 import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
-import { RazorpayProvider } from "../razorpay/razorpayProvider";
+import { RazorpayProvider } from "../razorpay/RazorpayProvider";
 import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
+import { Transaction } from "../../entities/Transaction";
+import { RefundActionProvider } from "../refund/RefundActionProvider";
+import { TransactionInfoProvider } from "../transaction/TransactionInfoProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -55,8 +60,12 @@ export class BookingActionProvider {
     private serviceInfoProvider: ServiceInfoProvider,
     @Inject(() => TransactionActionProvider)
     private transactionActionProvider: TransactionActionProvider,
+    @Inject(() => TransactionInfoProvider)
+    private transactionInfoProvider: TransactionInfoProvider,
     @Inject(() => UpdateTransactionProvider)
     private updateTransactionProvider: UpdateTransactionProvider,
+    @Inject(() => RefundActionProvider)
+    private refundActionProvider: RefundActionProvider,
     @Inject(() => RazorpayProvider)
     private razorpayProvider: RazorpayProvider
   ) {
@@ -65,7 +74,8 @@ export class BookingActionProvider {
   }
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
-    const { serviceIds, categoryId, userId, paid, totalPrice } = params;
+    const { serviceIds, categoryId, userId, paid, totalPrice, paymentMethod } =
+      params;
     logger.info(`📥 Placing a new booking for userId: ${userId}`);
 
     await this.bookingInfoProvider.isPendingAmount(userId);
@@ -87,37 +97,52 @@ export class BookingActionProvider {
         "You already have a pending booking for these services at this time."
       );
     }
+    const result = await this.bookingActionRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const booking = await transactionalEntityManager.save(
+          this.bookingActionRepository.create({
+            ...params,
+            paymentType: paid ? PaymentType.ONLINE : PaymentType.COD,
+            status: BookingStatus.PENDING,
+          })
+        );
 
-    const booking = await this.bookingActionRepository.save({
-      ...params,
-      status: BookingStatus.PENDING,
-    });
+        let transaction: Transaction | null = null;
+        if (paid) {
+          transaction =
+            await this.transactionActionProvider.createPaymentTransaction({
+              userId,
+              userRole: UserRole.USER,
+              bookingId: booking.id,
+              amount: totalPrice,
+              paymentMethod,
+              manager: transactionalEntityManager,
+            });
+        }
 
-    if (paid) {
-      const transaction =
-        await this.transactionActionProvider.createTransaction({
-          userId,
-          userRole: UserRole.USER,
-          bookingId: booking.id,
-          amount: totalPrice,
-        });
+        return { booking, transaction };
+      }
+    );
 
+    // ✅ Now outside the transaction — safe to call Razorpay
+    if (paid && result.transaction) {
       const order = await this.razorpayProvider.createRazorpayOrder({
         amount: totalPrice,
-        transactionId: transaction.id,
+        transactionId: result.transaction.id,
         userId,
       });
-      console.log(order, "razor");
 
       await this.updateTransactionProvider.updateTransaction({
-        updatedTransactionData: { orderId: order.id },
-        transactionId: transaction.id,
+        updatedTransactionData: {
+          orderId: order.id,
+        },
+        transactionId: result.transaction.id,
       });
     }
 
-    logger.info(`✅ Booking placed with ID: ${booking.id}`);
+    logger.info(`✅ Booking placed with ID: ${result.booking.id}`);
 
-    return new SingleBookingResponse(true, BOOKING_PLACED, booking);
+    return new SingleBookingResponse(true, BOOKING_PLACED, result.booking);
   }
 
   async acceptBooking(
@@ -176,32 +201,82 @@ export class BookingActionProvider {
       throw new CustomError(INTERNAL_ERROR_OCCURRED);
     }
 
-    return await this.bookingActionRepository.manager.transaction(
-      async (transactionalEntityManager) => {
-        const feeAmount = booking.totalPrice;
-        const isPenalty = booking.status === BookingStatus.ACCEPTED;
+    const refundTransactionObj =
+      await this.bookingActionRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          const amount = booking.totalPrice;
+          const isPenalty = booking.status === BookingStatus.ACCEPTED;
 
-        if (isPenalty && !confirmFee) {
-          throw new CustomError(
-            `❌ Cancelling this booking will incur a 100% fee of ₹${feeAmount}. Please confirm.`
-          );
+          if (isPenalty && !confirmFee) {
+            throw new CustomError(
+              `❌ Cancelling this booking will incur a 100% fee of ₹${amount}. Please confirm.`
+            );
+          }
+          const penaltyAmount = isPenalty ? amount : 0;
+          const refundAmount = booking.totalPrice - penaltyAmount;
+
+          await this.performCancellation({
+            userId,
+            panditId: booking.panditId,
+            bookingId,
+            cancelledBy: UserRole.USER,
+            amount: penaltyAmount,
+            cancelReason,
+            customReason,
+            transactionalEntityManager,
+          });
+
+          let paymentTransaction: Transaction | null = null;
+          let refundId: string | null = null;
+
+          if (booking.paid && refundAmount > 0) {
+            paymentTransaction =
+              await this.transactionInfoProvider.getPaymentTransaction({
+                bookingId,
+                userId,
+              });
+
+            if (paymentTransaction) {
+              const refund = await this.refundActionProvider.createRefund({
+                userId,
+                userRole: UserRole.USER,
+                bookingId,
+                originalAmount: booking.totalPrice,
+                refundAmount,
+                refundReason: RefundReason.CANCELLATION,
+                transactionId: paymentTransaction.id,
+                manager: transactionalEntityManager,
+              });
+
+              refundId = refund.id;
+            }
+          }
+          return { paymentTransaction, refundId };
         }
-        const penaltyAmount = isPenalty ? feeAmount : 0;
+      );
 
-        await this.performCancellation({
-          userId,
-          panditId: booking.panditId,
-          bookingId,
-          cancelledBy: UserRole.USER,
-          amount: penaltyAmount,
-          cancelReason,
-          customReason,
-          transactionalEntityManager,
-        });
+    const transaction = refundTransactionObj.paymentTransaction;
+    const refundId = refundTransactionObj.refundId;
 
-        return new SingleBookingResponse(true, BOOKING_CANCELLED_USER);
-      }
-    );
+    if (
+      booking.paid &&
+      transaction &&
+      transaction.paymentReferenceId &&
+      refundId
+    ) {
+      const order = await this.razorpayProvider.refundPayment({
+        transactionId: transaction.id,
+        paymentReferenceId: transaction.paymentReferenceId,
+        refundAmount: transaction.amount,
+        refundReason: RefundReason.CANCELLATION,
+        bookingId,
+        refundId,
+      });
+
+      logger.info(`successfully initiated refund: ${order}`);
+    }
+
+    return new SingleBookingResponse(true, BOOKING_CANCELLED_USER);
   }
 
   async cancelBookingByPandit(

@@ -20,8 +20,6 @@ export class CancelBookingProvider {
     params: CreateCancellationFeeDto,
     manager?: EntityManager
   ): Promise<CancelledBooking> {
-    console.log(params);
-    
     const em = manager || this.cancelBookingRepository.manager;
 
     const fee = em.create(CancelledBooking, params);

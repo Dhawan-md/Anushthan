@@ -1,5 +1,6 @@
 import Razorpay from "razorpay";
 import { Service } from "typedi";
+import { RefundReason } from "../../utils/enums";
 
 @Service()
 export class RazorpayProvider {
@@ -32,9 +33,34 @@ export class RazorpayProvider {
     return await this.razorpay.payments.fetch(paymentId);
   }
 
-  async refundPayment(paymentId: string, amount?: number) {
-    return await this.razorpay.payments.refund(paymentId, {
-      amount: amount, // If undefined, full refund
-    });
+  async refundPayment(params: {
+    transactionId: string;
+    paymentReferenceId: string; // Razorpay payment_id
+    refundAmount: number; // in rupees
+    refundReason: RefundReason;
+    bookingId: string;
+    refundId: string;
+  }) {
+    const {
+      transactionId,
+      paymentReferenceId,
+      refundAmount,
+      refundReason,
+      refundId,
+    } = params;
+    
+    const refundResponse = await this.razorpay.payments.refund(
+      paymentReferenceId,
+      {
+        amount: Math.round(refundAmount * 100), // Razorpay expects paise
+        notes: {
+          reason: refundReason,
+          transactionId,
+          refundId,
+        },
+      }
+    );
+
+    return refundResponse;
   }
 }

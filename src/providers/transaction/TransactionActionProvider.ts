@@ -1,12 +1,14 @@
 import { Service } from "typedi";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 import { Transaction } from "../../entities/Transaction";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import {
+  PaymentMethod,
   TransactionStatus,
   TransactionType,
   UserRole,
 } from "../../utils/enums";
+import { logger } from "../../utils/logger";
 
 @Service()
 export class TransactionActionProvider {
@@ -17,26 +19,85 @@ export class TransactionActionProvider {
       this.repositoryFactory.getRepository(Transaction);
   }
 
-  async createTransaction({
-    userId,
-    userRole,
-    bookingId,
-    amount,
-  }: {
+  async createPaymentTransaction(params: {
     userId: string;
     userRole: UserRole;
     bookingId: string;
     amount: number;
+    type?: TransactionType;
+    paymentMethod: PaymentMethod;
+    manager?: EntityManager;
   }): Promise<Transaction> {
-    const transaction = this.transactionActionRepository.create({
+    const {
       userId,
       userRole,
       bookingId,
       amount,
-      type: TransactionType.PAYMENT,
+      manager,
+      type = TransactionType.PAYMENT_INCOMING,
+      paymentMethod,
+    } = params;
+    logger.info(`🔄 Creating transaction with booking ID: ${bookingId}`);
+
+    const em = manager || this.transactionActionRepository.manager;
+
+    const transaction = await em.create(Transaction, {
+      userId,
+      userRole,
+      bookingId,
+      amount,
+      type,
       status: TransactionStatus.PENDING,
+      booking: { id: bookingId },
+      paymentMethod,
     });
 
-    return await this.transactionActionRepository.save(transaction);
+    return em.save(Transaction, transaction);
   }
+
+  // async createRefundTransaction(params: {
+  //   userId: string;
+  //   userRole: UserRole;
+  //   bookingId: string;
+  //   orignalAmount: number;
+  //   refundAmount: number;
+  //   refundReason: RefundReason;
+  //   manager?: EntityManager;
+  // }): Promise<Transaction> {
+  //   const {
+  //     userId,
+  //     userRole,
+  //     bookingId,
+  //     manager,
+  //     orignalAmount,
+  //     refundAmount,
+  //     refundReason,
+  //   } = params;
+
+  //   const em = manager || this.transactionActionRepository.manager;
+
+  //   const transaction = await em.create(Transaction, {
+  //     userId,
+  //     userRole,
+  //     bookingId,
+  //     amount: refundAmount,
+  //     type: TransactionType.REFUND,
+  //     status: TransactionStatus.PENDING,
+  //   });
+
+  //   const savedTransaction = await em.save(transaction);
+
+  //   await this.refundProvider.createRefund({
+  // userId,
+  // userRole,
+  // bookingId,
+  // orignalAmount,
+  // refundAmount,
+  // refundReason,
+  // transactionId: savedTransaction.id,
+  // manager,
+  //   });
+
+  //   return savedTransaction;
+  // }
 }

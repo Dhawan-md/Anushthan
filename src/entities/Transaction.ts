@@ -5,43 +5,43 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
-import { Field, ObjectType } from "type-graphql";
-import { TransactionStatus, TransactionType, UserRole } from "../utils/enums";
+import { ObjectType } from "type-graphql";
+import {
+  PaymentMethod,
+  TransactionStatus,
+  TransactionType,
+  UserRole,
+} from "../utils/enums";
 import { Booking } from "./Booking";
+import { Refund } from "./Refund";
 
 @ObjectType()
 @Entity()
 export class Transaction {
-  @Field()
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field()
   @Column()
   userId!: string;
 
-  @Field(() => UserRole)
   @Column({ type: "enum", enum: UserRole })
   userRole!: UserRole;
 
-  @Field()
-  @Column()
+  @Column({ name: "booking_id" })
   bookingId!: string;
 
-  @ManyToOne(() => Booking, { nullable: true })
-  @JoinColumn({ name: "bookingId" })
-  booking?: Booking;
+  @ManyToOne(() => Booking, (booking) => booking.transactions)
+  @JoinColumn()
+  booking!: Booking;
 
-  @Field()
   @Column({ type: "decimal", precision: 10, scale: 2 })
   amount!: number;
 
-  @Field(() => TransactionType)
   @Column({ type: "enum", enum: TransactionType })
   type!: TransactionType;
 
-  @Field(() => TransactionStatus)
   @Column({
     type: "enum",
     enum: TransactionStatus,
@@ -49,23 +49,25 @@ export class Transaction {
   })
   status!: TransactionStatus;
 
-  @Column({ nullable: true })
-  @Field({ nullable: true })
-  paymentProvider?: string;
+  @Column({ default: false, name: "is_refunded" })
+  isRefunded!: boolean;
 
-  @Field({ nullable: true })
+  @OneToMany(() => Refund, (refund) => refund.transaction, { cascade: true })
+  refunds!: Refund[];
+
+  @Column({
+    name: "payment_method",
+    type: "enum",
+    enum: PaymentMethod,
+  })
+  paymentMethod!: PaymentMethod;
+
   @Column({ nullable: true })
   orderId?: string;
 
-  @Field({ nullable: true })
   @Column({ nullable: true })
   paymentReferenceId?: string;
 
-  @Column({ default: false })
-  @Field()
-  isTest!: boolean;
-
-  @Field()
   @CreateDateColumn()
   createdAt!: Date;
 }

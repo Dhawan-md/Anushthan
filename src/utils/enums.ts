@@ -51,7 +51,6 @@ registerEnumType(BookingStatus, { name: "BookingStatus" });
 export enum PaymentMethod {
   UPI = "UPI",
   CARD = "CARD",
-  CASH = "CASH",
   WALLET = "WALLET",
   NET_BANKING = "NET_BANKING",
 }
@@ -110,8 +109,9 @@ registerEnumType(UserCancellationReason, {
 });
 
 export enum TransactionType {
-  PAYMENT = "PAYMENT",
-  REFUND = "REFUND",
+  PAYMENT_INCOMING = "PAYMENT_INCOMING",
+  PAYMENT_OUTGOING = "PAYMENT_OUTGOING",
+  PENALTY = "PENALTY",
 }
 registerEnumType(TransactionType, { name: "TransactionType" });
 
@@ -122,6 +122,13 @@ export enum TransactionStatus {
 }
 registerEnumType(TransactionStatus, { name: "TransactionStatus" });
 
+export enum RefundStatus {
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+}
+registerEnumType(RefundStatus, { name: "RefundStatus" });
+
 export enum RefundReason {
   CANCELLATION = "CANCELLATION",
   SERVICE_ISSUE = "SERVICE_ISSUE",
@@ -129,3 +136,8 @@ export enum RefundReason {
   OTHER = "OTHER",
 }
 
+export enum PaymentType {
+  COD = "COD",
+  ONLINE = "ONLINE",
+}
+registerEnumType(PaymentType, { name: "PaymentType" });

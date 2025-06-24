@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from "typeorm";
 import { Field, Float, Int, ObjectType } from "type-graphql";
-import { BookingStatus, PaymentMethod } from "../utils/enums";
+import { BookingStatus, PaymentType } from "../utils/enums";
 import { Transaction } from "./Transaction";
 
 @ObjectType()
@@ -15,11 +15,11 @@ import { Transaction } from "./Transaction";
 export class Booking {
   @Field()
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  id!: string;
 
   @Field()
   @Column({ name: "user_id" })
-  userId: string;
+  userId!: string;
 
   @Field({ nullable: true })
   @Column({ name: "pandit_id", nullable: true })
@@ -27,15 +27,15 @@ export class Booking {
 
   @Field(() => [String])
   @Column("text", { array: true, name: "service_ids" })
-  serviceIds: string[];
+  serviceIds!: string[];
 
   @Field()
   @Column({ name: "category_id" })
-  categoryId: string;
+  categoryId!: string;
 
   @Field()
   @Column()
-  location: string;
+  location!: string;
 
   @Field(() => BookingStatus)
   @Column({
@@ -43,35 +43,34 @@ export class Booking {
     enum: BookingStatus,
     default: BookingStatus.PENDING,
   })
-  status: BookingStatus;
+  status!: BookingStatus;
 
   @Field()
   @Column({ name: "time_slot", type: "timestamp" })
-  timeSlot: Date;
+  timeSlot!: Date;
 
   @Field(() => Float)
   @Column("float", { name: "total_price" })
-  totalPrice: number;
+  totalPrice!: number;
 
   @Field(() => Int)
   @Column({ name: "estimated_time" })
-  estimatedTime: number;
+  estimatedTime!: number;
 
   @Field()
   @Column({ default: false })
-  paid: boolean;
+  paid!: boolean;
 
-  @Field(() => PaymentMethod, { nullable: true })
+  @Field(() => PaymentType)
   @Column({
-    name: "payment_method",
+    name: "paymentType",
     type: "enum",
-    enum: PaymentMethod,
-    nullable: true,
+    enum: PaymentType,
   })
-  paymentMethod?: PaymentMethod; // Consider using enum
+  paymentType!: PaymentType; // Consider using enum
 
   @OneToMany(() => Transaction, (transaction) => transaction.booking)
-  transactions?: Transaction[];
+  transactions!: Transaction[];
 
   @Field({ nullable: true })
   @Column({ nullable: true, type: "timestamp" })
@@ -91,11 +90,11 @@ export class Booking {
 
   @Field()
   @CreateDateColumn({ name: "created_at" })
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field()
   @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Field({ nullable: true })
   @Column({ name: "cancellation_id", nullable: true })
