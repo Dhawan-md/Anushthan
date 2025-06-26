@@ -16,7 +16,7 @@ import {
   CancelPanditBookingDto,
   CancelUserBookingDto,
   PlaceBookingDto,
-} from "../../types/dtos/booking";
+} from "../../types/dtos/Booking";
 import { CancelBookingInput } from "../../types/inputTypes/booking/CancelUserBooking";
 
 @Service()

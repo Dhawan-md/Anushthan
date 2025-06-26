@@ -4,7 +4,7 @@ import { Transaction } from "../../entities/Transaction";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { MultipleTransactionResponse } from "../../types/responses/TransactionResponse";
 import { logger } from "../../utils/logger";
-import { getAllBookingTransactions } from "../../types/dtos/transaction";
+import { getAllBookingTransactions } from "../../types/dtos/Transaction";
 import { CustomError } from "../../utils/customError";
 import { NO_TRANSACTION_FOUND } from "../../utils/messages";
 import { TransactionStatus, TransactionType } from "../../utils/enums";
@@ -55,6 +55,7 @@ export class TransactionInfoProvider {
     orderId?: string;
   }): Promise<Transaction> {
     const { transactionId, orderId } = params;
+    console.log("worked");
 
     const transactionData = await this.transactionInfoRepository.findOne({
       where: [{ id: transactionId }, { orderId: orderId }],

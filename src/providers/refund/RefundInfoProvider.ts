@@ -5,7 +5,9 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 import { NO_TRANSACTION_FOUND } from "../../utils/messages";
-// import { RefundStatus } from "../../utils/enums";
+import { RefundStatus } from "../../utils/enums";
+import { MultipleRefundResponse } from "../../types/responses/RefundResponse";
+import { getAllTransactionRefunds } from "../../types/dtos/Refund";
 
 @Service()
 export class RefundInfoProvider {
@@ -15,53 +17,80 @@ export class RefundInfoProvider {
     this.refundInfoRepository = this.repositoryFactory.getRepository(Refund);
   }
 
-  // async getAllBookingRefunds(
-  //   params: getAllBookingRefunds
-  // ): Promise<MultipleRefundResponse> {
-  //   const { bookingId, page = 1, limit = 10 } = params;
-  //   logger.info(
-  //     `📦 Fetching refunds for booking ID: ${bookingId} | Page: ${page}, Limit: ${limit}`
-  //   );
+  async getAllTransactionRefunds(
+    params: getAllTransactionRefunds
+  ): Promise<MultipleRefundResponse> {
+    const { transactionId, page = 1, limit = 10 } = params;
 
-  //   const [bookingList, total] = await this.refundInfoRepository.findAndCount({
-  //     where: { bookingId },
-  //     skip: (page - 1) * limit,
-  //     take: limit,
-  //   });
+    logger.info(
+      `📦 Fetching refund list | Transaction ID: ${transactionId} | Page: ${page} | Limit: ${limit}`
+    );
 
-  //   const totalPages = Math.ceil(total / limit);
+    const [refunds, total] = await this.refundInfoRepository.findAndCount({
+      where: { transactionId },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
-  //   logger.info(
-  //     `✅ Retrieved ${bookingList.length} bookings out of ${total} total.`
-  //   );
+    const totalPages = Math.ceil(total / limit);
+    logger.info(
+      `✅ Found ${refunds.length} refunds for transaction ${transactionId} | Total: ${total}, Total Pages: ${totalPages}`
+    );
 
-  //   return new MultipleRefundResponse(
-  //     true,
-  //     "Refund List",
-  //     bookingList,
-  //     total,
-  //     page,
-  //     limit,
-  //     totalPages
-  //   );
-  // }
+    return new MultipleRefundResponse(
+      true,
+      "Refund List",
+      refunds,
+      total,
+      page,
+      limit,
+      totalPages
+    );
+  }
 
   async getRefund(params: {
-    refundId: string;
+    refundId?: string;
+    paymentReferenceId?: string;
     withRelation?: boolean;
   }): Promise<Refund> {
-    const { refundId, withRelation = false } = params;
+    const { refundId, withRelation = false, paymentReferenceId } = params;
 
-    const refundData = await this.refundInfoRepository.findOne({
-      where: { id: refundId },
+    logger.info(
+      `🔍 Fetching refund | Refund ID: ${
+        refundId ?? "-"
+      } | Payment Reference ID: ${
+        paymentReferenceId ?? "-"
+      } | With Relation: ${withRelation}`
+    );
+
+    const whereConditions: Partial<Refund>[] = [];
+
+    if (refundId) {
+      whereConditions.push({ id: refundId, status: RefundStatus.PENDING });
+    }
+
+    if (paymentReferenceId) {
+      whereConditions.push({
+        paymentReferenceId,
+        status: RefundStatus.PENDING,
+      });
+    }
+
+    const refund = await this.refundInfoRepository.findOne({
+      where: whereConditions,
       ...(withRelation ? { relations: ["transaction"] } : {}),
     });
 
-    if (!refundData) {
-      logger.warn(`❌ No refund found with id: ${refundId}`);
+    if (!refund) {
+      logger.warn(
+        `❌ Refund not found | Refund ID: ${
+          refundId ?? "-"
+        } | Payment Reference ID: ${paymentReferenceId ?? "-"}`
+      );
       throw new CustomError(NO_TRANSACTION_FOUND);
     }
 
-    return refundData;
+    logger.info(`✅ Refund found | ID: ${refund.id}`);
+    return refund;
   }
 }

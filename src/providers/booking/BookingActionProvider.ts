@@ -15,7 +15,7 @@ import {
   CancelPanditBookingDto,
   CancelUserBookingDto,
   PlaceBookingDto,
-} from "../../types/dtos/booking";
+} from "../../types/dtos/Booking";
 import {
   ActiveStatus,
   BookingStatus,
@@ -74,7 +74,7 @@ export class BookingActionProvider {
   }
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
-    const { serviceIds, categoryId, userId, paid, totalPrice, paymentMethod } =
+    const { serviceIds, categoryId, userId, totalPrice, paymentType } =
       params;
     logger.info(`📥 Placing a new booking for userId: ${userId}`);
 
@@ -90,59 +90,64 @@ export class BookingActionProvider {
 
     if (isDuplicate) {
       logger.warn(
-        `⚠️ Duplicate booking attempt detected for userId: ${params.userId}`
+        `⚠️ Duplicate booking attempt detected for userId: ${userId}`
       );
-
       throw new CustomError(
         "You already have a pending booking for these services at this time."
       );
     }
-    const result = await this.bookingActionRepository.manager.transaction(
-      async (transactionalEntityManager) => {
-        const booking = await transactionalEntityManager.save(
-          this.bookingActionRepository.create({
-            ...params,
-            paymentType: paid ? PaymentType.ONLINE : PaymentType.COD,
-            status: BookingStatus.PENDING,
-          })
-        );
 
-        let transaction: Transaction | null = null;
-        if (paid) {
-          transaction =
-            await this.transactionActionProvider.createPaymentTransaction({
-              userId,
-              userRole: UserRole.USER,
-              bookingId: booking.id,
-              amount: totalPrice,
-              paymentMethod,
-              manager: transactionalEntityManager,
-            });
+    const { booking, transaction } =
+      await this.bookingActionRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          const booking = await transactionalEntityManager.save(
+            this.bookingActionRepository.create({
+              ...params,
+              paymentType,
+              status: BookingStatus.PENDING,
+            })
+          );
+
+          let transaction: Transaction | null = null;
+
+          if (paymentType === PaymentType.ONLINE) {
+            transaction =
+              await this.transactionActionProvider.createPaymentTransaction({
+                userId,
+                userRole: UserRole.USER,
+                bookingId: booking.id,
+                amount: totalPrice,
+                manager: transactionalEntityManager,
+              });
+          }
+
+          return { booking, transaction };
         }
-
-        return { booking, transaction };
-      }
-    );
+      );
 
     // ✅ Now outside the transaction — safe to call Razorpay
-    if (paid && result.transaction) {
+    if (paymentType === PaymentType.ONLINE && transaction) {
       const order = await this.razorpayProvider.createRazorpayOrder({
         amount: totalPrice,
-        transactionId: result.transaction.id,
+        transactionId: transaction.id,
         userId,
       });
+      console.log(order);
 
       await this.updateTransactionProvider.updateTransaction({
         updatedTransactionData: {
           orderId: order.id,
         },
-        transactionId: result.transaction.id,
+        transactionId: transaction.id,
       });
+
+      logger.info(
+        `✅ Razorpay order created for transaction: ${transaction.id}`
+      );
     }
+    logger.info(`✅ Booking placed with ID: ${booking.id}`);
 
-    logger.info(`✅ Booking placed with ID: ${result.booking.id}`);
-
-    return new SingleBookingResponse(true, BOOKING_PLACED, result.booking);
+    return new SingleBookingResponse(true, BOOKING_PLACED, booking);
   }
 
   async acceptBooking(
@@ -166,10 +171,10 @@ export class BookingActionProvider {
       );
     }
 
-    await this.updateBookingProvider.updateBooking(
-      { status: BookingStatus.ACCEPTED, panditId },
-      bookingId
-    );
+    await this.updateBookingProvider.updateBooking({
+      updatedBookingData: { status: BookingStatus.ACCEPTED, panditId },
+      bookingId,
+    });
     logger.info(`✅ Booking ${bookingId} accepted by pandit ${panditId}`);
 
     return new SingleBookingResponse(true, BOOKING_ACCEPTED);
@@ -236,7 +241,7 @@ export class BookingActionProvider {
                 userId,
               });
 
-            if (paymentTransaction) {
+            if (paymentTransaction && paymentTransaction.paymentReferenceId) {
               const refund = await this.refundActionProvider.createRefund({
                 userId,
                 userRole: UserRole.USER,
@@ -245,6 +250,7 @@ export class BookingActionProvider {
                 refundAmount,
                 refundReason: RefundReason.CANCELLATION,
                 transactionId: paymentTransaction.id,
+                paymentReferenceId: paymentTransaction.paymentReferenceId,
                 manager: transactionalEntityManager,
               });
 
@@ -383,15 +389,15 @@ export class BookingActionProvider {
         status: amount > 0 ? ActiveStatus.ACTIVE : ActiveStatus.INACTIVE,
       });
 
-    await this.updateBookingProvider.updateBooking(
-      {
+    await this.updateBookingProvider.updateBooking({
+      updatedBookingData: {
         status: BookingStatus.CANCELLED,
         cancellationId: cancelledBooking.id,
         cancelledAt: cancelledBooking.cancelledAt,
       },
       bookingId,
-      transactionalEntityManager
-    );
+      manager: transactionalEntityManager,
+    });
 
     return cancelledBooking;
   }

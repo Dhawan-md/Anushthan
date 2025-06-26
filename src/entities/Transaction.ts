@@ -8,12 +8,7 @@ import {
   OneToMany,
 } from "typeorm";
 import { ObjectType } from "type-graphql";
-import {
-  PaymentMethod,
-  TransactionStatus,
-  TransactionType,
-  UserRole,
-} from "../utils/enums";
+import { TransactionStatus, TransactionType, UserRole } from "../utils/enums";
 import { Booking } from "./Booking";
 import { Refund } from "./Refund";
 
@@ -55,12 +50,8 @@ export class Transaction {
   @OneToMany(() => Refund, (refund) => refund.transaction, { cascade: true })
   refunds!: Refund[];
 
-  @Column({
-    name: "payment_method",
-    type: "enum",
-    enum: PaymentMethod,
-  })
-  paymentMethod!: PaymentMethod;
+  @Column({ nullable: true })
+  paymentMethod?: string;
 
   @Column({ nullable: true })
   orderId?: string;

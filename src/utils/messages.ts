@@ -130,3 +130,4 @@ export const NO_TRANSACTION_FOUND = "No transaction found.";
 
 //Refund Message
 export const NO_REFUND_FOUND = "No refund found.";
+export const REFUND_UPDATED = "Refund updated successfully.";

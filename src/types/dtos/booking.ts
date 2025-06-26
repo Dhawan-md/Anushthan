@@ -1,7 +1,7 @@
 import { PaginationDto } from "./Pagination";
 import {
   ActiveStatus,
-  PaymentMethod,
+  PaymentType,
   UserCancellationReason,
   UserRole,
 } from "../../utils/enums";
@@ -15,8 +15,8 @@ export class PlaceBookingDto {
   totalPrice: number;
   estimatedTime: number;
   paid: boolean;
-  paymentMethod: PaymentMethod;
   transactionId?: string;
+  paymentType: PaymentType;
 }
 
 export class BookingActionDto {

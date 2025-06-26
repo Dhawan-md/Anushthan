@@ -3,7 +3,6 @@ import { EntityManager, Repository } from "typeorm";
 import { Transaction } from "../../entities/Transaction";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import {
-  PaymentMethod,
   TransactionStatus,
   TransactionType,
   UserRole,
@@ -25,7 +24,6 @@ export class TransactionActionProvider {
     bookingId: string;
     amount: number;
     type?: TransactionType;
-    paymentMethod: PaymentMethod;
     manager?: EntityManager;
   }): Promise<Transaction> {
     const {
@@ -35,12 +33,12 @@ export class TransactionActionProvider {
       amount,
       manager,
       type = TransactionType.PAYMENT_INCOMING,
-      paymentMethod,
     } = params;
     logger.info(`🔄 Creating transaction with booking ID: ${bookingId}`);
 
     const em = manager || this.transactionActionRepository.manager;
-
+    console.log("errrrr");
+    
     const transaction = await em.create(Transaction, {
       userId,
       userRole,
@@ -49,7 +47,6 @@ export class TransactionActionProvider {
       type,
       status: TransactionStatus.PENDING,
       booking: { id: bookingId },
-      paymentMethod,
     });
 
     return em.save(Transaction, transaction);

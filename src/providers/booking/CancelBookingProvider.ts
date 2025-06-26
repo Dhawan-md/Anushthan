@@ -5,7 +5,7 @@ import { CancelledBooking } from "../../entities/CancelledBooking";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { CreateCancellationFeeDto } from "../../types/dtos/booking";
+import { CreateCancellationFeeDto } from "../../types/dtos/Booking";
 
 @Service()
 export class CancelBookingProvider {

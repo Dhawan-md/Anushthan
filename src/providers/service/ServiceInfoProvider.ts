@@ -18,7 +18,7 @@ import {
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
-import { GetServicesDto } from "../../types/dtos/service";
+import { GetServicesDto } from "../../types/dtos/Service";
 
 @Service()
 export class ServiceInfoProvider {

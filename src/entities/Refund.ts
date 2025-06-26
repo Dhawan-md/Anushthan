@@ -43,6 +43,9 @@ export class Refund {
   @Column({ type: "enum", enum: RefundReason, name: "refund_reason" })
   refundReason!: RefundReason;
 
+  @Column()
+  paymentReferenceId: string;
+
   @Column({ nullable: true, name: "refund_reference_id" })
   refundReferenceId?: string;
 

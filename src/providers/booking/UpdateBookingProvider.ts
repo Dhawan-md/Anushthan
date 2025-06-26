@@ -20,11 +20,12 @@ export class UpdateBookingProvider {
       this.repositoryFactory.getRepository(Booking);
   }
 
-  async updateBooking(
-    updatedBookingData: Partial<Booking>,
-    bookingId: string,
-    manager?: EntityManager
-  ): Promise<SingleBookingResponse> {
+  async updateBooking(params: {
+    updatedBookingData: Partial<Booking>;
+    bookingId: string;
+    manager?: EntityManager;
+  }): Promise<SingleBookingResponse> {
+    const { bookingId, manager, updatedBookingData } = params;
     logger.info(`🔄 Updating booking with ID: ${bookingId}`);
 
     if (Object.keys(updatedBookingData).length === 0) {

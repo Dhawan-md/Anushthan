@@ -9,7 +9,7 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
-import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/booking";
+import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/Booking";
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
 

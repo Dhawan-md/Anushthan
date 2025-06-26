@@ -7,7 +7,7 @@ import { BookingInfoProvider } from "../../providers/booking/BookingInfoProvider
 import { Context } from "../../types/context";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
-import { MyBookingsDto } from "../../types/dtos/booking";
+import { MyBookingsDto } from "../../types/dtos/Booking";
 
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
@@ -28,7 +28,7 @@ export class BookingQueryResolver {
     @Ctx() ctx: Context
   ): Promise<MultipleBookingResponse> {
     const userId = ctx.user?.id;
-    
+
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
     const dto: MyBookingsDto = plainToInstance(MyBookingsDto, {

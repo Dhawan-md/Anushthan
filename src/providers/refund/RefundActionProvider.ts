@@ -13,51 +13,53 @@ export class RefundActionProvider {
     this.refundRepository = this.repositoryFactory.getRepository(Refund);
   }
 
-  async createRefund(
-    params: {
-      userId: string;
-      userRole: UserRole;
-      bookingId: string;
-      originalAmount: number;
-      refundAmount: number;
-      refundReason: RefundReason;
-      transactionId: string;
-      manager?: EntityManager;
-    } // Optional for now
-  ): Promise<Refund> {
-    // Step 1: Log refund action
+  async createRefund(params: {
+    userId: string;
+    userRole: UserRole;
+    bookingId: string;
+    originalAmount: number;
+    refundAmount: number;
+    refundReason: RefundReason;
+    transactionId: string;
+    paymentReferenceId: string;
+    manager?: EntityManager;
+  }): Promise<Refund> {
     const {
       userId,
-      bookingId,
       userRole,
+      bookingId,
       originalAmount,
       refundAmount,
       refundReason,
       transactionId,
+      paymentReferenceId,
       manager,
     } = params;
-    logger.info(
-      `💸 Refunding ₹${refundAmount} to user ${userId} for booking ${bookingId}`
-    );
 
     const em = manager || this.refundRepository.manager;
 
-    // Step 2: (MVP) Save refund details in DB
-    const refund = await em.create(Refund, {
+    logger.info(
+      `💸 Creating refund record for userId: ${userId}, bookingId: ${bookingId}, amount: ₹${refundAmount}`
+    );
+
+    const refund = em.create(Refund, {
       userId,
       userRole,
       bookingId,
       originalAmount,
-      transactionId,
       refundAmount,
       refundReason,
-      transaction: { id: transactionId },
+      transactionId,
+      paymentReferenceId,
+      transaction: { id: transactionId }, // Ensures .transaction works for later eager loads
     });
 
     const savedRefund = await em.save(refund);
 
-    // Step 3: (Future) Integrate with actual payment gateway
-    // Example: await razorpay.refund(paymentReferenceId, amount);
+    logger.info(
+      `✅ Refund record created: refundId: ${savedRefund.id}, linked to transactionId: ${transactionId}`
+    );
+
     return savedRefund;
   }
 }
