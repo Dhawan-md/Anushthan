@@ -5,8 +5,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
 } from "typeorm";
 import { ActiveStatus, UserCancellationReason, UserRole } from "../utils/enums";
+import { Booking } from "./Booking";
 
 @ObjectType()
 @Entity()
@@ -62,4 +65,8 @@ export class CancelledBooking {
   @Field(() => Date)
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @OneToOne(() => Booking, (booking) => booking.cancelled_booking)
+  @JoinColumn()
+  booking: Booking;
 }

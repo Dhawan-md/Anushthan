@@ -3,9 +3,9 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
-  ManyToOne,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from "typeorm";
 import { ObjectType } from "type-graphql";
 import { TransactionStatus, TransactionType, UserRole } from "../utils/enums";
@@ -27,7 +27,7 @@ export class Transaction {
   @Column({ name: "booking_id" })
   bookingId!: string;
 
-  @ManyToOne(() => Booking, (booking) => booking.transactions)
+  @OneToOne(() => Booking, (booking) => booking.transaction)
   @JoinColumn()
   booking!: Booking;
 

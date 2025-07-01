@@ -21,6 +21,7 @@ import {
   BookingStatus,
   PaymentType,
   RefundReason,
+  TransactionStatus,
   UserCancellationReason,
   UserRole,
 } from "../../utils/enums";
@@ -43,6 +44,11 @@ import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvi
 import { Transaction } from "../../entities/Transaction";
 import { RefundActionProvider } from "../refund/RefundActionProvider";
 import { TransactionInfoProvider } from "../transaction/TransactionInfoProvider";
+import { paymentTimeoutQueue } from "../../bullmq/queues/paymentTimeout.queue";
+import { generateUserSecret } from "../../helpers/generateUserSecret";
+import { generateOtp } from "../../helpers/generateOtp";
+import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
+import redis from "../../config/redis";
 
 @Service()
 export class BookingActionProvider {
@@ -74,8 +80,7 @@ export class BookingActionProvider {
   }
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
-    const { serviceIds, categoryId, userId, totalPrice, paymentType } =
-      params;
+    const { serviceIds, categoryId, userId, totalPrice, paymentType } = params;
     logger.info(`📥 Placing a new booking for userId: ${userId}`);
 
     await this.bookingInfoProvider.isPendingAmount(userId);
@@ -127,23 +132,50 @@ export class BookingActionProvider {
 
     // ✅ Now outside the transaction — safe to call Razorpay
     if (paymentType === PaymentType.ONLINE && transaction) {
-      const order = await this.razorpayProvider.createRazorpayOrder({
-        amount: totalPrice,
-        transactionId: transaction.id,
-        userId,
-      });
-      console.log(order);
+      try {
+        const order = await this.razorpayProvider.createRazorpayOrder({
+          amount: totalPrice,
+          transactionId: transaction.id,
+          userId,
+        });
 
-      await this.updateTransactionProvider.updateTransaction({
-        updatedTransactionData: {
-          orderId: order.id,
-        },
-        transactionId: transaction.id,
-      });
+        await paymentTimeoutQueue.add(
+          "check-payment-timeout",
+          {
+            bookingId: booking.id,
+            transactionId: transaction.id,
+          },
+          { delay: 15 * 60 * 1000 }
+        );
 
-      logger.info(
-        `✅ Razorpay order created for transaction: ${transaction.id}`
-      );
+        await this.updateTransactionProvider.updateTransaction({
+          updatedTransactionData: {
+            orderId: order.id,
+          },
+          transactionId: transaction.id,
+        });
+
+        logger.info(
+          `✅ Razorpay order created and transaction updated: ${transaction.id}`
+        );
+      } catch (error) {
+        logger.error("❌ Failed during Razorpay payment setup", error);
+
+        // Optional rollback logic
+        await this.updateBookingProvider.updateBooking({
+          updatedBookingData: { status: BookingStatus.REJECTED },
+          bookingId: booking.id,
+        });
+
+        await this.updateTransactionProvider.updateTransaction({
+          updatedTransactionData: { status: TransactionStatus.FAILED },
+          transactionId: transaction.id,
+        });
+
+        throw new CustomError(
+          "Something went wrong while setting up the payment. Please try again."
+        );
+      }
     }
     logger.info(`✅ Booking placed with ID: ${booking.id}`);
 
@@ -158,9 +190,9 @@ export class BookingActionProvider {
       `📤 Pandit ${panditId} attempting to accept booking ${bookingId}`
     );
 
-    const bookingDetails = await this.bookingInfoProvider.getBookingDetails(
-      bookingId
-    );
+    const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+    });
 
     if (!bookingDetails || bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
@@ -169,6 +201,17 @@ export class BookingActionProvider {
       throw new CustomError(
         `Invalid booking or booking has been ${bookingDetails.status}`
       );
+    }
+
+    if (
+      bookingDetails.paymentType == PaymentType.ONLINE &&
+      !bookingDetails.paid
+    ) {
+      logger.error(
+        `❌ Booking ID ${bookingDetails.id} has payment type ONLINE but is yet to be paid.`
+      );
+
+      throw new CustomError("The booking is not paid so cannot be accepted.");
     }
 
     await this.updateBookingProvider.updateBooking({
@@ -180,13 +223,120 @@ export class BookingActionProvider {
     return new SingleBookingResponse(true, BOOKING_ACCEPTED);
   }
 
+  async initiateStartBooking(
+    bookingId: string,
+    panditId: string
+  ): Promise<SingleBookingResponse> {
+    logger.info(
+      `📦 Initiating startBooking for bookingId=${bookingId}, panditId=${panditId}`
+    );
+
+    const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+      filters: {
+        panditId,
+      },
+    });
+
+    if (bookingDetails.status !== BookingStatus.ACCEPTED) {
+      logger.warn(
+        `❌ Cannot initiate start. Booking ${bookingId} is in ${bookingDetails.status} status.)`
+      );
+
+      throw new CustomError("Booking is not confirmed or already started.");
+    }
+
+    const userSecret = generateUserSecret();
+    const otpDetails = generateOtp(userSecret.base32);
+    const redisKey = generateRedisOtpKey(bookingDetails.userId, bookingId);
+
+    const existingOtp = await redis.get(redisKey);
+
+    if (existingOtp) {
+      logger.warn(
+        `🚫 OTP already generated for booking ${bookingId}. Wait for it to expire.`
+      );
+      throw new CustomError(
+        "OTP already sent. Please wait until it expires before trying again."
+      );
+    }
+
+    await redis.setex(redisKey, 5 * 60, otpDetails.otpCode);
+    logger.info(`🔐 OTP stored in Redis for key=${redisKey}, expires in 5 min`);
+
+    // Replace with real notification
+    logger.info(
+      `📩 OTP for booking ${bookingId} is ${otpDetails.otpCode} (for debug only)`
+    );
+
+    return new SingleBookingResponse(
+      true,
+      "OTP sent. Please verify to start booking."
+    );
+  }
+
+  async finalizeStartBooking(
+    bookingId: string,
+    panditId: string,
+    otpCode: string
+  ): Promise<SingleBookingResponse> {
+    logger.info(
+      `✅ Finalizing startBooking for bookingId=${bookingId}, panditId=${panditId}`
+    );
+
+    const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+      filters: {
+        panditId,
+      },
+    });
+
+    const redisKey = generateRedisOtpKey(bookingDetails.userId, bookingId);
+    const storedOtp = await redis.get(redisKey);
+
+    if (!storedOtp) {
+      logger.warn(
+        `⚠️ OTP expired or not found for booking ${bookingId} (key=${redisKey})`
+      );
+      throw new CustomError("OTP expired or not generated.");
+    }
+
+    if (storedOtp !== otpCode) {
+      logger.warn(
+        `🚫 Invalid OTP for booking ${bookingId}, userInput=${otpCode}`
+      );
+      throw new CustomError("Invalid OTP.");
+    }
+
+    await redis.del(redisKey);
+    logger.info(`🧹 OTP key ${redisKey} cleared from Redis`);
+
+    await this.updateBookingProvider.updateBooking({
+      bookingId,
+      updatedBookingData: {
+        status: BookingStatus.STARTED,
+        startedAt: new Date(),
+      },
+    });
+
+    logger.info(`🟢 Booking ${bookingId} marked as STARTED`);
+
+    logger.info(
+      `✅ Booking ${bookingId} started successfully by pandit ${panditId}`
+    );
+
+    return new SingleBookingResponse(true, "Booking started successfully.");
+  }
+
   async cancelBookingByUser(
     params: CancelUserBookingDto
   ): Promise<SingleBookingResponse> {
     const { bookingId, userId, confirmFee, cancelReason, customReason } =
       params;
 
-    const booking = await this.bookingInfoProvider.getBookingDetails(bookingId);
+    const booking = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+    });
 
     if (booking.userId !== userId)
       throw new CustomError("You are not authorized to cancel this booking.");
@@ -236,9 +386,8 @@ export class BookingActionProvider {
 
           if (booking.paid && refundAmount > 0) {
             paymentTransaction =
-              await this.transactionInfoProvider.getPaymentTransaction({
+              await this.transactionInfoProvider.getTransaction({
                 bookingId,
-                userId,
               });
 
             if (paymentTransaction && paymentTransaction.paymentReferenceId) {
@@ -291,7 +440,9 @@ export class BookingActionProvider {
     const { bookingId, panditId, confirmFee, cancelReason, customReason } =
       params;
 
-    const booking = await this.bookingInfoProvider.getBookingDetails(bookingId);
+    const booking = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+    });
 
     if (booking.panditId !== panditId) {
       throw new CustomError("You are not authorized to cancel this booking.");
@@ -392,7 +543,7 @@ export class BookingActionProvider {
     await this.updateBookingProvider.updateBooking({
       updatedBookingData: {
         status: BookingStatus.CANCELLED,
-        cancellationId: cancelledBooking.id,
+        cancelled_booking: cancelledBooking,
         cancelledAt: cancelledBooking.cancelledAt,
       },
       bookingId,

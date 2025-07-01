@@ -42,6 +42,7 @@ registerEnumType(PanditStatus, {
 export enum BookingStatus {
   PENDING = "PENDING",
   ACCEPTED = "ACCEPTED",
+  STARTED = "STARTED",
   REJECTED = "REJECTED",
   COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",

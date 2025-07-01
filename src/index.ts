@@ -103,8 +103,11 @@ const startServer = async () => {
   try {
     await intializeDatabase();
     const app = await createApp();
-    const server = app.listen(5000, () => {
-      logger.info("🚀 Server is running at http://localhost:5000/graphql");
+
+    const PORT = process.env.PORT || 5000;
+
+    const server = app.listen(PORT, () => {
+      logger.info(`🚀 Server is running at http://localhost:${PORT}/graphql`);
     });
 
     // ✅ Gracefully handle shutdown

@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { Repository } from "typeorm";
+import { FindOptionsWhere, Repository } from "typeorm";
 import isEqual from "lodash/isEqual";
 
 import { Booking } from "../../entities/Booking";
@@ -12,6 +12,7 @@ import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
 import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/Booking";
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
+import { BookingFilters } from "../../types/globalTypes";
 
 @Service()
 export class BookingInfoProvider {
@@ -50,19 +51,40 @@ export class BookingInfoProvider {
     );
   }
 
-  async getBookingDetails(id: string): Promise<Booking> {
-    logger.info(`🔍 Fetching booking details for booking ID: ${id}`);
+  async getBookingDetails(params: {
+    bookingId: string;
+    filters?: BookingFilters;
+  }): Promise<Booking> {
+    const { bookingId, filters = {} } = params;
+    logger.info(
+      `🔍 Fetching booking details for ID: ${bookingId} with filters: ${JSON.stringify(
+        filters
+      )}`
+    );
+
+    const where: FindOptionsWhere<Booking> = { id: bookingId };
+
+    if (filters.userId) where.userId = filters.userId;
+    if (filters.panditId) where.panditId = filters.panditId;
+    if (filters.categoryId) where.categoryId = filters.categoryId;
+    if (filters.location) where.location = filters.location;
+    if (filters.status) where.status = filters.status;
+    if (filters.paid !== undefined) where.paid = filters.paid;
+    if (filters.paymentType) where.paymentType = filters.paymentType;
+    if (filters.timeSlot) where.timeSlot = filters.timeSlot;
+    if (filters.completedAt) where.completedAt = filters.completedAt;
+    if (filters.cancelledAt) where.cancelledAt = filters.cancelledAt;
 
     const bookingDetails = await this.bookingInfoRepository.findOne({
-      where: { id },
+      where,
     });
 
     if (!bookingDetails) {
-      logger.warn(`⚠️ Booking details not found for ID: ${id}`);
+      logger.warn(`⚠️ Booking details not found for ID: ${bookingId}`);
       throw new CustomError("missing booking Details");
     }
 
-    logger.info(`✅ Found booking details for ID: ${id}`);
+    logger.info(`✅ Found booking details for ID: ${bookingId}`);
 
     return bookingDetails;
   }
@@ -111,8 +133,20 @@ export class BookingInfoProvider {
     );
 
     const booking = await this.bookingInfoRepository.findOne({
-      where: { userId, paid: false },
+      where: {
+        userId,
+        status: BookingStatus.CANCELLED,
+        cancelled_booking: {
+          isPenaltyApplied: true,
+        },
+      },
+      relations: ["cancelled_booking"],
+      order: {
+        createdAt: "DESC", // or use cancelled_booking.createdAt if more accurate
+      },
     });
+    console.log(booking);
+
     if (!!booking) {
       throw new CustomError(
         `An amount of ${booking.totalPrice} is pending from your previous booking with booking Id: ${booking.id}. Go to orders and clear the due before placing a new booking.`

@@ -20,6 +20,7 @@ export const razorpayWebhookHandler = async (
   req: express.Request,
   res: express.Response
 ) => {
+  logger.info("📬 Webhook endpoint hit");
   let payload: any;
 
   try {
@@ -168,6 +169,23 @@ export const razorpayWebhookHandler = async (
             logger.info("✅ Refund and transaction updated to SUCCESS!");
           }
         );
+
+        break;
+      }
+
+      case "refund.failed": {
+        const refundData = payload.payload.refund.entity;
+        // const refundReferenceId = refundData.id;
+        const paymentId = refundData.payment_id;
+        const refundNotes = refundData.notes;
+
+        await updateRefundProvider.updateRefund({
+          updatedRefundData: {
+            status: RefundStatus.FAILED,
+          },
+          refundId: refundNotes.refundId,
+          paymentReferenceId: paymentId,
+        });
 
         break;
       }

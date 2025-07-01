@@ -67,11 +67,11 @@ export class UserInfoProvider {
     logger.info(
       `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
-    
+
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { userEmail: normalizedEmail }],
     });
-    
+
     if (!userData) {
       logger.warn(
         `❌ No user found with email or id: ${normalizedEmail || params.id}`

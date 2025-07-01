@@ -7,7 +7,6 @@ import { logger } from "../../utils/logger";
 import { getAllBookingTransactions } from "../../types/dtos/Transaction";
 import { CustomError } from "../../utils/customError";
 import { NO_TRANSACTION_FOUND } from "../../utils/messages";
-import { TransactionStatus, TransactionType } from "../../utils/enums";
 
 @Service()
 export class TransactionInfoProvider {
@@ -53,12 +52,13 @@ export class TransactionInfoProvider {
   async getTransaction(params: {
     transactionId?: string;
     orderId?: string;
+    bookingId?: string;
   }): Promise<Transaction> {
-    const { transactionId, orderId } = params;
-    console.log("worked");
+    const { transactionId, orderId, bookingId } = params;
+    logger.info(`🔍 Fetching booking details for transaction ID: ${transactionId || bookingId || orderId}`);
 
     const transactionData = await this.transactionInfoRepository.findOne({
-      where: [{ id: transactionId }, { orderId: orderId }],
+      where: [{ id: transactionId }, { orderId: orderId }, { bookingId }],
     });
 
     if (!transactionData) {
@@ -71,26 +71,26 @@ export class TransactionInfoProvider {
     return transactionData;
   }
 
-  async getPaymentTransaction(params: {
-    bookingId: string;
-    userId: string;
-  }): Promise<Transaction> {
-    const transaction = await this.transactionInfoRepository.findOne({
-      where: {
-        bookingId: params.bookingId,
-        userId: params.userId,
-        type: TransactionType.PAYMENT_INCOMING,
-        status: TransactionStatus.SUCCESS, // Only refund successful payments!
-      },
-      order: {
-        createdAt: "DESC", // latest one first
-      },
-    });
+  // async getPaymentTransaction(params: {
+  //   bookingId: string;
+  //   userId: string;
+  // }): Promise<Transaction> {
+  //   const transaction = await this.transactionInfoRepository.findOne({
+  //     where: {
+  //       bookingId: params.bookingId,
+  //       userId: params.userId,
+  //       type: TransactionType.PAYMENT_INCOMING,
+  //       status: TransactionStatus.SUCCESS, // Only refund successful payments!
+  //     },
+  //     order: {
+  //       createdAt: "DESC", // latest one first
+  //     },
+  //   });
 
-    if (!transaction) {
-      throw new CustomError("No transaction found");
-    }
+  //   if (!transaction) {
+  //     throw new CustomError("No transaction found");
+  //   }
 
-    return transaction;
-  }
+  //   return transaction;
+  // }
 }

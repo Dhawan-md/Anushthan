@@ -67,6 +67,35 @@ export class BookingMutationResolver {
 
   @Mutation(() => SingleBookingResponse)
   @Authorized(UserRole.PANDIT)
+  async initiateStartBooking(
+    @Arg("bookingId") bookingId: string,
+    @Ctx() ctx: Context
+  ): Promise<SingleBookingResponse> {
+    const panditId = ctx.user?.id;
+
+    if (!panditId) throw new CustomError(UNAUTHORIZED);
+    return this.bookingActionProvider.initiateStartBooking(bookingId, panditId);
+  }
+
+  @Mutation(() => SingleBookingResponse)
+  @Authorized(UserRole.PANDIT)
+  async finalizeStartBooking(
+    @Arg("bookingId") bookingId: string,
+    @Arg("otpCode") otpCode: string,
+    @Ctx() ctx: Context
+  ): Promise<SingleBookingResponse> {
+    const panditId = ctx.user?.id;
+
+    if (!panditId) throw new CustomError(UNAUTHORIZED);
+    return this.bookingActionProvider.finalizeStartBooking(
+      bookingId,
+      panditId,
+      otpCode
+    );
+  }
+
+  @Mutation(() => SingleBookingResponse)
+  @Authorized(UserRole.PANDIT)
   async cancelBookingPandit(
     @Arg("data") data: CancelBookingInput,
     @Ctx() ctx: Context

@@ -1,6 +1,8 @@
 import Razorpay from "razorpay";
 import { Service } from "typedi";
 import { RefundReason } from "../../utils/enums";
+import { CustomError } from "../../utils/customError";
+import { logger } from "../../utils/logger";
 
 @Service()
 export class RazorpayProvider {
@@ -18,21 +20,38 @@ export class RazorpayProvider {
     transactionId: string;
     userId: string;
   }) {
-    const response = await this.razorpay.orders.create({
-      amount: params.amount * 100,
-      currency: "INR",
-      receipt: "txn_" + params.transactionId,
-      notes: {
-        transactionId: params.transactionId,
-      },
-    });
-    return response;
+    try {
+      const response = await this.razorpay.orders.create({
+        amount: params.amount * 100, // amount in paisa
+        currency: "INR",
+        receipt: `txn_${params.transactionId}`,
+        notes: {
+          transactionId: params.transactionId,
+          userId: params.userId,
+        },
+      });
+
+      logger.info(
+        `✅ Razorpay order created: OrderID=${response.id} for TransactionID=${params.transactionId}`
+      );
+
+      return response;
+    } catch (error: any) {
+      logger.error(
+        `❌ Failed to create Razorpay order for TransactionID=${params.transactionId}: ${error?.message}`,
+        error
+      );
+
+      // Optional: Wrap Razorpay error into your custom error class
+      throw new CustomError(
+        "Something went wrong while creating Razorpay order. Please try again later."
+      );
+    }
   }
 
-  async fetchPayment(paymentId: string) {
-    return await this.razorpay.payments.fetch(paymentId);
+  async fetchPayment(orderId: string) {
+    return await this.razorpay.payments.fetch(orderId);
   }
-
   async refundPayment(params: {
     transactionId: string;
     paymentReferenceId: string; // Razorpay payment_id
@@ -48,7 +67,7 @@ export class RazorpayProvider {
       refundReason,
       refundId,
     } = params;
-    
+
     const refundResponse = await this.razorpay.payments.refund(
       paymentReferenceId,
       {

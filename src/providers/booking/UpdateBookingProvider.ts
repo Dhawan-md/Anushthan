@@ -35,9 +35,9 @@ export class UpdateBookingProvider {
 
     const em = manager || this.updateBookingRepository.manager;
 
-    const bookingData = await this.bookingInfoProvider.getBookingDetails(
-      bookingId
-    );
+    const bookingData = await this.bookingInfoProvider.getBookingDetails({
+      bookingId,
+    });
 
     Object.assign(bookingData, updatedBookingData);
 

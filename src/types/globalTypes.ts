@@ -1,5 +1,7 @@
 import { ObjectType, Field } from "type-graphql";
 
+import { BookingStatus, PaymentType } from "../utils/enums";
+
 @ObjectType()
 export class AccessToken {
   @Field()
@@ -31,3 +33,16 @@ export class OtpToken {
     this.expiresAt = expiresAt;
   }
 }
+
+export type BookingFilters = {
+  userId?: string;
+  panditId?: string;
+  categoryId?: string;
+  location?: string;
+  status?: BookingStatus;
+  paid?: boolean;
+  paymentType?: PaymentType;
+  timeSlot?: Date;
+  completedAt?: Date;
+  cancelledAt?: Date;
+};

@@ -4,11 +4,12 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  OneToOne,
 } from "typeorm";
 import { Field, Float, Int, ObjectType } from "type-graphql";
 import { BookingStatus, PaymentType } from "../utils/enums";
 import { Transaction } from "./Transaction";
+import { CancelledBooking } from "./CancelledBooking";
 
 @ObjectType()
 @Entity()
@@ -69,15 +70,19 @@ export class Booking {
   })
   paymentType!: PaymentType; // Consider using enum
 
-  @OneToMany(() => Transaction, (transaction) => transaction.booking)
-  transactions!: Transaction[];
+  @OneToOne(() => Transaction, (transaction) => transaction.booking)
+  transaction!: Transaction;
 
   @Field({ nullable: true })
-  @Column({ nullable: true, type: "timestamp" })
+  @Column({ nullable: true, type: "timestamp", name: "cancelled_at" })
   cancelledAt?: Date;
 
   @Field({ nullable: true })
-  @Column({ nullable: true, type: "timestamp" })
+  @Column({ nullable: true, type: "timestamp", name: "started_at" })
+  startedAt?: Date;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true, type: "timestamp", name: "completed_at" })
   completedAt?: Date;
 
   @Field({ nullable: true })
@@ -96,7 +101,6 @@ export class Booking {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
-  @Field({ nullable: true })
-  @Column({ name: "cancellation_id", nullable: true })
-  cancellationId?: string;
+  @OneToOne(() => CancelledBooking, (cb) => cb.booking)
+  cancelled_booking: CancelledBooking;
 }
