@@ -22,6 +22,7 @@ export class RefundActionProvider {
     refundReason: RefundReason;
     transactionId: string;
     paymentReferenceId: string;
+    attemptNumber: number;
     manager?: EntityManager;
   }): Promise<Refund> {
     const {
@@ -33,6 +34,7 @@ export class RefundActionProvider {
       refundReason,
       transactionId,
       paymentReferenceId,
+      attemptNumber,
       manager,
     } = params;
 
@@ -51,6 +53,7 @@ export class RefundActionProvider {
       refundReason,
       transactionId,
       paymentReferenceId,
+      attemptNumber,
       transaction: { id: transactionId }, // Ensures .transaction works for later eager loads
     });
 

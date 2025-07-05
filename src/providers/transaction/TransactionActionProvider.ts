@@ -37,8 +37,7 @@ export class TransactionActionProvider {
     logger.info(`🔄 Creating transaction with booking ID: ${bookingId}`);
 
     const em = manager || this.transactionActionRepository.manager;
-    console.log("errrrr");
-    
+
     const transaction = await em.create(Transaction, {
       userId,
       userRole,
@@ -48,8 +47,9 @@ export class TransactionActionProvider {
       status: TransactionStatus.PENDING,
       booking: { id: bookingId },
     });
+    const savedTransaction = await em.save(Transaction, transaction);
 
-    return em.save(Transaction, transaction);
+    return savedTransaction;
   }
 
   // async createRefundTransaction(params: {

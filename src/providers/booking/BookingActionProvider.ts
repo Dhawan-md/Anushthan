@@ -49,6 +49,8 @@ import { generateUserSecret } from "../../helpers/generateUserSecret";
 import { generateOtp } from "../../helpers/generateOtp";
 import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
 import redis from "../../config/redis";
+import { Refund } from "../../entities/Refund";
+import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
 
 @Service()
 export class BookingActionProvider {
@@ -139,11 +141,15 @@ export class BookingActionProvider {
           userId,
         });
 
+        logger.info(
+          `🧾 Queueing payment timeout job booking id: ${booking.id} and transaction id: ${transaction.id}`
+        );
+
         await paymentTimeoutQueue.add(
           "check-payment-timeout",
           {
-            bookingId: booking.id,
-            transactionId: transaction.id,
+            bookingId: String(booking.id),
+            transactionId: String(transaction?.id),
           },
           { delay: 15 * 60 * 1000 }
         );
@@ -382,7 +388,7 @@ export class BookingActionProvider {
           });
 
           let paymentTransaction: Transaction | null = null;
-          let refundId: string | null = null;
+          let refund: Refund | null = null;
 
           if (booking.paid && refundAmount > 0) {
             paymentTransaction =
@@ -391,7 +397,7 @@ export class BookingActionProvider {
               });
 
             if (paymentTransaction && paymentTransaction.paymentReferenceId) {
-              const refund = await this.refundActionProvider.createRefund({
+              refund = await this.refundActionProvider.createRefund({
                 userId,
                 userRole: UserRole.USER,
                 bookingId,
@@ -400,35 +406,39 @@ export class BookingActionProvider {
                 refundReason: RefundReason.CANCELLATION,
                 transactionId: paymentTransaction.id,
                 paymentReferenceId: paymentTransaction.paymentReferenceId,
+                attemptNumber: 1,
                 manager: transactionalEntityManager,
               });
-
-              refundId = refund.id;
             }
           }
-          return { paymentTransaction, refundId };
+          return { paymentTransaction, refund };
         }
       );
 
     const transaction = refundTransactionObj.paymentTransaction;
-    const refundId = refundTransactionObj.refundId;
+    const refund = refundTransactionObj.refund;
 
     if (
       booking.paid &&
       transaction &&
       transaction.paymentReferenceId &&
-      refundId
+      refund
     ) {
-      const order = await this.razorpayProvider.refundPayment({
+      logger.info(
+        `🧾 Queuing refund attempt #1 for booking ${booking.id}, refundId: ${refund.id}`
+      );
+
+      await retryRefundQueue.add("retry-refund", {
         transactionId: transaction.id,
         paymentReferenceId: transaction.paymentReferenceId,
-        refundAmount: transaction.amount,
+        refundAmount: refund.refundAmount,
         refundReason: RefundReason.CANCELLATION,
         bookingId,
-        refundId,
+        refundId: refund.id,
+        userId,
+        attemptNumber: 1,
+        originalAmount: refund.originalAmount,
       });
-
-      logger.info(`successfully initiated refund: ${order}`);
     }
 
     return new SingleBookingResponse(true, BOOKING_CANCELLED_USER);

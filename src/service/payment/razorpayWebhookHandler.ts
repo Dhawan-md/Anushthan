@@ -9,11 +9,15 @@ import { CustomError } from "../../utils/customError";
 import { INTERNAL_ERROR_OCCURRED } from "../../utils/messages";
 import { AppDataSource } from "../../config/database";
 import { UpdateBookingProvider } from "../../providers/booking/UpdateBookingProvider";
+import { MAX_ATTEMPTS } from "../../utils/constants";
+import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
 
 const RAZORPAY_WEBHOOK_SECRET = process.env["RAZORPAY_KEY_SECRET"];
 
 if (!RAZORPAY_WEBHOOK_SECRET) {
-  throw new Error("RAZORPAY_KEY_SECRET is not set in environment variables");
+  throw new CustomError(
+    "RAZORPAY_KEY_SECRET is not set in environment variables"
+  );
 }
 
 export const razorpayWebhookHandler = async (
@@ -79,7 +83,7 @@ export const razorpayWebhookHandler = async (
 
             if (!transaction.data?.bookingId) {
               logger.error("❌ Missing Booking ID on Transaction entity");
-              throw new Error("Missing Booking ID on Transaction entity");
+              throw new CustomError("Missing Booking ID on Transaction entity");
             }
 
             await updateBookingProvider.updateBooking({
@@ -155,7 +159,7 @@ export const razorpayWebhookHandler = async (
 
             if (!refund?.data?.transactionId) {
               logger.error("❌ Missing transactionId on refund entity");
-              throw new Error("Missing transactionId on refund");
+              throw new CustomError("Missing transactionId on refund");
             }
 
             await updateTransactionProvider.updateTransaction({
@@ -175,17 +179,63 @@ export const razorpayWebhookHandler = async (
 
       case "refund.failed": {
         const refundData = payload.payload.refund.entity;
-        // const refundReferenceId = refundData.id;
         const paymentId = refundData.payment_id;
         const refundNotes = refundData.notes;
 
-        await updateRefundProvider.updateRefund({
+        logger.error(
+          `❌ Razorpay refund failed for paymentId: ${paymentId}, reason: ${
+            refundData.error_description || "Unknown"
+          }`
+        );
+
+        const refundDetails = await updateRefundProvider.updateRefund({
           updatedRefundData: {
             status: RefundStatus.FAILED,
+            failedReason: refundData.error_description || "Unknown",
           },
           refundId: refundNotes.refundId,
           paymentReferenceId: paymentId,
         });
+
+        if (!refundDetails.data) {
+          logger.error(
+            `❌ Refund record not found or update failed for refundId: ${refundNotes.refundId}`
+          );
+          throw new CustomError("Unexpected error occurred while refunding.");
+        }
+
+        const attempt = refundDetails.data.attemptNumber;
+
+        if (attempt < MAX_ATTEMPTS) {
+          const nextAttempt = attempt + 1;
+          const delay = Math.pow(2, nextAttempt) * 60 * 1000;
+
+          logger.info(
+            `🔁 Scheduling retry attempt #${nextAttempt} for refundId: ${
+              refundDetails.data.id
+            } with delay: ${delay / 1000}s`
+          );
+
+          await retryRefundQueue.add(
+            "retry-refund",
+            {
+              userId: refundDetails.data.userId,
+              transactionId: refundDetails.data.transactionId,
+              paymentReferenceId: refundDetails.data.paymentReferenceId,
+              refundAmount: refundDetails.data.refundAmount,
+              refundReason: refundDetails.data.refundReason,
+              bookingId: refundDetails.data.bookingId,
+              refundId: refundDetails.data.id,
+              attemptNumber: nextAttempt,
+              originalAmount: refundDetails.data.originalAmount,
+            },
+            { delay }
+          );
+        } else {
+          logger.warn(
+            `🚫 Max refund attempts reached for refundId: ${refundDetails.data.id}`
+          );
+        }
 
         break;
       }

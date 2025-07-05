@@ -18,9 +18,8 @@ const startWorker = async () => {
     createBullWorker("paymentTimeout", async (job) => {
       try {
         const { transactionId, bookingId } = job.data;
-
         logger.info(
-          `🔁 Processing delayed payment failure for booking ${bookingId}`
+          `🔁 Processing delayed payment failure for booking ${bookingId} and transaction ${transactionId}`
         );
 
         const bookingInfoProvider = Container.get(BookingInfoProvider);
@@ -35,9 +34,9 @@ const startWorker = async () => {
             const booking = await bookingInfoProvider.getBookingDetails({
               bookingId,
             });
-            const transaction = await transactionInfoProvider.getTransaction(
-              transactionId
-            );
+            const transaction = await transactionInfoProvider.getTransaction({
+              transactionId,
+            });
 
             if (transaction.status === TransactionStatus.PENDING) {
               await updateTransactionProvider.updateTransaction({
