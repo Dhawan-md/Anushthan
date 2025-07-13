@@ -1,11 +1,9 @@
 import { PaginationDto } from "./Pagination";
 
 export class FiltersDto {
-  categoryId?: string;
-  minDuration?: number;
-  maxDuration?: number;
+  categoryId: string;
 }
 
 export class GetServicesDto extends PaginationDto {
-  filters?: FiltersDto;
+  filters: FiltersDto;
 }

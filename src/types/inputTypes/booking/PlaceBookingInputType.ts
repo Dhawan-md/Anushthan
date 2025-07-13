@@ -1,4 +1,5 @@
 import { InputType, Field, Float, Int } from "type-graphql";
+
 import { PaymentType } from "../../../utils/enums";
 
 @InputType()

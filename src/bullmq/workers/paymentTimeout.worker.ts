@@ -1,77 +1,129 @@
 import Container from "typedi";
-import { AppDataSource } from "../../config/database";
-import { createBullWorker } from "../../config/bullmq";
-import { BookingInfoProvider } from "../../providers/booking/BookingInfoProvider";
-import { logger } from "../../utils/logger";
+import { Job } from "bullmq";
+
 import { UpdateBookingProvider } from "../../providers/booking/UpdateBookingProvider";
 import { UpdateTransactionProvider } from "../../providers/transaction/UpdateTransactionProvider";
 import { TransactionInfoProvider } from "../../providers/transaction/TransactionInfoProvider";
+
+import { AppDataSource } from "../../config/database";
+import { createBullWorker } from "../../config/bullmq";
+
+import { logger } from "../../utils/logger";
+import { PaymentTimeoutJobData } from "../../types/interfaces";
 import { BookingStatus, TransactionStatus } from "../../utils/enums";
 
 const startWorker = async () => {
   try {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      logger.info("📦 Data source initialized in worker.");
+      logger.info(
+        `[paymentTimeout-worker] 📦 Data source initialized in worker.`
+      );
     }
 
-    createBullWorker("paymentTimeout", async (job) => {
-      try {
-        const { transactionId, bookingId } = job.data;
-        logger.info(
-          `🔁 Processing delayed payment failure for booking ${bookingId} and transaction ${transactionId}`
-        );
+    createBullWorker(
+      "paymentTimeout",
+      async (job: Job<PaymentTimeoutJobData>) => {
+        try {
+          const { transactionId, bookingId } = job.data;
+          logger.info(`[paymentTimeout-worker] 🔁 Processing delayed payment`, {
+            bookingId,
+            transactionId,
+            jobId: job.id,
+          });
 
-        const bookingInfoProvider = Container.get(BookingInfoProvider);
-        const transactionInfoProvider = Container.get(TransactionInfoProvider);
-        const updateBookingProvider = Container.get(UpdateBookingProvider);
-        const updateTransactionProvider = Container.get(
-          UpdateTransactionProvider
-        );
+          const transactionInfoProvider = Container.get(
+            TransactionInfoProvider
+          );
+          const updateBookingProvider = Container.get(UpdateBookingProvider);
+          const updateTransactionProvider = Container.get(
+            UpdateTransactionProvider
+          );
 
-        await AppDataSource.manager.transaction(
-          async (transactionalEntityManager) => {
-            const booking = await bookingInfoProvider.getBookingDetails({
-              bookingId,
-            });
-            const transaction = await transactionInfoProvider.getTransaction({
-              transactionId,
-            });
-
-            if (transaction.status === TransactionStatus.PENDING) {
-              await updateTransactionProvider.updateTransaction({
+          await AppDataSource.manager.transaction(
+            async (transactionalEntityManager) => {
+              const transaction = await transactionInfoProvider.getTransaction({
                 transactionId,
-                updatedTransactionData: { status: TransactionStatus.FAILED },
-                manager: transactionalEntityManager,
-              });
-            }
-
-            if (booking.status === BookingStatus.PENDING && !booking.paid) {
-              await updateBookingProvider.updateBooking({
-                bookingId,
-                updatedBookingData: { status: BookingStatus.REJECTED },
-                manager: transactionalEntityManager,
               });
 
-              logger.info(
-                `🚫 Booking ${bookingId} marked as REJECTED due to payment timeout.`
-              );
-            } else {
-              logger.info(
-                `✅ Booking ${bookingId} already paid or processed, skipping rejection.`
-              );
+              switch (transaction.status) {
+                case TransactionStatus.PENDING: {
+                  await updateTransactionProvider.updateTransaction({
+                    transactionId,
+                    updatedTransactionData: {
+                      status: TransactionStatus.FAILED,
+                    },
+                    manager: transactionalEntityManager,
+                  });
+
+                  await updateBookingProvider.updateBooking({
+                    bookingId,
+                    updatedBookingData: { status: BookingStatus.REJECTED },
+                    manager: transactionalEntityManager,
+                  });
+
+                  logger.info(
+                    `[paymentTimeout-worker] 🚫 Booking ${bookingId} marked as REJECTED due to payment timeout.`
+                  );
+                  logger.info(
+                    `[paymentTimeout-worker] 🚫 Transaction ${transactionId} marked as FAILED due to payment timeout.`
+                  );
+                  break;
+                }
+
+                case TransactionStatus.FAILED: {
+                  await updateBookingProvider.updateBooking({
+                    bookingId,
+                    updatedBookingData: { status: BookingStatus.REJECTED },
+                    manager: transactionalEntityManager,
+                  });
+
+                  logger.info(
+                    `[paymentTimeout-worker] 🚫 Booking ${bookingId} marked as REJECTED due to already FAILED transaction.`
+                  );
+                  break;
+                }
+
+                case TransactionStatus.SUCCESS: {
+                  await updateBookingProvider.updateBooking({
+                    bookingId,
+                    updatedBookingData: { paid: true },
+                    manager: transactionalEntityManager,
+                  });
+
+                  logger.info(
+                    `[paymentTimeout-worker] ✅ Booking ${bookingId} marked as paid (transaction successful).`
+                  );
+                  break;
+                }
+
+                default: {
+                  logger.warn(
+                    `[paymentTimeout-worker] ⚠️ Unhandled transaction status '${transaction.status}' for booking ${bookingId}, transaction ${transactionId}`
+                  );
+                  break;
+                }
+              }
             }
-          }
-        );
-      } catch (error) {
-        logger.error("❌ Error in BullMQ worker for paymentTimeout", { error });
-        throw error;
+          );
+
+          logger.info(
+            `[paymentTimeout-worker] ✅ Job complete for booking ${bookingId}`
+          );
+        } catch (error) {
+          logger.error(
+            "[paymentTimeout-worker] ❌ Error in BullMQ worker for paymentTimeout",
+            { error }
+          );
+          throw error;
+        }
       }
-    });
+    );
   } catch (err) {
-    logger.error("❌ Worker failed to start due to DB init error", {
-      error: err,
-    });
+    logger.error(
+      "[paymentTimeout-worker] ❌ Worker failed to start due to DB init error",
+      { error: err }
+    );
   }
 };
 

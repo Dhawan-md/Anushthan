@@ -7,6 +7,7 @@ import { CategoryInfoProvider } from "../../providers/category/CategoryInfoProvi
 import { MultipleCategoryResponse } from "../../types/responses/CategoryResponse";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { PaginationDto } from "../../types/dtos/Pagination";
+
 import { UserRole } from "../../utils/enums";
 
 @Service()
@@ -22,6 +23,6 @@ export class CategoryQueryResolver {
   async getAllCategories(@Arg("data") data: PaginationInput) {
     const dto = plainToInstance(PaginationDto, data);
 
-    return this.categoryInfoProvider.getAllCategorys(dto);
+    return this.categoryInfoProvider.getAllCategories(dto);
   }
 }

@@ -1,13 +1,30 @@
 import { Inject, Service } from "typedi";
 import { EntityManager, Repository } from "typeorm";
 
-import { Booking } from "../../entities/Booking";
-
 import { BookingInfoProvider } from "./BookingInfoProvider";
+import { UpdateBookingProvider } from "./UpdateBookingProvider";
+import { CancelBookingProvider } from "./CancelBookingProvider";
+import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
+import { TransactionInfoProvider } from "../transaction/TransactionInfoProvider";
+import { RefundActionProvider } from "../refund/RefundActionProvider";
+import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
+import { RazorpayProvider } from "../razorpay/RazorpayProvider";
+import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
+
+import redis from "../../config/redis";
+
+import { Booking } from "../../entities/Booking";
+import { CancelledBooking } from "../../entities/CancelledBooking";
+import { Transaction } from "../../entities/Transaction";
+import { Refund } from "../../entities/Refund";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { logger } from "../../utils/logger";
+import { generateOtp } from "../../helpers/generateOtp";
+import { generateUserSecret } from "../../helpers/generateUserSecret";
+
+import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
+import { paymentTimeoutQueue } from "../../bullmq/queues/paymentTimeout.queue";
 
 import { SingleBookingResponse } from "../../types/responses/BookingResponse";
 import {
@@ -16,6 +33,9 @@ import {
   CancelUserBookingDto,
   PlaceBookingDto,
 } from "../../types/dtos/Booking";
+
+import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
+
 import {
   ActiveStatus,
   BookingStatus,
@@ -25,32 +45,21 @@ import {
   UserCancellationReason,
   UserRole,
 } from "../../utils/enums";
-import { CustomError } from "../../utils/customError";
 import {
   BOOKING_ACCEPTED,
   BOOKING_CANCELLED_PANDIT,
   BOOKING_CANCELLED_USER,
+  BOOKING_OTP_SENT,
   BOOKING_PLACED,
   INTERNAL_ERROR_OCCURRED,
 } from "../../utils/messages";
-import { UpdateBookingProvider } from "./UpdateBookingProvider";
-import { CancelBookingProvider } from "./CancelBookingProvider";
-import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
-import { CancelledBooking } from "../../entities/CancelledBooking";
-import { CANCELLATION_WINDOW_HOURS } from "../../utils/constants";
-import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
-import { RazorpayProvider } from "../razorpay/RazorpayProvider";
-import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
-import { Transaction } from "../../entities/Transaction";
-import { RefundActionProvider } from "../refund/RefundActionProvider";
-import { TransactionInfoProvider } from "../transaction/TransactionInfoProvider";
-import { paymentTimeoutQueue } from "../../bullmq/queues/paymentTimeout.queue";
-import { generateUserSecret } from "../../helpers/generateUserSecret";
-import { generateOtp } from "../../helpers/generateOtp";
-import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
-import redis from "../../config/redis";
-import { Refund } from "../../entities/Refund";
-import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
+import {
+  CANCELLATION_WINDOW_HOURS,
+  MAX_ATTEMPTS,
+  PANDIT_CANCELLATION_FINE,
+} from "../../utils/constants";
+import { CustomError } from "../../utils/customError";
+import { logger } from "../../utils/logger";
 
 @Service()
 export class BookingActionProvider {
@@ -83,7 +92,9 @@ export class BookingActionProvider {
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
     const { serviceIds, categoryId, userId, totalPrice, paymentType } = params;
-    logger.info(`📥 Placing a new booking for userId: ${userId}`);
+    logger.info(
+      `[bookingActionProvider.ts] 📥 Placing a new booking for userId: ${userId}`
+    );
 
     await this.bookingInfoProvider.isPendingAmount(userId);
     await this.serviceInfoProvider.doServicesBelongToCategory(
@@ -97,7 +108,7 @@ export class BookingActionProvider {
 
     if (isDuplicate) {
       logger.warn(
-        `⚠️ Duplicate booking attempt detected for userId: ${userId}`
+        `[bookingActionProvider.ts] ⚠️ Duplicate booking attempt detected for userId: ${userId}`
       );
       throw new CustomError(
         "You already have a pending booking for these services at this time."
@@ -107,13 +118,9 @@ export class BookingActionProvider {
     const { booking, transaction } =
       await this.bookingActionRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          const booking = await transactionalEntityManager.save(
-            this.bookingActionRepository.create({
-              ...params,
-              paymentType,
-              status: BookingStatus.PENDING,
-            })
-          );
+          const booking = await transactionalEntityManager.save(Booking, {
+            ...params,
+          });
 
           let transaction: Transaction | null = null;
 
@@ -138,20 +145,23 @@ export class BookingActionProvider {
         const order = await this.razorpayProvider.createRazorpayOrder({
           amount: totalPrice,
           transactionId: transaction.id,
-          userId,
         });
 
         logger.info(
-          `🧾 Queueing payment timeout job booking id: ${booking.id} and transaction id: ${transaction.id}`
+          `[bookingActionProvider.ts] 🧾 Queueing payment timeout job booking id: ${booking.id} and transaction id: ${transaction.id}`
         );
 
         await paymentTimeoutQueue.add(
           "check-payment-timeout",
           {
             bookingId: String(booking.id),
-            transactionId: String(transaction?.id),
+            transactionId: String(transaction.id),
           },
-          { delay: 15 * 60 * 1000 }
+          {
+            attempts: MAX_ATTEMPTS,
+            backoff: { type: "exponential", delay: 30000 },
+            delay: 15 * 60 * 1000,
+          }
         );
 
         await this.updateTransactionProvider.updateTransaction({
@@ -162,10 +172,13 @@ export class BookingActionProvider {
         });
 
         logger.info(
-          `✅ Razorpay order created and transaction updated: ${transaction.id}`
+          `[bookingActionProvider.ts] ✅ Razorpay order created and transaction updated: ${transaction.id}`
         );
       } catch (error) {
-        logger.error("❌ Failed during Razorpay payment setup", error);
+        logger.error(
+          "[bookingActionProvider.ts] ❌ Failed during Razorpay payment setup",
+          error
+        );
 
         // Optional rollback logic
         await this.updateBookingProvider.updateBooking({
@@ -183,7 +196,9 @@ export class BookingActionProvider {
         );
       }
     }
-    logger.info(`✅ Booking placed with ID: ${booking.id}`);
+    logger.info(
+      `[bookingActionProvider.ts] ✅ Booking placed with ID: ${booking.id}`
+    );
 
     return new SingleBookingResponse(true, BOOKING_PLACED, booking);
   }
@@ -193,20 +208,18 @@ export class BookingActionProvider {
   ): Promise<SingleBookingResponse> {
     const { bookingId, panditId } = params;
     logger.info(
-      `📤 Pandit ${panditId} attempting to accept booking ${bookingId}`
+      `[bookingActionProvider.ts] 📤 Pandit ${panditId} attempting to accept booking ${bookingId}`
     );
 
     const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
       bookingId,
     });
 
-    if (!bookingDetails || bookingDetails.status !== BookingStatus.PENDING) {
+    if (bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
-        `⚠️ Booking ${bookingId} is invalid or has been ${bookingDetails.status}.`
+        `[bookingActionProvider.ts] ⚠️ Booking has been ${bookingDetails.status}.`
       );
-      throw new CustomError(
-        `Invalid booking or booking has been ${bookingDetails.status}`
-      );
+      throw new CustomError(`Booking has been ${bookingDetails.status}`);
     }
 
     if (
@@ -214,19 +227,35 @@ export class BookingActionProvider {
       !bookingDetails.paid
     ) {
       logger.error(
-        `❌ Booking ID ${bookingDetails.id} has payment type ONLINE but is yet to be paid.`
+        `[bookingActionProvider.ts] ❌ Booking ID ${bookingDetails.id} has payment type ONLINE but is yet to be paid.`
       );
 
       throw new CustomError("The booking is not paid so cannot be accepted.");
     }
 
-    await this.updateBookingProvider.updateBooking({
-      updatedBookingData: { status: BookingStatus.ACCEPTED, panditId },
-      bookingId,
-    });
-    logger.info(`✅ Booking ${bookingId} accepted by pandit ${panditId}`);
+    return await this.bookingActionRepository.manager.transaction(
+      async (transactionalEntityManager) => {
+        const result = await transactionalEntityManager
+          .createQueryBuilder()
+          .update(Booking)
+          .set({ status: BookingStatus.ACCEPTED, panditId })
+          .where("id = :bookingId", { bookingId })
+          .andWhere("status = :status", { status: BookingStatus.PENDING })
+          .execute();
 
-    return new SingleBookingResponse(true, BOOKING_ACCEPTED);
+        if (result.affected === 0) {
+          throw new CustomError(
+            "Booking could not be accepted. It may have already been accepted."
+          );
+        }
+
+        logger.info(
+          `[bookingActionProvider.ts] ✅ Booking ${bookingId} accepted by pandit ${panditId}`
+        );
+
+        return new SingleBookingResponse(true, BOOKING_ACCEPTED);
+      }
+    );
   }
 
   async initiateStartBooking(
@@ -234,7 +263,7 @@ export class BookingActionProvider {
     panditId: string
   ): Promise<SingleBookingResponse> {
     logger.info(
-      `📦 Initiating startBooking for bookingId=${bookingId}, panditId=${panditId}`
+      `[bookingActionProvider.ts] 📦 Initiating startBooking for bookingId=${bookingId}, panditId=${panditId}`
     );
 
     const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
@@ -246,39 +275,42 @@ export class BookingActionProvider {
 
     if (bookingDetails.status !== BookingStatus.ACCEPTED) {
       logger.warn(
-        `❌ Cannot initiate start. Booking ${bookingId} is in ${bookingDetails.status} status.)`
+        `[bookingActionProvider.ts] ❌ Cannot initiate start. Booking ${bookingId} is in ${bookingDetails.status} status.)`
       );
 
       throw new CustomError("Booking is not confirmed or already started.");
     }
 
-    const userSecret = generateUserSecret();
-    const otpDetails = generateOtp(userSecret.base32);
     const redisKey = generateRedisOtpKey(bookingDetails.userId, bookingId);
 
-    const existingOtp = await redis.get(redisKey);
-
-    if (existingOtp) {
+    const ttl = await redis.ttl(redisKey); // time-to-live in seconds
+    if (ttl > 240) {
       logger.warn(
-        `🚫 OTP already generated for booking ${bookingId}. Wait for it to expire.`
+        `[bookingActionProvider.ts] 🚫 OTP already generated for booking ${bookingId}. Wait for ${
+          ttl - 240
+        } seconds to regenrate.`
       );
       throw new CustomError(
-        "OTP already sent. Please wait until it expires before trying again."
+        "OTP already sent recently. Please wait a few seconds before retrying."
       );
     }
 
+    const userSecret = generateUserSecret();
+    const otpDetails = generateOtp(userSecret.base32);
+
     await redis.setex(redisKey, 5 * 60, otpDetails.otpCode);
-    logger.info(`🔐 OTP stored in Redis for key=${redisKey}, expires in 5 min`);
+    logger.info(
+      `[bookingActionProvider.ts] 🔐 OTP stored in Redis for key=${redisKey}, expires in 5 min`
+    );
 
     // Replace with real notification
-    logger.info(
-      `📩 OTP for booking ${bookingId} is ${otpDetails.otpCode} (for debug only)`
-    );
+    if (process.env.NODE_ENV !== "production") {
+      logger.debug(
+        `[bookingActionProvider.ts] OTP for booking ${bookingId}: ${otpDetails.otpCode}`
+      );
+    }
 
-    return new SingleBookingResponse(
-      true,
-      "OTP sent. Please verify to start booking."
-    );
+    return new SingleBookingResponse(true, BOOKING_OTP_SENT);
   }
 
   async finalizeStartBooking(
@@ -287,7 +319,7 @@ export class BookingActionProvider {
     otpCode: string
   ): Promise<SingleBookingResponse> {
     logger.info(
-      `✅ Finalizing startBooking for bookingId=${bookingId}, panditId=${panditId}`
+      `[bookingActionProvider.ts] ✅ Finalizing startBooking for bookingId=${bookingId}, panditId=${panditId}`
     );
 
     const bookingDetails = await this.bookingInfoProvider.getBookingDetails({
@@ -297,25 +329,34 @@ export class BookingActionProvider {
       },
     });
 
+    if (bookingDetails.status !== BookingStatus.ACCEPTED) {
+      logger.info(
+        `BookingActionProvider.ts] ⚠️ Booking is in ${bookingDetails.status} state.`
+      );
+      throw new CustomError(`Booking is in ${bookingDetails.status} state.`);
+    }
+
     const redisKey = generateRedisOtpKey(bookingDetails.userId, bookingId);
     const storedOtp = await redis.get(redisKey);
 
     if (!storedOtp) {
       logger.warn(
-        `⚠️ OTP expired or not found for booking ${bookingId} (key=${redisKey})`
+        `[bookingActionProvider.ts] ⚠️ OTP expired or not found for booking ${bookingId} (key=${redisKey})`
       );
       throw new CustomError("OTP expired or not generated.");
     }
 
     if (storedOtp !== otpCode) {
       logger.warn(
-        `🚫 Invalid OTP for booking ${bookingId}, userInput=${otpCode}`
+        `[bookingActionProvider.ts] 🚫 Invalid OTP for booking ${bookingId}, userInput=${otpCode}`
       );
       throw new CustomError("Invalid OTP.");
     }
 
     await redis.del(redisKey);
-    logger.info(`🧹 OTP key ${redisKey} cleared from Redis`);
+    logger.info(
+      `[bookingActionProvider.ts] 🧹 OTP key ${redisKey} cleared from Redis`
+    );
 
     await this.updateBookingProvider.updateBooking({
       bookingId,
@@ -325,10 +366,12 @@ export class BookingActionProvider {
       },
     });
 
-    logger.info(`🟢 Booking ${bookingId} marked as STARTED`);
+    logger.info(
+      `[bookingActionProvider.ts] 🟢 Booking ${bookingId} marked as STARTED`
+    );
 
     logger.info(
-      `✅ Booking ${bookingId} started successfully by pandit ${panditId}`
+      `[bookingActionProvider.ts] ✅ Booking ${bookingId} started successfully by pandit ${panditId}`
     );
 
     return new SingleBookingResponse(true, "Booking started successfully.");
@@ -352,17 +395,21 @@ export class BookingActionProvider {
       booking.status === BookingStatus.COMPLETED ||
       booking.status === BookingStatus.REJECTED
     ) {
-      logger.warn(`⚠️ User tried to cancel a ${booking.status} booking.`);
+      logger.warn(
+        `[bookingActionProvider.ts] ⚠️ User tried to cancel a ${booking.status} booking.`
+      );
       throw new CustomError(`You cannot cancel a ${booking.status} booking.`);
     }
 
     if (booking.status === BookingStatus.ACCEPTED && !booking.panditId) {
-      logger.warn(`⚠️ Pandit must be assigned when booking is accepted.`);
+      logger.warn(
+        `[bookingActionProvider.ts] ⚠️ Pandit must be assigned when booking is accepted.`
+      );
 
       throw new CustomError(INTERNAL_ERROR_OCCURRED);
     }
 
-    const refundTransactionObj =
+    const { transaction, refund } =
       await this.bookingActionRepository.manager.transaction(
         async (transactionalEntityManager) => {
           const amount = booking.totalPrice;
@@ -387,16 +434,15 @@ export class BookingActionProvider {
             transactionalEntityManager,
           });
 
-          let paymentTransaction: Transaction | null = null;
+          let transaction: Transaction | null = null;
           let refund: Refund | null = null;
 
           if (booking.paid && refundAmount > 0) {
-            paymentTransaction =
-              await this.transactionInfoProvider.getTransaction({
-                bookingId,
-              });
+            transaction = await this.transactionInfoProvider.getTransaction({
+              bookingId,
+            });
 
-            if (paymentTransaction && paymentTransaction.paymentReferenceId) {
+            if (transaction && transaction.paymentReferenceId) {
               refund = await this.refundActionProvider.createRefund({
                 userId,
                 userRole: UserRole.USER,
@@ -404,19 +450,16 @@ export class BookingActionProvider {
                 originalAmount: booking.totalPrice,
                 refundAmount,
                 refundReason: RefundReason.CANCELLATION,
-                transactionId: paymentTransaction.id,
-                paymentReferenceId: paymentTransaction.paymentReferenceId,
+                transactionId: transaction.id,
+                paymentReferenceId: transaction.paymentReferenceId,
                 attemptNumber: 1,
                 manager: transactionalEntityManager,
               });
             }
           }
-          return { paymentTransaction, refund };
+          return { transaction, refund };
         }
       );
-
-    const transaction = refundTransactionObj.paymentTransaction;
-    const refund = refundTransactionObj.refund;
 
     if (
       booking.paid &&
@@ -425,7 +468,7 @@ export class BookingActionProvider {
       refund
     ) {
       logger.info(
-        `🧾 Queuing refund attempt #1 for booking ${booking.id}, refundId: ${refund.id}`
+        `[bookingActionProvider.ts] 🧾 Queuing refund attempt #1 for booking ${booking.id}, refundId: ${refund.id}`
       );
 
       await retryRefundQueue.add("retry-refund", {
@@ -460,14 +503,17 @@ export class BookingActionProvider {
 
     if (booking.status !== BookingStatus.ACCEPTED) {
       throw new CustomError(
-        "Booking cannot be cancelled in its current status."
+        `Booking cannot be cancelled while in ${booking.status} state`
       );
     }
 
     const now = new Date();
+
     const diffHours =
       (booking.timeSlot.getTime() - now.getTime()) / (1000 * 60 * 60);
+
     const isLateCancellation = diffHours < CANCELLATION_WINDOW_HOURS;
+
     if (isLateCancellation && !confirmFee) {
       throw new CustomError(
         `Cannot cancel booking less than ${CANCELLATION_WINDOW_HOURS} hours before the scheduled time. A cancellation fee will be charged.`
@@ -481,7 +527,7 @@ export class BookingActionProvider {
           panditId,
           bookingId,
           cancelledBy: UserRole.PANDIT,
-          amount: isLateCancellation ? 100 : 0,
+          amount: isLateCancellation ? PANDIT_CANCELLATION_FINE : 0,
           cancelReason,
           customReason,
           transactionalEntityManager,
@@ -506,13 +552,9 @@ export class BookingActionProvider {
         // );
 
         logger.info(
-          `Booking ${bookingId} cancelled by pandit ${panditId}, penalty: ₹${100}`
+          `[bookingActionProvider.ts] Booking ${bookingId} cancelled by pandit ${panditId}, penalty: ₹${100}`
         );
-        return new SingleBookingResponse(
-          true,
-          BOOKING_CANCELLED_PANDIT,
-          booking
-        );
+        return new SingleBookingResponse(true, BOOKING_CANCELLED_PANDIT);
       }
     );
   }
@@ -537,7 +579,7 @@ export class BookingActionProvider {
     transactionalEntityManager: EntityManager;
   }): Promise<CancelledBooking> {
     const cancelledBooking =
-      await this.cancelBookingProvider.createCancellationFee({
+      await this.cancelBookingProvider.createCancellation({
         userId,
         panditId,
         bookingId,
@@ -554,7 +596,7 @@ export class BookingActionProvider {
       updatedBookingData: {
         status: BookingStatus.CANCELLED,
         cancelled_booking: cancelledBooking,
-        cancelledAt: cancelledBooking.cancelledAt,
+        cancelledAt: cancelledBooking.createdAt,
       },
       bookingId,
       manager: transactionalEntityManager,
@@ -565,6 +607,6 @@ export class BookingActionProvider {
 
   //   async applyProviderPenalty(panditId: string, amount: number) {
   //     await this.panditRepo.increment({ id: panditId }, "ratings", -0.2); // Example penalty
-  //     logger.warn(`Penalty applied to pandit ${panditId}, amount ₹${amount}`);
+  //     logger.warn(`[bookingActionProvider.ts] Penalty applied to pandit ${panditId}, amount ₹${amount}`);
   //   }
 }

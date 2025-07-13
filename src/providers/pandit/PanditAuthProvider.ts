@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
+import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -15,6 +16,17 @@ import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { sendEmail } from "../../service/email/sendEmail";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+import {
+  LoginPanditDto,
+  RegisterPanditDto,
+  VerifyPanditDto,
+} from "../../types/dtos/Pandit";
+
+import { validatePassword } from "../../utils/validatePassword";
+import { hashPassword } from "../../utils/hashPassword";
+import { CustomError } from "../../utils/customError";
+import { validateEmail } from "../../utils/validateEmail";
+import { isSamePassword } from "../../utils/isSamePassword";
 
 import {
   EmailName,
@@ -23,9 +35,6 @@ import {
   S3BucketType,
   UserRole,
 } from "../../utils/enums";
-import { validatePassword } from "../../utils/validatePassword";
-import { hashPassword } from "../../utils/hashPassword";
-import { CustomError } from "../../utils/customError";
 import {
   FILE_UPLOAD_FAIL,
   INVALID_PASSWORD,
@@ -36,14 +45,6 @@ import {
   SERVICE_NOT_FOUND,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
-import { validateEmail } from "../../utils/validateEmail";
-import { isSamePassword } from "../../utils/isSamePassword";
-import {
-  LoginPanditDto,
-  RegisterPanditDto,
-  VerifyPanditDto,
-} from "../../types/dtos/Pandit";
-import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
 
 @Service()
 export class PanditAuthProvider {

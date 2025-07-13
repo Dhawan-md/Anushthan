@@ -7,17 +7,20 @@ import { BookingActionProvider } from "../../providers/booking/BookingActionProv
 import { PlaceBookingInput } from "../../types/inputTypes/booking/PlaceBookingInputType";
 import { Context } from "../../types/context";
 import { SingleBookingResponse } from "../../types/responses/BookingResponse";
-
-import { CustomError } from "../../utils/customError";
-import { UNAUTHORIZED } from "../../utils/messages";
-import { UserRole } from "../../utils/enums";
 import {
   AcceptBookingDto,
   CancelPanditBookingDto,
   CancelUserBookingDto,
   PlaceBookingDto,
 } from "../../types/dtos/Booking";
-import { CancelBookingInput } from "../../types/inputTypes/booking/CancelUserBooking";
+import {
+  CancelPanditBookingInput,
+  CancelUserBookingInput,
+} from "../../types/inputTypes/booking/CancelUserBooking";
+
+import { CustomError } from "../../utils/customError";
+import { UNAUTHORIZED } from "../../utils/messages";
+import { UserRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -74,6 +77,7 @@ export class BookingMutationResolver {
     const panditId = ctx.user?.id;
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
+
     return this.bookingActionProvider.initiateStartBooking(bookingId, panditId);
   }
 
@@ -87,6 +91,7 @@ export class BookingMutationResolver {
     const panditId = ctx.user?.id;
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
+
     return this.bookingActionProvider.finalizeStartBooking(
       bookingId,
       panditId,
@@ -97,14 +102,13 @@ export class BookingMutationResolver {
   @Mutation(() => SingleBookingResponse)
   @Authorized(UserRole.PANDIT)
   async cancelBookingPandit(
-    @Arg("data") data: CancelBookingInput,
+    @Arg("data") data: CancelPanditBookingInput,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const panditId = ctx.user?.id;
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
 
-    // TODO: notify user via socket or pubsub
     const dto: CancelPanditBookingDto = plainToInstance(
       CancelPanditBookingDto,
       {
@@ -119,14 +123,13 @@ export class BookingMutationResolver {
   @Mutation(() => SingleBookingResponse)
   @Authorized(UserRole.USER)
   async cancelBookingUser(
-    @Arg("data") data: CancelBookingInput,
+    @Arg("data") data: CancelUserBookingInput,
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const userId = ctx.user?.id;
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    // TODO: notify user via socket or pubsub
     const dto: CancelUserBookingDto = plainToInstance(CancelUserBookingDto, {
       ...data,
       userId,

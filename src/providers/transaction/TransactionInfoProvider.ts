@@ -1,10 +1,14 @@
 import { Service } from "typedi";
 import { Repository } from "typeorm";
+
 import { Transaction } from "../../entities/Transaction";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
 import { MultipleTransactionResponse } from "../../types/responses/TransactionResponse";
-import { logger } from "../../utils/logger";
 import { getAllBookingTransactions } from "../../types/dtos/Transaction";
+
+import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 import { NO_TRANSACTION_FOUND } from "../../utils/messages";
 
@@ -55,15 +59,26 @@ export class TransactionInfoProvider {
     bookingId?: string;
   }): Promise<Transaction> {
     const { transactionId, orderId, bookingId } = params;
-    logger.info(`🔍 Fetching booking details for transaction ID: ${transactionId || bookingId || orderId}`);
+    logger.info(
+      `[TransactionInfoProvider.ts] 🔍 Fetching booking details for transaction ID: ${
+        transactionId || bookingId || orderId
+      }`
+    );
+
+    const whereClause: Record<string, any> = {};
+    if (transactionId) whereClause.id = transactionId;
+    if (orderId) whereClause.orderId = orderId;
+    if (bookingId) whereClause.bookingId = bookingId;
 
     const transactionData = await this.transactionInfoRepository.findOne({
-      where: [{ id: transactionId }, { orderId: orderId }, { bookingId }],
+      where: whereClause,
     });
 
     if (!transactionData) {
       logger.warn(
-        `❌ No transaction found with id: ${transactionId || orderId}`
+        `[TransactionInfoProvider.ts] ❌ No transaction found with id: ${
+          transactionId || orderId
+        }`
       );
       throw new CustomError(NO_TRANSACTION_FOUND);
     }

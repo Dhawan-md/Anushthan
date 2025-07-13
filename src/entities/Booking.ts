@@ -5,12 +5,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  Index,
 } from "typeorm";
 import { Field, Float, Int, ObjectType } from "type-graphql";
-import { BookingStatus, PaymentType } from "../utils/enums";
+
 import { Transaction } from "./Transaction";
 import { CancelledBooking } from "./CancelledBooking";
 
+import { BookingStatus, PaymentType } from "../utils/enums";
+
+// @Index("idx_user_timeslot_status", ["userId", "timeSlot", "status"])
 @ObjectType()
 @Entity()
 export class Booking {
@@ -20,10 +24,12 @@ export class Booking {
 
   @Field()
   @Column({ name: "user_id" })
+  @Index()
   userId!: string;
 
   @Field({ nullable: true })
   @Column({ name: "pandit_id", nullable: true })
+  @Index()
   panditId?: string;
 
   @Field(() => [String])
@@ -71,6 +77,7 @@ export class Booking {
   paymentType!: PaymentType; // Consider using enum
 
   @OneToOne(() => Transaction, (transaction) => transaction.booking)
+  @Index()
   transaction!: Transaction;
 
   @Field({ nullable: true })
@@ -102,5 +109,6 @@ export class Booking {
   updatedAt!: Date;
 
   @OneToOne(() => CancelledBooking, (cb) => cb.booking)
+  @Index()
   cancelled_booking: CancelledBooking;
 }

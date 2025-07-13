@@ -6,16 +6,16 @@ import { Pandit } from "../entities/Pandit";
 import { Booking } from "../entities/Booking";
 import { Otp } from "../entities/Otp";
 import { Admin } from "../entities/Admin";
-
 import { Service } from "../entities/Service";
+import { Refund } from "../entities/Refund";
+import { Transaction } from "../entities/Transaction";
+import { Category } from "../entities/Category";
+import { CancelledBooking } from "../entities/CancelledBooking";
+
 import { logger } from "../utils/logger";
 
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
-import { Category } from "../entities/Category";
-import { CancelledBooking } from "../entities/CancelledBooking";
-import { Transaction } from "../entities/Transaction";
-import { Refund } from "../entities/Refund";
 
 dotenv.config();
 

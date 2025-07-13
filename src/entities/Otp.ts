@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 
 import { ActiveStatus, OtpType } from "../utils/enums";
+
 import { User } from "./User";
 
 @ObjectType()

@@ -60,6 +60,7 @@ export const OTP_GENERATION_FAILED = "Failed to generate OTP.";
 export const SESSION_EXPIRED = "Session has expired.";
 export const OTP_VERIFICATION_REQUIRED =
   "You need to verify OTP before changing your password.";
+export const BOOKING_OTP_SENT = "OTP sent. Please verify to start booking.";
 
 // Email messages
 export const EMAIL_SENT = "Email sent successfully.";
@@ -116,6 +117,7 @@ export const PANDIT_ONLY = "Only Pandit can perform this action.";
 export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";
 export const CATEGORY_ALREADY_EXISTS = "Category already exists.";
 export const CATEGORY_LIST = "Categories list.";
+export const CATEGORY_NOT_FOUND = "Category not found."
 
 //Booking Messages
 export const BOOKING_UPDATED = "Booking edited successfully.";

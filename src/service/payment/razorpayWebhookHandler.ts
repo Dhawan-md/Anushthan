@@ -1,16 +1,21 @@
 import express from "express";
 import crypto from "crypto";
 import Container from "typedi";
+
 import { UpdateTransactionProvider } from "../../providers/transaction/UpdateTransactionProvider";
-import { RefundStatus, TransactionStatus } from "../../utils/enums";
+import { UpdateBookingProvider } from "../../providers/booking/UpdateBookingProvider";
 import { UpdateRefundProvider } from "../../providers/refund/UpdateRefundProvider";
+
+import { AppDataSource } from "../../config/database";
+
+import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
+
 import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
+
 import { INTERNAL_ERROR_OCCURRED } from "../../utils/messages";
-import { AppDataSource } from "../../config/database";
-import { UpdateBookingProvider } from "../../providers/booking/UpdateBookingProvider";
 import { MAX_ATTEMPTS } from "../../utils/constants";
-import { retryRefundQueue } from "../../bullmq/queues/retryRefund.queue";
+import { RefundStatus, TransactionStatus } from "../../utils/enums";
 
 const RAZORPAY_WEBHOOK_SECRET = process.env["RAZORPAY_KEY_SECRET"];
 
@@ -57,14 +62,10 @@ export const razorpayWebhookHandler = async (
         const paymentEntity = payload.payload.payment.entity;
         const paymentId = paymentEntity.id;
         const orderId = paymentEntity.order_id;
-        const transactionId =
-          payload.payload.payment.entity.notes.transactionId;
+        const transactionId = paymentEntity.notes.transactionId;
 
-        if (!orderId) {
+        if (!transactionId) {
           logger.error("❌ Missing transactionId in notes");
-          return res
-            .status(400)
-            .json({ error: "Missing transactionId in notes" });
         }
 
         await AppDataSource.manager.transaction(
@@ -107,9 +108,7 @@ export const razorpayWebhookHandler = async (
         const reason =
           paymentEntity.error_description || paymentEntity.error_reason;
         const paymentId = paymentEntity.id;
-
         const transactionId = paymentEntity.notes?.transactionId;
-        console.log(paymentEntity);
 
         logger.warn(
           `❌ Payment failed for Order ID: ${orderId} | Reason: ${reason}`
@@ -117,7 +116,6 @@ export const razorpayWebhookHandler = async (
 
         if (!transactionId) {
           logger.error("❌ Missing transactionId in payment.notes");
-          return res.status(400).json({ error: "Missing transactionId" });
         }
 
         await updateTransactionProvider.updateTransaction({
@@ -135,10 +133,10 @@ export const razorpayWebhookHandler = async (
       }
 
       case "refund.processed": {
-        const refundData = payload.payload.refund.entity;
-        const refundReferenceId = refundData.id;
-        const paymentId = refundData.payment_id;
-        const refundNotes = refundData.notes;
+        const refundEntity = payload.payload.refund.entity;
+        const refundReferenceId = refundEntity.id;
+        const paymentId = refundEntity.payment_id;
+        const refundNotes = refundEntity.notes;
 
         if (!refundNotes?.refundId) {
           logger.error("❌ Missing refundId in notes");
@@ -146,7 +144,7 @@ export const razorpayWebhookHandler = async (
 
         await AppDataSource.manager.transaction(
           async (transactionalEntityManager) => {
-            const refund = await updateRefundProvider.updateRefund({
+            const refundData = await updateRefundProvider.updateRefund({
               updatedRefundData: {
                 status: RefundStatus.SUCCESS,
                 refundedAt: new Date(),
@@ -157,7 +155,7 @@ export const razorpayWebhookHandler = async (
               manager: transactionalEntityManager, // pass manager to updateRefund
             });
 
-            if (!refund?.data?.transactionId) {
+            if (!refundData?.data?.transactionId) {
               logger.error("❌ Missing transactionId on refund entity");
               throw new CustomError("Missing transactionId on refund");
             }
@@ -166,7 +164,7 @@ export const razorpayWebhookHandler = async (
               updatedTransactionData: {
                 isRefunded: true,
               },
-              transactionId: refund.data.transactionId,
+              transactionId: refundData.data.transactionId,
               manager: transactionalEntityManager, // pass manager to updateTransaction
             });
 
@@ -178,33 +176,33 @@ export const razorpayWebhookHandler = async (
       }
 
       case "refund.failed": {
-        const refundData = payload.payload.refund.entity;
-        const paymentId = refundData.payment_id;
-        const refundNotes = refundData.notes;
+        const refundEntity = payload.payload.refund.entity;
+        const paymentId = refundEntity.payment_id;
+        const refundNotes = refundEntity.notes;
 
         logger.error(
           `❌ Razorpay refund failed for paymentId: ${paymentId}, reason: ${
-            refundData.error_description || "Unknown"
+            refundEntity.error_description || "Unknown"
           }`
         );
 
-        const refundDetails = await updateRefundProvider.updateRefund({
+        const refundData = await updateRefundProvider.updateRefund({
           updatedRefundData: {
             status: RefundStatus.FAILED,
-            failedReason: refundData.error_description || "Unknown",
+            failedReason: refundEntity.error_description || "Unknown",
           },
           refundId: refundNotes.refundId,
           paymentReferenceId: paymentId,
         });
 
-        if (!refundDetails.data) {
+        if (!refundData.data) {
           logger.error(
             `❌ Refund record not found or update failed for refundId: ${refundNotes.refundId}`
           );
           throw new CustomError("Unexpected error occurred while refunding.");
         }
 
-        const attempt = refundDetails.data.attemptNumber;
+        const attempt = refundData.data.attemptNumber;
 
         if (attempt < MAX_ATTEMPTS) {
           const nextAttempt = attempt + 1;
@@ -212,28 +210,28 @@ export const razorpayWebhookHandler = async (
 
           logger.info(
             `🔁 Scheduling retry attempt #${nextAttempt} for refundId: ${
-              refundDetails.data.id
+              refundData.data.id
             } with delay: ${delay / 1000}s`
           );
 
           await retryRefundQueue.add(
             "retry-refund",
             {
-              userId: refundDetails.data.userId,
-              transactionId: refundDetails.data.transactionId,
-              paymentReferenceId: refundDetails.data.paymentReferenceId,
-              refundAmount: refundDetails.data.refundAmount,
-              refundReason: refundDetails.data.refundReason,
-              bookingId: refundDetails.data.bookingId,
-              refundId: refundDetails.data.id,
+              userId: refundData.data.userId,
+              transactionId: refundData.data.transactionId,
+              paymentReferenceId: refundData.data.paymentReferenceId,
+              refundAmount: refundData.data.refundAmount,
+              refundReason: refundData.data.refundReason,
+              bookingId: refundData.data.bookingId,
+              refundId: refundData.data.id,
               attemptNumber: nextAttempt,
-              originalAmount: refundDetails.data.originalAmount,
+              originalAmount: refundData.data.originalAmount,
             },
             { delay }
           );
         } else {
           logger.warn(
-            `🚫 Max refund attempts reached for refundId: ${refundDetails.data.id}`
+            `🚫 Max refund attempts reached for refundId: ${refundData.data.id}`
           );
         }
 

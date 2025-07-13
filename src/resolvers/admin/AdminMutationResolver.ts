@@ -5,6 +5,7 @@ import { plainToInstance } from "class-transformer";
 import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
 import { ServiceActionProvider } from "../../providers/service/ServiceActionProvider";
 import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
+import { CategoryActionProvdier } from "../../providers/category/CategoryActionProvider";
 
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
@@ -20,7 +21,6 @@ import {
 import { AddServiceInput } from "../../types/inputTypes/service/AddServiceInput";
 import { SetPanditApprovalStatusInput } from "../../types/inputTypes/admin/SetPanditApprovalStatusInput";
 import { LoginAdminInput } from "../../types/inputTypes/admin/LoginAdminInput";
-import { CategoryActionProvier } from "../../providers/category/CategoryActionProvider";
 import { SingleCategoryResponse } from "../../types/responses/CategoryResponse";
 import { AddCategoryInput } from "../../types/inputTypes/category/AddCategoryInput";
 
@@ -30,11 +30,12 @@ export class AdminMutationResolver {
   constructor(
     @Inject(() => AdminAuthProvider)
     private adminAuthProvider: AdminAuthProvider,
-    @Inject(() => ServiceActionProvider) private serviceProvider: ServiceActionProvider,
+    @Inject(() => ServiceActionProvider)
+    private serviceProvider: ServiceActionProvider,
     @Inject(() => PanditActionProvider)
     private panditActionProvider: PanditActionProvider,
-    @Inject(() => CategoryActionProvier)
-    private categoryActionProvider: CategoryActionProvier
+    @Inject(() => CategoryActionProvdier)
+    private categoryActionProvider: CategoryActionProvdier
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -67,7 +68,6 @@ export class AdminMutationResolver {
   async addCategory(
     @Arg("data") data: AddCategoryInput
   ): Promise<SingleCategoryResponse> {
-    
     return this.categoryActionProvider.addCategory(data.name);
   }
 

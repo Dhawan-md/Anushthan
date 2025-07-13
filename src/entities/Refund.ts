@@ -4,10 +4,15 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
 } from "typeorm";
 import { ObjectType } from "type-graphql";
-import { RefundReason, RefundStatus, UserRole } from "../utils/enums";
+
 import { Transaction } from "./Transaction";
+
+import { RefundReason, RefundStatus, UserRole } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -21,7 +26,8 @@ export class Refund {
   @Column("decimal", { precision: 10, scale: 2, name: "refund_amount" })
   refundAmount!: number;
 
-  @Column()
+  @Column({ name: "user_id" })
+  @Index()
   userId!: string;
 
   @Column({ type: "enum", enum: UserRole })
@@ -30,31 +36,40 @@ export class Refund {
   @Column({ name: "status", enum: RefundStatus, default: RefundStatus.PENDING })
   status!: RefundStatus;
 
-  @Column()
+  @Column({ name: "booking_id" })
+  @Index()
   bookingId!: string;
 
   @Column({ name: "transaction_id" })
+  @Index()
   transactionId!: string;
 
   @ManyToOne(() => Transaction, (transaction) => transaction.refunds)
   @JoinColumn()
+  @Index()
   transaction!: Transaction;
 
   @Column({ type: "enum", enum: RefundReason, name: "refund_reason" })
   refundReason!: RefundReason;
 
-  @Column({ name: "faliure_reason", nullable: true })
+  @Column({ name: "failure_reason", nullable: true })
   failedReason?: string;
 
   @Column({ name: "attempt_number" })
   attemptNumber!: number;
 
   @Column({ name: "payment_reference_id" })
-  paymentReferenceId: string;
+  paymentReferenceId!: string;
 
   @Column({ nullable: true, name: "refund_reference_id" })
   refundReferenceId?: string;
 
   @Column({ name: "refunded_at", nullable: true })
   refundedAt?: Date;
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

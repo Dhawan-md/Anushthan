@@ -45,7 +45,7 @@ export class MyBookingsDto extends PaginationDto {
   id: string;
 }
 
-export class CreateCancellationFeeDto {
+export class CreateCancellationDto {
   userId: string;
   panditId?: string;
   bookingId: string;

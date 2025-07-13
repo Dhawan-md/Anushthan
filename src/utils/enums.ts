@@ -109,6 +109,19 @@ registerEnumType(UserCancellationReason, {
   description: "Reason provided by user for cancelling a booking",
 });
 
+export enum PanditCancellationReason {
+  USER_UNRESPONSIVE = "User was unresponsive",
+  PERSONAL_EMERGENCY = "Personal emergency or issue",
+  DOUBLE_BOOKED = "Pandit was double booked",
+  LOCATION_TOO_FAR = "Location is too far or inaccessible",
+  OTHER = "Other reason",
+}
+
+registerEnumType(PanditCancellationReason, {
+  name: "PanditCancellationReason", // this name will appear in the GraphQL schema
+  description: "Reason provided by Pandit for cancelling a booking",
+});
+
 export enum TransactionType {
   PAYMENT_INCOMING = "PAYMENT_INCOMING",
   PAYMENT_OUTGOING = "PAYMENT_OUTGOING",

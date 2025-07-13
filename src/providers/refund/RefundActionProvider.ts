@@ -1,9 +1,13 @@
 import { Service } from "typedi";
 import { EntityManager, Repository } from "typeorm";
+
 import { Refund } from "../../entities/Refund";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
 import { logger } from "../../utils/logger";
 import { RefundReason, UserRole } from "../../utils/enums";
+import { CustomError } from "../../utils/customError";
 
 @Service()
 export class RefundActionProvider {
@@ -41,28 +45,37 @@ export class RefundActionProvider {
     const em = manager || this.refundRepository.manager;
 
     logger.info(
-      `💸 Creating refund record for userId: ${userId}, bookingId: ${bookingId}, amount: ₹${refundAmount}`
+      `[RefundActionProvider] 💸 Creating refund record for userId: ${userId}, bookingId: ${bookingId}, amount: ₹${refundAmount}`
     );
 
-    const refund = em.create(Refund, {
-      userId,
-      userRole,
-      bookingId,
-      originalAmount,
-      refundAmount,
-      refundReason,
-      transactionId,
-      paymentReferenceId,
-      attemptNumber,
-      transaction: { id: transactionId }, // Ensures .transaction works for later eager loads
-    });
+    try {
+      const repo = em.getRepository(Refund);
+      const refund = repo.create({
+        userId,
+        userRole,
+        bookingId,
+        originalAmount,
+        refundAmount,
+        refundReason,
+        transactionId,
+        paymentReferenceId,
+        attemptNumber,
+        transaction: { id: transactionId }, // for relation
+      });
 
-    const savedRefund = await em.save(refund);
+      const savedRefund = await repo.save(refund);
 
-    logger.info(
-      `✅ Refund record created: refundId: ${savedRefund.id}, linked to transactionId: ${transactionId}`
-    );
+      logger.info(
+        `✅ [RefundActionProvider] Refund record created | refundId=${savedRefund.id}, transactionId=${transactionId}, amount=₹${refundAmount}`
+      );
 
-    return savedRefund;
+      return savedRefund;
+    } catch (error: any) {
+      logger.error(
+        `❌ [RefundActionProvider] Failed to create refund record for transactionId=${transactionId}, bookingId=${bookingId}, userId=${userId}`,
+        error
+      );
+      throw new CustomError("Failed to create refund. Please try again.");
+    }
   }
 }

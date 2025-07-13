@@ -21,6 +21,8 @@ import { intializeDatabase } from "./config/database";
 import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 
+import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
+
 import { logger } from "./utils/logger";
 
 import { UserMutationResolver } from "./resolvers/user/UserMutationResolver";
@@ -31,7 +33,6 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
-import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
 
 const createApp = async () => {
   const app: Application = express();

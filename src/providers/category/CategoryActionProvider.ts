@@ -1,15 +1,19 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
-import { Category } from "../../entities/Category";
-import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { SingleCategoryResponse } from "../../types/responses/CategoryResponse";
-import { logger } from "../../utils/logger";
 import { CategoryInfoProvider } from "./CategoryInfoProvider";
+
+import { Category } from "../../entities/Category";
+
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { SingleCategoryResponse } from "../../types/responses/CategoryResponse";
+
+import { logger } from "../../utils/logger";
 import { CATEGORY_ADDED_SUCCESS } from "../../utils/messages";
 
 @Service()
-export class CategoryActionProvier {
+export class CategoryActionProvdier {
   private categoryActionRepository: Repository<Category>;
 
   constructor(
@@ -22,15 +26,19 @@ export class CategoryActionProvier {
   }
 
   async addCategory(name: string): Promise<SingleCategoryResponse> {
-    logger.info(`📩 Received request to add new category: ${name}`);
+    logger.info(
+      `[CategoryActionProvider.ts] 📩 Received request to add new category: ${name}`
+    );
 
-    await this.categoryInfoProvider.checkCategoryExists(name);
+    await this.categoryInfoProvider.checkIfCategoryExists(name);
 
     const category = this.categoryActionRepository.create({ name });
 
     await this.categoryActionRepository.save(category);
 
-    logger.info(`✅ New category added: ${category.name} (ID: ${category.id})`);
+    logger.info(
+      `[CategoryActionProvider.ts] ✅ New category added: ${category.name} (ID: ${category.id})`
+    );
     return new SingleCategoryResponse(true, CATEGORY_ADDED_SUCCESS, category);
   }
 }

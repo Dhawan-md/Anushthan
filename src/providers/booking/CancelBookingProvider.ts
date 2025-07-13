@@ -5,7 +5,9 @@ import { CancelledBooking } from "../../entities/CancelledBooking";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { CreateCancellationFeeDto } from "../../types/dtos/Booking";
+import { logger } from "../../utils/logger";
+
+import { CreateCancellationDto } from "../../types/dtos/Booking";
 
 @Service()
 export class CancelBookingProvider {
@@ -16,15 +18,17 @@ export class CancelBookingProvider {
       this.repositoryFactory.getRepository(CancelledBooking);
   }
 
-  async createCancellationFee(
-    params: CreateCancellationFeeDto,
+  async createCancellation(
+    params: CreateCancellationDto,
     manager?: EntityManager
   ): Promise<CancelledBooking> {
     const em = manager || this.cancelBookingRepository.manager;
 
-    const fee = em.create(CancelledBooking, params);
-    await em.save(CancelledBooking, fee);
+    logger.info(`[CancelBookingProvider] Creating cancellation fee:`, params);
 
-    return fee;
+    const cancellationDetails = em.create(CancelledBooking, params);
+    await em.save(CancelledBooking, cancellationDetails);
+
+    return cancellationDetails;
   }
 }

@@ -3,11 +3,22 @@ import { EntityManager, Repository } from "typeorm";
 import speakeasy from "speakeasy";
 
 import { Otp } from "../../entities/Otp";
+import { User } from "../../entities/User";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { generateUserSecret } from "../../helpers/generateUserSecret";
-import { logger } from "../../utils/logger";
-import { generateOtp } from "../../helpers/generateOtp";
+
 import { OtpResponse } from "../../types/responses/OtpResponse";
+import { ResendOtpDto } from "../../types/dtos/Otp";
+import { OtpToken } from "../../types/globalTypes";
+import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
+
+import { sendEmail } from "../../service/email/sendEmail";
+
+import { generateUserSecret } from "../../helpers/generateUserSecret";
+import { generateOtp } from "../../helpers/generateOtp";
+import { logger } from "../../utils/logger";
+import { CustomError } from "../../utils/customError";
+
 import {
   EXPIRED_OTP,
   INVALID_OTP,
@@ -18,12 +29,6 @@ import {
   VALID_OTP,
 } from "../../utils/messages";
 import { ActiveStatus, OtpType } from "../../utils/enums";
-import { CustomError } from "../../utils/customError";
-import { OtpToken } from "../../types/globalTypes";
-import { sendEmail } from "../../service/email/sendEmail";
-import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
-import { User } from "../../entities/User";
-import { ResendOtpDto } from "../../types/dtos/Otp";
 
 @Service()
 export class OtpProvider {

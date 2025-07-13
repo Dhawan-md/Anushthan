@@ -1,19 +1,24 @@
 import { Container } from "typedi";
-import { createBullWorker } from "../../config/bullmq";
+import { Job } from "bullmq";
+
 import { RefundActionProvider } from "../../providers/refund/RefundActionProvider";
-import { UserRole } from "../../utils/enums";
 import { RazorpayProvider } from "../../providers/razorpay/RazorpayProvider";
-import { logger } from "../../utils/logger";
+
+import { createBullWorker } from "../../config/bullmq";
 import { AppDataSource } from "../../config/database";
+
+import { UserRole } from "../../utils/enums";
+import { logger } from "../../utils/logger";
+import { RetryRefundJobData } from "../../types/interfaces";
 
 const startWorker = async () => {
   try {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      logger.info("📦 Data source initialized in worker.");
+      logger.info("[retryRefund-worker] 📦 Data source initialized in worker.");
     }
 
-    createBullWorker("retryRefund", async (job) => {
+    createBullWorker("retryRefund", async (job: Job<RetryRefundJobData>) => {
       const {
         userId,
         transactionId,
@@ -33,13 +38,13 @@ const startWorker = async () => {
         let actualRefundId = refundId;
 
         logger.info(
-          `🚀 Starting refund attempt #${attemptNumber} for transaction ${transactionId}, refundId: ${refundId}`
+          `[retryRefund-worker] 🚀 Starting refund attempt #${attemptNumber} for transaction ${transactionId}, refundId: ${refundId}`
         );
 
         // If retry, create a new refund entry
-        if (attemptNumber > 1) {
+        if (!actualRefundId || attemptNumber > 1) {
           logger.info(
-            `🆕 Creating new refund entry for retry attempt #${attemptNumber}`
+            `[retryRefund-worker] 🆕 Creating new refund entry for retry attempt #${attemptNumber}`
           );
 
           const newRefund = await refundActionProvider.createRefund({
@@ -56,7 +61,9 @@ const startWorker = async () => {
 
           actualRefundId = newRefund.id;
 
-          logger.info(`🆕 New refund created with ID: ${actualRefundId}`);
+          logger.info(
+            `[retryRefund-worker] 🆕 New refund entry created with ID: ${actualRefundId}`
+          );
         }
 
         const order = await razorpayProvider.refundPayment({
@@ -67,29 +74,31 @@ const startWorker = async () => {
           bookingId,
           refundId: actualRefundId,
         });
-        console.log(order);
-        
-        logger.info(
-          `✅ Successfully initiated Razorpay refund: ${JSON.stringify(order)}`
-        );
 
-        // Optionally update refund status here (if needed in this phase)
+        logger.info(
+          `[retryRefund-worker] ✅ Successfully initiated Razorpay refund: ${JSON.stringify(
+            order
+          )}`
+        );
       } catch (error: any) {
         logger.error(
-          `❌ Refund attempt #${attemptNumber} failed for refundId ${refundId}`,
+          `[retryRefund-worker] ❌ Refund attempt #${attemptNumber} failed for refundId ${refundId}`,
           {
             error: error.message,
             stack: error.stack,
           }
         );
 
-        throw error; // Let BullMQ handle retry policies
+        throw error;
       }
     });
   } catch (err) {
-    logger.error("❌ Worker failed to start due to DB init error", {
-      error: err,
-    });
+    logger.error(
+      "[retryRefund-worker] ❌ Worker failed to start due to DB init error",
+      {
+        error: err,
+      }
+    );
   }
 };
 

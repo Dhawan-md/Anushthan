@@ -1,7 +1,8 @@
 import { Queue, Worker } from "bullmq";
 
-import { logger } from "../utils/logger";
 import redis from "./redis";
+
+import { logger } from "../utils/logger";
 
 // Factory to create BullMQ Queue
 export const createBullQueue = (name: string) => {
@@ -33,6 +34,8 @@ export const createBullWorker = (name: string, processor: any) => {
       error: err,
       stack: err.stack,
       jobData: job?.data,
+      attemptsMade: job?.attemptsMade,
+      maxAttempts: job?.opts.attempts,
     });
   });
 

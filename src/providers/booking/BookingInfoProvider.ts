@@ -9,10 +9,12 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
+
 import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/Booking";
+import { BookingFilters } from "../../types/globalTypes";
+
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
-import { BookingFilters } from "../../types/globalTypes";
 
 @Service()
 export class BookingInfoProvider {
@@ -25,7 +27,7 @@ export class BookingInfoProvider {
   async myBookings(params: MyBookingsDto): Promise<MultipleBookingResponse> {
     const { id, page = 1, limit = 10 } = params;
     logger.info(
-      `📦 Fetching bookings for user/pandit ID: ${id} | Page: ${page}, Limit: ${limit}`
+      `[bookingInfoProvider.ts] 📦 Fetching bookings for user/pandit ID: ${id} | Page: ${page}, Limit: ${limit}`
     );
 
     const [bookingList, total] = await this.bookingInfoRepository.findAndCount({
@@ -37,7 +39,7 @@ export class BookingInfoProvider {
     const totalPages = Math.ceil(total / limit);
 
     logger.info(
-      `✅ Retrieved ${bookingList.length} bookings out of ${total} total.`
+      `[bookingInfoProvider.ts] ✅ Retrieved ${bookingList.length} bookings out of ${total} total.`
     );
 
     return new MultipleBookingResponse(
@@ -57,45 +59,50 @@ export class BookingInfoProvider {
   }): Promise<Booking> {
     const { bookingId, filters = {} } = params;
     logger.info(
-      `🔍 Fetching booking details for ID: ${bookingId} with filters: ${JSON.stringify(
+      `[bookingInfoProvider.ts] 🔍 Fetching booking details for ID: ${bookingId} with filters: ${JSON.stringify(
         filters
       )}`
     );
 
-    const where: FindOptionsWhere<Booking> = { id: bookingId };
+    const where: FindOptionsWhere<Booking> = {
+      id: bookingId,
+      ...(filters.userId && { userId: filters.userId }),
+      ...(filters.panditId && { panditId: filters.panditId }),
+      ...(filters.categoryId && { categoryId: filters.categoryId }),
+      ...(filters.location && { location: filters.location }),
+      ...(filters.status && { status: filters.status }),
+      ...(filters.paid !== undefined && { paid: filters.paid }),
+      ...(filters.paymentType && { paymentType: filters.paymentType }),
+      ...(filters.timeSlot && { timeSlot: filters.timeSlot }),
+      ...(filters.completedAt && { completedAt: filters.completedAt }),
+      ...(filters.cancelledAt && { cancelledAt: filters.cancelledAt }),
+    };
 
-    if (filters.userId) where.userId = filters.userId;
-    if (filters.panditId) where.panditId = filters.panditId;
-    if (filters.categoryId) where.categoryId = filters.categoryId;
-    if (filters.location) where.location = filters.location;
-    if (filters.status) where.status = filters.status;
-    if (filters.paid !== undefined) where.paid = filters.paid;
-    if (filters.paymentType) where.paymentType = filters.paymentType;
-    if (filters.timeSlot) where.timeSlot = filters.timeSlot;
-    if (filters.completedAt) where.completedAt = filters.completedAt;
-    if (filters.cancelledAt) where.cancelledAt = filters.cancelledAt;
-
-    const bookingDetails = await this.bookingInfoRepository.findOne({
-      where,
-    });
+    const bookingDetails = await this.bookingInfoRepository.findOneBy(where);
 
     if (!bookingDetails) {
-      logger.warn(`⚠️ Booking details not found for ID: ${bookingId}`);
-      throw new CustomError("missing booking Details");
+      logger.warn(
+        `[bookingInfoProvider.ts] ⚠️ Booking details not found for ID: ${bookingId}`
+      );
+      throw new CustomError(`Booking not found for ID: ${bookingId}`);
     }
 
-    logger.info(`✅ Found booking details for ID: ${bookingId}`);
+    logger.info(
+      `[bookingInfoProvider.ts] ✅ Found booking details for ID: ${bookingId}`
+    );
 
     return bookingDetails;
   }
 
   async isDuplicateBooking(params: PlaceBookingDto): Promise<boolean> {
     logger.info(
-      `🔍 Checking for duplicate booking for userId: ${params.userId}`
+      `[bookingInfoProvider.ts] 🔍 Checking for duplicate booking for userId: ${params.userId}`
     );
 
     if (!params.serviceIds || params.serviceIds.length === 0) {
-      logger.warn(`⚠️ No serviceIds provided for duplicate check.`);
+      logger.warn(
+        `[bookingInfoProvider.ts] ⚠️ No serviceIds provided for duplicate check.`
+      );
       throw new CustomError("No serviceIds provided for duplicate check.");
     }
 
@@ -108,7 +115,7 @@ export class BookingInfoProvider {
     });
 
     logger.info(
-      `📋 Found ${possibleConflicts.length} existing pending bookings at the same time.`
+      `[bookingInfoProvider.ts] 📋 Found ${possibleConflicts.length} existing pending bookings at the same time.`
     );
 
     const sortedInputIds = [...params.serviceIds].sort();
@@ -118,7 +125,7 @@ export class BookingInfoProvider {
       const isMatch = isEqual(existingIds, sortedInputIds);
       if (isMatch) {
         logger.info(
-          `⚠️ Duplicate booking found with serviceIds: ${existingIds}`
+          `[bookingInfoProvider.ts] ⚠️ Duplicate booking found with serviceIds: ${existingIds}`
         );
       }
       return isMatch;
@@ -129,7 +136,7 @@ export class BookingInfoProvider {
 
   async isPendingAmount(userId: string): Promise<void> {
     logger.info(
-      `🔍 Checking if their is some pending amount from previous bookings`
+      `[bookingInfoProvider.ts] 🔍 Checking if their is some pending amount from previous bookings`
     );
 
     const booking = await this.bookingInfoRepository.findOne({
@@ -145,11 +152,10 @@ export class BookingInfoProvider {
         createdAt: "DESC", // or use cancelled_booking.createdAt if more accurate
       },
     });
-    console.log(booking);
 
     if (!!booking) {
       throw new CustomError(
-        `An amount of ${booking.totalPrice} is pending from your previous booking with booking Id: ${booking.id}. Go to orders and clear the due before placing a new booking.`
+        `You have a pending penalty of ₹${booking.cancelled_booking.amount} from booking #${booking.id}. Please clear the due before placing a new booking.`
       );
     }
   }

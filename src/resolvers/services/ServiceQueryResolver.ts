@@ -5,10 +5,8 @@ import { plainToInstance } from "class-transformer";
 import { ServiceInfoProvider } from "../../providers/service/ServiceInfoProvider";
 
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
-
 import { GetServicesInput } from "../../types/inputTypes/service/GetServiceInput";
 import { GetServicesDto } from "../../types/dtos/Service";
-import { UserRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -18,7 +16,7 @@ export class ServiceQueryResolver {
     private serviceInfoProvider: ServiceInfoProvider
   ) {}
 
-  @Authorized(UserRole.USER)
+  @Authorized()
   @Query(() => MultipleServiceResponse)
   async getAllServices(
     @Arg("data", () => GetServicesInput, { nullable: true })

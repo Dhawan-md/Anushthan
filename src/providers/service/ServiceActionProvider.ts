@@ -1,17 +1,19 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
+import { CategoryInfoProvider } from "../category/CategoryInfoProvider";
+import { ServiceInfoProvider } from "./ServiceInfoProvider";
+
 import { Service as ServiceEntity } from "../../entities/Service";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
-
-import { SERVICE_ADDED_SUCCESS } from "../../utils/messages";
-import { logger } from "../../utils/logger";
 import { AddServiceDto } from "../../types/dtos/Admin";
-import { ServiceInfoProvider } from "./ServiceInfoProvider";
-import { CategoryInfoProvider } from "../category/CategoryInfoProvider";
+
+import { CustomError } from "../../utils/customError";
+import { logger } from "../../utils/logger";
+import { SERVICE_ADDED_SUCCESS } from "../../utils/messages";
 
 @Service()
 export class ServiceActionProvider {
@@ -30,25 +32,45 @@ export class ServiceActionProvider {
 
   async addService(params: AddServiceDto): Promise<SingleServiceResponse> {
     const { name, categoryId, description, duration, price } = params;
-    logger.info(`📩 Received request to add new service: ${name}`);
-
-    await this.serviceInfoProvider.checkServiceExists(name);
-
-    const categoryDetails = await this.categoryInfoProvider.getCategoryDetails(
-      categoryId
+    logger.info(
+      `[ServiceActionProvider.ts] 📩 Received request to add new service: ${name}`
     );
 
-    const service = this.serviceActionRepository.create({
-      name,
-      description,
-      duration,
-      price,
-      category: categoryDetails,
-    });
+    try {
+      await this.serviceInfoProvider.checkServiceExists(name);
 
-    await this.serviceActionRepository.save(service);
+      const categoryDetails =
+        await this.categoryInfoProvider.getCategoryDetails(categoryId);
 
-    logger.info(`✅ New service added: ${service.name} (ID: ${service.id})`);
-    return new SingleServiceResponse(true, SERVICE_ADDED_SUCCESS, service);
+      logger.debug(`[ServiceActionProvider.ts] 📦 Creating service with data`, {
+        name,
+        description,
+        duration,
+        price,
+        categoryId,
+      });
+
+      const service = this.serviceActionRepository.create({
+        name,
+        description,
+        duration,
+        price,
+        category: categoryDetails,
+      });
+
+      await this.serviceActionRepository.save(service);
+
+      logger.info(
+        `[ServiceActionProvider.ts] ✅ Service added successfully: ${service.name} (ID: ${service.id})`
+      );
+
+      return new SingleServiceResponse(true, SERVICE_ADDED_SUCCESS, service);
+    } catch (error) {
+      logger.error(
+        `[ServiceActionProvider.ts] ❌ Failed to add service: ${name}`,
+        error
+      );
+      throw new CustomError("Unable to add service. Please try again.");
+    }
   }
 }

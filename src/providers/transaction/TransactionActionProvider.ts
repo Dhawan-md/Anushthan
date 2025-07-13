@@ -1,13 +1,18 @@
 import { Service } from "typedi";
 import { EntityManager, Repository } from "typeorm";
+
 import { Transaction } from "../../entities/Transaction";
+
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { logger } from "../../utils/logger";
+import { CustomError } from "../../utils/customError";
 import {
   TransactionStatus,
   TransactionType,
   UserRole,
 } from "../../utils/enums";
-import { logger } from "../../utils/logger";
+import { INTERNAL_ERROR_OCCURRED } from "../../utils/messages";
 
 @Service()
 export class TransactionActionProvider {
@@ -34,22 +39,43 @@ export class TransactionActionProvider {
       manager,
       type = TransactionType.PAYMENT_INCOMING,
     } = params;
-    logger.info(`🔄 Creating transaction with booking ID: ${bookingId}`);
+
+    logger.info(
+      `[TransactionActionProvider.ts] 🧾 Initiating transaction creation | userId: ${userId}, bookingId: ${bookingId}, amount: ₹${amount}, role: ${userRole}, type: ${type}`
+    );
 
     const em = manager || this.transactionActionRepository.manager;
+    const repo = em.getRepository(Transaction);
 
-    const transaction = await em.create(Transaction, {
-      userId,
-      userRole,
-      bookingId,
-      amount,
-      type,
-      status: TransactionStatus.PENDING,
-      booking: { id: bookingId },
-    });
-    const savedTransaction = await em.save(Transaction, transaction);
+    try {
+      const transaction = repo.create({
+        userId,
+        userRole,
+        bookingId,
+        amount,
+        type,
+        status: TransactionStatus.PENDING,
+        booking: { id: bookingId },
+      });
 
-    return savedTransaction;
+      logger.debug(
+        `[TransactionActionProvider.ts] 📦 Transaction entity created (not saved yet) | bookingId: ${bookingId}`
+      );
+
+      const savedTransaction = await repo.save(transaction);
+
+      logger.info(
+        `[TransactionActionProvider.ts] ✅ Transaction saved | transactionId: ${savedTransaction.id}, bookingId: ${bookingId}`
+      );
+
+      return savedTransaction;
+    } catch (error: any) {
+      logger.error(
+        `[TransactionActionProvider.ts] ❌ Failed to create transaction | bookingId: ${bookingId}, userId: ${userId}, error: ${error?.message}`,
+        error
+      );
+      throw new CustomError(INTERNAL_ERROR_OCCURRED);
+    }
   }
 
   // async createRefundTransaction(params: {

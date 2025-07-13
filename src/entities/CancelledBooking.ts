@@ -7,9 +7,12 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  Index,
 } from "typeorm";
-import { ActiveStatus, UserCancellationReason, UserRole } from "../utils/enums";
+
 import { Booking } from "./Booking";
+
+import { ActiveStatus, UserCancellationReason, UserRole } from "../utils/enums";
 
 @ObjectType()
 @Entity()
@@ -20,14 +23,17 @@ export class CancelledBooking {
 
   @Field()
   @Column({ name: "user_id" })
+  @Index()
   userId!: string;
 
   @Field({ nullable: true })
   @Column({ name: "pandit_id", nullable: true })
+  @Index()
   panditId?: string;
 
   @Field()
   @Column({ name: "booking_id" })
+  @Index()
   bookingId!: string;
 
   @Field(() => Float)
@@ -59,14 +65,16 @@ export class CancelledBooking {
   status!: ActiveStatus;
 
   @Field(() => Date)
-  @CreateDateColumn({ name: "cancelled_at" })
-  cancelledAt!: Date;
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
 
   @Field(() => Date)
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
 
-  @OneToOne(() => Booking, (booking) => booking.cancelled_booking)
+  @OneToOne(() => Booking, (booking) => booking.cancelled_booking, {
+    nullable: false,
+  })
   @JoinColumn()
   booking: Booking;
 }
