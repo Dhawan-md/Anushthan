@@ -299,13 +299,14 @@ export class BookingActionProvider {
     const otpDetails = generateOtp(userSecret.base32);
 
     await redis.setex(redisKey, 5 * 60, otpDetails.otpCode);
+
     logger.info(
       `[bookingActionProvider.ts] 🔐 OTP stored in Redis for key=${redisKey}, expires in 5 min`
     );
 
     // Replace with real notification
     if (process.env.NODE_ENV !== "production") {
-      logger.debug(
+      logger.info(
         `[bookingActionProvider.ts] OTP for booking ${bookingId}: ${otpDetails.otpCode}`
       );
     }

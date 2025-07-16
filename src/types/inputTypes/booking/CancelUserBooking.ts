@@ -5,6 +5,7 @@ import {
   UserCancellationReason,
 } from "../../../utils/enums";
 
+@InputType()
 export class CancelBookingInput {
   @Field()
   bookingId: string;

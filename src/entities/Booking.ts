@@ -77,7 +77,6 @@ export class Booking {
   paymentType!: PaymentType; // Consider using enum
 
   @OneToOne(() => Transaction, (transaction) => transaction.booking)
-  @Index()
   transaction!: Transaction;
 
   @Field({ nullable: true })
@@ -109,6 +108,5 @@ export class Booking {
   updatedAt!: Date;
 
   @OneToOne(() => CancelledBooking, (cb) => cb.booking)
-  @Index()
   cancelled_booking: CancelledBooking;
 }

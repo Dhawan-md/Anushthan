@@ -22,11 +22,36 @@ export class CancelBookingProvider {
     params: CreateCancellationDto,
     manager?: EntityManager
   ): Promise<CancelledBooking> {
+    const {
+      userId,
+      panditId,
+      bookingId,
+      amount,
+      cancelledBy,
+      cancelReason,
+      cancelledAt,
+      customReason,
+      isPenaltyApplied,
+      status,
+    } = params;
+    
     const em = manager || this.cancelBookingRepository.manager;
 
     logger.info(`[CancelBookingProvider] Creating cancellation fee:`, params);
 
-    const cancellationDetails = em.create(CancelledBooking, params);
+    const cancellationDetails = em.create(CancelledBooking, {
+      userId,
+      panditId,
+      bookingId,
+      amount,
+      cancelledBy,
+      cancelReason,
+      customReason,
+      createdAt: cancelledAt,
+      isPenaltyApplied,
+      status,
+      booking: { id: bookingId },
+    });
     await em.save(CancelledBooking, cancellationDetails);
 
     return cancellationDetails;
