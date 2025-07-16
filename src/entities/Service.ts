@@ -3,12 +3,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
+  JoinColumn,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
 import { Pandit } from "./Pandit";
+import { Category } from "./Category";
 
 @ObjectType()
 @Entity()
@@ -22,7 +26,7 @@ export class Service {
   name!: string;
 
   @Field(() => String)
-  @Column({ type: "text", nullable: true })
+  @Column({ type: "text"})
   description: string | null;
 
   @Field(() => Int)
@@ -33,9 +37,14 @@ export class Service {
   @Column({ type: "int", default: 30 })
   duration!: number;
 
-  @Field(() => [Pandit], { nullable: true })
   @ManyToMany(() => Pandit, (pandit) => pandit.services)
   pandits!: Pandit[];
+
+  @Field(() => Category)
+  @ManyToOne(() => Category, (category) => category.services)
+  @JoinColumn({ name: "category_id" }) // Optional: customize DB column name
+  @Index()
+  category!: Category;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

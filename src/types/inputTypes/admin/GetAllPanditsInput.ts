@@ -1,5 +1,5 @@
 import { InputType, Field } from "type-graphql";
-import { PaginationInput } from "./PaginationInput";
+import { PaginationInput } from "../PaginationInput";
 import { PanditStatus } from "../../../utils/enums";
 
 @InputType()

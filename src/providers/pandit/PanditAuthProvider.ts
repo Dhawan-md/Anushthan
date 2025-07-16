@@ -2,9 +2,9 @@ import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
 import { UserInfoProvider } from "../user/UserInfoProvider";
-import { ServiceProvider } from "../service/ServiceProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
+import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -16,6 +16,17 @@ import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { sendEmail } from "../../service/email/sendEmail";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
+import {
+  LoginPanditDto,
+  RegisterPanditDto,
+  VerifyPanditDto,
+} from "../../types/dtos/Pandit";
+
+import { validatePassword } from "../../utils/validatePassword";
+import { hashPassword } from "../../utils/hashPassword";
+import { CustomError } from "../../utils/customError";
+import { validateEmail } from "../../utils/validateEmail";
+import { isSamePassword } from "../../utils/isSamePassword";
 
 import {
   EmailName,
@@ -24,9 +35,6 @@ import {
   S3BucketType,
   UserRole,
 } from "../../utils/enums";
-import { validatePassword } from "../../utils/validatePassword";
-import { hashPassword } from "../../utils/hashPassword";
-import { CustomError } from "../../utils/customError";
 import {
   FILE_UPLOAD_FAIL,
   INVALID_PASSWORD,
@@ -37,9 +45,6 @@ import {
   SERVICE_NOT_FOUND,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
-import { validateEmail } from "../../utils/validateEmail";
-import { isSamePassword } from "../../utils/isSamePassword";
-import { LoginPanditDto, RegisterPanditDto, VerifyPanditDto } from "../../types/dtos/Pandit";
 
 @Service()
 export class PanditAuthProvider {
@@ -51,8 +56,8 @@ export class PanditAuthProvider {
     private userInfoProvider: UserInfoProvider,
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
-    @Inject(() => ServiceProvider)
-    private serviceProvider: ServiceProvider,
+    @Inject(() => ServiceInfoProvider)
+    private serviceInfoProvider: ServiceInfoProvider,
     @Inject(() => OtpProvider)
     private otpProvider: OtpProvider
   ) {
@@ -80,7 +85,7 @@ export class PanditAuthProvider {
 
     const user = await this.userInfoProvider.getUser({ id: userId });
 
-    const services = await this.serviceProvider.getServices(serviceIds);
+    const services = await this.serviceInfoProvider.getServices(serviceIds);
 
     const hashedPassword = await hashPassword(password);
 
@@ -157,8 +162,7 @@ export class PanditAuthProvider {
     logger.info(
       `🔄 Verification request received for pandit with email: ${userEmail}`
     );
-    console.log(userEmail);
-    
+
     const panditData = await this.panditInfoProvider.getPandit({
       userEmail,
     });

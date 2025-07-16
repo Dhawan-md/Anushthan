@@ -59,7 +59,7 @@ export class UpdatePanditProvider {
   }
 
   async deleteDocument(filePathArray: string): Promise<void> {
-    logger.info(`🔍 Fetching pandit documents from S3.`);
+    logger.info(`🗑️ Deleting pandit documents from S3.`);
     let parsedFilePathArray = JSON.parse(filePathArray);
     const bucketName = getBucketName(S3BucketType.DOCUMENT);
 
@@ -69,6 +69,6 @@ export class UpdatePanditProvider {
       })
     );
 
-    logger.info(`✅ Retrieved pandit documents from S3.`);
+    logger.info(`✅ Deleted pandit documents from S3.`);
   }
 }

@@ -18,4 +18,7 @@ export class AddServiceInput {
   @Field(() => Int)
   @Min(1)
   duration: number;
+
+  @Field()
+  categoryId: string;
 }

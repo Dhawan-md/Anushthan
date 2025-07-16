@@ -46,6 +46,7 @@ export const LOGIN_SUCCESSFUL = "Login successful.";
 export const LOGIN_REQUESTED = "Login requested. Otp has been sent.";
 export const PHONE_NUMBER_REQUIRED =
   "Phone Number Required! Phone number field cannot be empty.";
+export const USER_ONLY = "Only Users can perform this action.";
 
 // OTP messages
 export const VALID_OTP = "OTP is valid.";
@@ -59,6 +60,7 @@ export const OTP_GENERATION_FAILED = "Failed to generate OTP.";
 export const SESSION_EXPIRED = "Session has expired.";
 export const OTP_VERIFICATION_REQUIRED =
   "You need to verify OTP before changing your password.";
+export const BOOKING_OTP_SENT = "OTP sent. Please verify to start booking.";
 
 // Email messages
 export const EMAIL_SENT = "Email sent successfully.";
@@ -98,6 +100,8 @@ export const SERVICE_NOT_FOUND = "Invalid or missing services.";
 export const SERVICE_ALREADY_EXISTS = "Service already exists.";
 export const NO_SERVICE_ID_PROVIDED = "No service id provided";
 export const SERVICE_LIST = "Services list.";
+export const SERVICE_DOES_NOT_BELONG_TO_THIS_CATEGORY =
+  "One or more selected services do not belong to the specified category.";
 
 // Pandit messages
 export const PANDIT_REGISTERED = "Pandit registered successfully.";
@@ -107,3 +111,25 @@ export const PANDIT_LIST = "Pandits list.";
 export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
 export const STATUS_UPDATED = "Document status has been updated";
 export const PANDIT_UPDATED = "Pandit has been updated.";
+export const PANDIT_ONLY = "Only Pandit can perform this action.";
+
+// Category messages
+export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";
+export const CATEGORY_ALREADY_EXISTS = "Category already exists.";
+export const CATEGORY_LIST = "Categories list.";
+export const CATEGORY_NOT_FOUND = "Category not found."
+
+//Booking Messages
+export const BOOKING_UPDATED = "Booking edited successfully.";
+export const BOOKING_LIST = "Bookings list.";
+export const BOOKING_PLACED = "Booking placed successfully.";
+export const BOOKING_ACCEPTED = "Booking accepted.";
+export const BOOKING_CANCELLED_USER = "Booking has been cancelled by user.";
+export const BOOKING_CANCELLED_PANDIT = "Booking has been cancelled by pandit.";
+
+//Transaction Message
+export const NO_TRANSACTION_FOUND = "No transaction found.";
+
+//Refund Message
+export const NO_REFUND_FOUND = "No refund found.";
+export const REFUND_UPDATED = "Refund updated successfully.";

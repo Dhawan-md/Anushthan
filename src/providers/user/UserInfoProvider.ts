@@ -14,7 +14,7 @@ import {
   USER_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
-import { PaginationDto } from "../../types/dtos/Admin";
+import { PaginationDto } from "../../types/dtos/Pagination";
 
 @Service()
 export class UserInfoProvider {
@@ -25,7 +25,7 @@ export class UserInfoProvider {
   }
 
   async getAllUsers(params: PaginationDto): Promise<MultipleUserResponse> {
-    const { page = 1, limit = 1 } = params;
+    const { page = 1, limit = 10 } = params;
     logger.info(`🔄 Fetching users for page ${page} with limit ${limit}`);
 
     const [userList, total] = await this.userInfoRepository.findAndCount({
@@ -67,11 +67,11 @@ export class UserInfoProvider {
     logger.info(
       `🔍 Searching for user with params: ${params.id || normalizedEmail}`
     );
-    
+
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { userEmail: normalizedEmail }],
     });
-    
+
     if (!userData) {
       logger.warn(
         `❌ No user found with email or id: ${normalizedEmail || params.id}`

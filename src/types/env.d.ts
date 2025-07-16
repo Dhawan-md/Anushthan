@@ -22,6 +22,10 @@ declare namespace NodeJS {
     // Sendgrid
     SENDGRID_API_KEY: string;
 
+    //razorpayApiKeys
+    RAZORPAY_KEY_ID: string;
+    RAZORPAY_KEY_SECRET: string;
+
     // Server
     PORT?: string;
   }

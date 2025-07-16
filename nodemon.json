@@ -3,5 +3,6 @@
   "ext": "ts",
   "ignore": ["node_modules", "dist"],
   "exec": "ts-node -r tsconfig-paths/register src/index.ts",
-  "delay": 2000
+  "delay": 2000,
+  "legacyWatch": true
 }

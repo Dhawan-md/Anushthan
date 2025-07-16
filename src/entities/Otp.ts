@@ -8,7 +8,8 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 
-import { OtpStatus, OtpType } from "../utils/enums";
+import { ActiveStatus, OtpType } from "../utils/enums";
+
 import { User } from "./User";
 
 @ObjectType()
@@ -36,15 +37,15 @@ export class Otp {
   @Column({ name: "user_secret" })
   userSecret!: string;
 
-  @Field(() => OtpStatus)
+  @Field(() => ActiveStatus)
   @Column({
     name: "status",
     type: "enum",
-    enum: OtpStatus,
+    enum: ActiveStatus,
     enumName: "status",
-    default: OtpStatus.ACTIVE,
+    default: ActiveStatus.ACTIVE,
   })
-  status!: OtpStatus;
+  status!: ActiveStatus;
 
   @Field(() => OtpType)
   @Column({

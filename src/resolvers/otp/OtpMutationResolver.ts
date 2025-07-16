@@ -7,7 +7,7 @@ import { OtpResponse } from "../../types/responses/OtpResponse";
 
 import { ResendOtpInput } from "../../types/inputTypes/otp/ResendOtpInput";
 import { plainToInstance } from "class-transformer";
-import { ResendOtpDto } from "../../types/dtos/otp";
+import { ResendOtpDto } from "../../types/dtos/Otp";
 
 @Service()
 @Resolver()
