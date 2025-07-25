@@ -1,6 +1,9 @@
+import "reflect-metadata";
+
 import express, { Application } from "express";
 import cors from "cors";
-import { Server } from "http";
+import { createServer, Server } from "http";
+import { Server as ioServer } from "socket.io";
 
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -10,6 +13,8 @@ import {
   Upload,
 } from "graphql-upload-minimal";
 import Container from "typedi";
+
+import { NotificationProvider } from "./providers/notification/notificationProvider";
 
 import { UploadScalar } from "./types/scalar/UploadScalar";
 
@@ -22,6 +27,7 @@ import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 
 import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
+import { redisPublisher, redisSubscriber } from "./config/redis";
 
 import { logger } from "./utils/logger";
 
@@ -33,6 +39,7 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
+import { setSocketServerInstance } from "./config/socket";
 
 const createApp = async () => {
   const app: Application = express();
@@ -70,6 +77,13 @@ const createApp = async () => {
   await server.start();
   server.applyMiddleware({ app, path: "/graphql" });
 
+  Container.set("redisPublisher", redisPublisher);
+  Container.set("redisSubscriber", redisSubscriber);
+
+  const notificationProvider = Container.get(NotificationProvider);
+
+  await notificationProvider.subscribe("booking_notification");
+
   app.get("/test-payment/:orderId", (req, res) => {
     const { orderId } = req.params;
     const html = `
@@ -105,15 +119,38 @@ const startServer = async () => {
     await intializeDatabase();
     const app = await createApp();
 
+    const httpServer = createServer(app);
+
+    // Attach socket.io
+    const io = new ioServer(httpServer, {
+      cors: { origin: "*" },
+    });
+
+    setSocketServerInstance(io);
+
+    io.on("connection", (socket) => {
+      const userId = socket.handshake.query.userId;
+      if (userId) {
+        socket.join(`user_${userId}`);
+        logger.info(
+          `[index.ts] User ${userId} connected and joined room user_${userId}`
+        );
+      } else {
+        logger.warn(
+          "[index.ts] A socket connected without a userId in handshake query."
+        );
+      }
+    });
+
     const PORT = process.env.PORT || 5000;
 
-    const server = app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       logger.info(`🚀 Server is running at http://localhost:${PORT}/graphql`);
     });
 
     // ✅ Gracefully handle shutdown
-    process.on("SIGINT", () => shutdown(server));
-    process.on("SIGTERM", () => shutdown(server));
+    process.on("SIGINT", () => shutdown(httpServer));
+    process.on("SIGTERM", () => shutdown(httpServer));
   } catch (error) {
     logger.error("❌ Server failed to start:", error);
     process.exit(1);

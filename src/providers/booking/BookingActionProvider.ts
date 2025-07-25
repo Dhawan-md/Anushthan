@@ -10,6 +10,7 @@ import { RefundActionProvider } from "../refund/RefundActionProvider";
 import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
 import { RazorpayProvider } from "../razorpay/RazorpayProvider";
 import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
+import { NotificationProvider } from "../notification/notificationProvider";
 
 import redis from "../../config/redis";
 
@@ -84,7 +85,9 @@ export class BookingActionProvider {
     @Inject(() => RefundActionProvider)
     private refundActionProvider: RefundActionProvider,
     @Inject(() => RazorpayProvider)
-    private razorpayProvider: RazorpayProvider
+    private razorpayProvider: RazorpayProvider,
+    @Inject(() => NotificationProvider)
+    private notificationProvider: NotificationProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -198,6 +201,16 @@ export class BookingActionProvider {
     }
     logger.info(
       `[bookingActionProvider.ts] ✅ Booking placed with ID: ${booking.id}`
+    );
+
+    await this.notificationProvider.publish(
+      "booking_notification",
+      "BOOKING_ACCEPTED",
+      {
+        userId: booking.userId,
+        message: `Your booking #${booking.id} has been accepted by the pandit.`,
+        fcmToken: true,
+      }
     );
 
     return new SingleBookingResponse(true, BOOKING_PLACED, booking);
