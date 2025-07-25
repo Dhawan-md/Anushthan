@@ -12,5 +12,5 @@ logs*
 logs/
 
 # Firebase keys
-anushthan-firebase-adminsdk.json
+anushthan-test-fcm.json
 
