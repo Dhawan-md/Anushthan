@@ -61,6 +61,7 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
+import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -87,7 +88,9 @@ export class BookingActionProvider {
     @Inject(() => RazorpayProvider)
     private razorpayProvider: RazorpayProvider,
     @Inject(() => NotificationProvider)
-    private notificationProvider: NotificationProvider
+    private notificationProvider: NotificationProvider,
+    @Inject(() => PanditInfoProvider)
+    private panditInfoProvider: PanditInfoProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -228,11 +231,29 @@ export class BookingActionProvider {
       bookingId,
     });
 
+    const panditDetails = await this.panditInfoProvider.getPandit({
+      data: { id: panditId },
+      withCategory: true,
+    });
+
     if (bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
         `[bookingActionProvider.ts] ⚠️ Booking has been ${bookingDetails.status}.`
       );
       throw new CustomError(`Booking has been ${bookingDetails.status}`);
+    }
+
+    const hasCategory = panditDetails.categories.some(
+      (category) => category.id === bookingDetails.categoryId
+    );
+
+    if (!hasCategory) {
+      logger.warn(
+        `[bookingActionProvider.ts] ❌ Pandit ${panditId} is not registered in category ${bookingDetails.categoryId}`
+      );
+      throw new CustomError(
+        "You are not eligible to accept this booking category"
+      );
     }
 
     if (

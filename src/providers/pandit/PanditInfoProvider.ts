@@ -1,4 +1,4 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
 import { Pandit } from "../../entities/Pandit";
@@ -27,12 +27,18 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
+import { UserLocationProvider } from "../user/UserLocationProvider";
+import { UserLocation } from "../../entities/UserLocation";
 
 @Service()
 export class PanditInfoProvider {
   private panditInfoRepository: Repository<Pandit>;
 
-  constructor(private repositoryFactory: RepositoryFactory) {
+  constructor(
+    private repositoryFactory: RepositoryFactory,
+    @Inject(() => UserLocationProvider)
+    private userLocationProvider: UserLocationProvider
+  ) {
     this.panditInfoRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
@@ -94,11 +100,13 @@ export class PanditInfoProvider {
     return isExisting;
   }
 
-  async getPandit(
-    params: GetPanditParams,
-    withUser: boolean = false
-  ): Promise<Pandit> {
-    const { userEmail, id } = params;
+  async getPandit(params: {
+    data: GetPanditParams;
+    withUser?: boolean;
+    withCategory?: boolean;
+  }): Promise<Pandit> {
+    const { data, withCategory = false, withUser = false } = params;
+    const { id, userEmail } = data;
 
     const normalizedEmail = userEmail?.trim().toLowerCase();
     logger.info(
@@ -111,6 +119,7 @@ export class PanditInfoProvider {
     const panditData = await this.panditInfoRepository.findOne({
       where: whereClause,
       ...(withUser ? { relations: ["user"] } : {}),
+      ...(withCategory ? { relations: ["category"] } : {}),
     });
 
     if (!panditData) {
@@ -126,7 +135,7 @@ export class PanditInfoProvider {
   async getDocument(filePathArray: string): Promise<MultipleDocumentResponse> {
     logger.info(`🔍 Fetching pandit documents from S3.`);
     let parsedFilePathArray = JSON.parse(filePathArray);
-    
+
     let signedUrls = await Promise.all(
       parsedFilePathArray.map((filePath: string) => {
         return generateSignedUrl(filePath, S3BucketType.DOCUMENT);
@@ -152,5 +161,42 @@ export class PanditInfoProvider {
     };
 
     await sendEmail(userEmail, { name: name }, emailTypeMap[status]);
+  }
+
+  async findNearbyPandits(userId: string, radiusKm = 10) {
+    // Fetch user's location first
+    const userLocation = await this.userLocationProvider.getLocationDetails(
+      userId
+    );
+
+    if (!userLocation) throw new CustomError("User location not found");
+
+    const { latitude, longitude } = userLocation;
+
+    const pandits = await this.panditInfoRepository
+      .createQueryBuilder("pandit")
+      .innerJoin("pandit.user", "user")
+      .innerJoin(UserLocation, "location", "location.userId = user.id")
+      .where("pandit.isAvailable = :isAvailable", { isAvailable: true })
+      .andWhere("pandit.status = :status", { status: "APPROVED" })
+      .addSelect(
+        `
+      (
+        6371 * acos(
+          cos(radians(:lat)) *
+          cos(radians(location.latitude)) *
+          cos(radians(location.longitude) - radians(:lng)) +
+          sin(radians(:lat)) *
+          sin(radians(location.latitude))
+        )
+      )`,
+        "distance"
+      )
+      .having("distance <= :radius", { radius: radiusKm })
+      .setParameters({ lat: latitude, lng: longitude })
+      .orderBy("distance", "ASC")
+      .getRawAndEntities();
+
+    return pandits.entities;
   }
 }

@@ -117,7 +117,9 @@ export const PANDIT_ONLY = "Only Pandit can perform this action.";
 export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";
 export const CATEGORY_ALREADY_EXISTS = "Category already exists.";
 export const CATEGORY_LIST = "Categories list.";
-export const CATEGORY_NOT_FOUND = "Category not found."
+export const CATEGORY_NOT_FOUND = "Category not found.";
+export const NO_CATEGORY_ID_PROVIDED = "No category id provided";
+export const CATEGORY_IDS_FOUND = "Category Ids found successfully.";
 
 //Booking Messages
 export const BOOKING_UPDATED = "Booking edited successfully.";

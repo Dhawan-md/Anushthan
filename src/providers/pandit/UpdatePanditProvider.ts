@@ -42,7 +42,7 @@ export class UpdatePanditProvider {
 
     const em = manager || this.updatePanditRepository.manager;
     const panditData = await this.panditInfoProvider.getPandit({
-      id: panditId,
+      data: { id: panditId },
     });
 
     Object.assign(panditData, updatedPanditData);

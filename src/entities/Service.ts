@@ -5,13 +5,11 @@ import {
   Entity,
   Index,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
-import { Pandit } from "./Pandit";
 import { Category } from "./Category";
 
 @ObjectType()
@@ -36,9 +34,6 @@ export class Service {
   @Field(() => Int)
   @Column({ type: "int", default: 30 })
   duration!: number;
-
-  @ManyToMany(() => Pandit, (pandit) => pandit.services)
-  pandits!: Pandit[];
 
   @Field(() => Category)
   @ManyToOne(() => Category, (category) => category.services)

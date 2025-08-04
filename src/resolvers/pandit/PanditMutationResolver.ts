@@ -57,9 +57,8 @@ export class PanditMutationResolver {
       userId,
       password: data.password,
       documents: resolvedDocument,
-      serviceIds: data.serviceIds,
+      categoryIds: data.categoryIds,
       experience: data.experience,
-      address: data.address,
     });
   }
 

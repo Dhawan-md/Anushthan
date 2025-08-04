@@ -85,7 +85,9 @@ export class PanditPasswordProvider {
       otpType: OtpType.FORGET_PASSWORD,
     });
 
-    const panditData = await this.panditInfoProvider.getPandit({ userEmail });
+    const panditData = await this.panditInfoProvider.getPandit({
+      data: { userEmail },
+    });
 
     const verificationToken = generateJwtToken(
       { panditId: panditData.id },
@@ -121,7 +123,7 @@ export class PanditPasswordProvider {
     validatePassword(newPassword);
 
     const panditData = await this.panditInfoProvider.getPandit({
-      id: panditId,
+      data: { id: panditId },
     });
 
     const isMatching = await isSamePassword({

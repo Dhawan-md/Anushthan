@@ -11,12 +11,9 @@ export class RegisterPanditInput {
   documents: Promise<FileUpload>[];
 
   @Field(() => [String])
-  serviceIds: string[];
+  categoryIds: string[];
 
   @Field(() => Int)
   experience: number;
-
-  @Field()
-  address: string;
 }
 

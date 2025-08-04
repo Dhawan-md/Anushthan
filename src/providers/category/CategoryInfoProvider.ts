@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 
 import { Category } from "../../entities/Category";
 
@@ -12,9 +12,12 @@ import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 import {
   CATEGORY_ALREADY_EXISTS,
+  CATEGORY_IDS_FOUND,
   CATEGORY_LIST,
   CATEGORY_NOT_FOUND,
+  NO_CATEGORY_ID_PROVIDED,
 } from "../../utils/messages";
+import { validateFoundIds } from "../../utils/validateFoundIds";
 
 @Service()
 export class CategoryInfoProvider {
@@ -93,5 +96,36 @@ export class CategoryInfoProvider {
     );
 
     return categoryDetails;
+  }
+
+  async getCategories(
+    categoryIds: string[]
+  ): Promise<MultipleCategoryResponse> {
+    logger.info(
+      `[CategoryInfoProvider.ts] 📩 Received request to fetch category with IDs: ${categoryIds.join(
+        ", "
+      )}`
+    );
+
+    if (!categoryIds.length) {
+      throw new CustomError(NO_CATEGORY_ID_PROVIDED);
+    }
+
+    const categories = await this.categoryInfoRepository.find({
+      where: { id: In(categoryIds) },
+    });
+
+    if (!categories || categories.length !== categoryIds.length) {
+      logger.warn(
+        `[CategoryInfoProvider.ts] ⚠️ Some provided category IDs are invalid. Expected: ${categoryIds.length}, Found: ${categoryIds.length}`
+      );
+
+      validateFoundIds(categories, categoryIds, "Invalid Service Ids");
+    }
+
+    logger.info(
+      `[ServiceInfoProvider.ts] ✅ Successfully fetched ${categories.length} categories`
+    );
+    return new MultipleCategoryResponse(true, CATEGORY_IDS_FOUND, categories);
   }
 }

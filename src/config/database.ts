@@ -16,6 +16,7 @@ import { logger } from "../utils/logger";
 
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
+import { UserLocation } from "../entities/UserLocation";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ export const AppDataSource = new DataSource({
     CancelledBooking,
     Transaction,
     Refund,
+    UserLocation,
   ],
   synchronize: process.env["NODE_ENV"] !== "production",
 });
