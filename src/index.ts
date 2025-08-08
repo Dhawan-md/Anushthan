@@ -40,6 +40,7 @@ import { BookingMutationResolver } from "./resolvers/booking/BookingMutationReso
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
 import { setSocketServerInstance } from "./config/socket";
+import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -56,6 +57,7 @@ const createApp = async () => {
       BookingMutationResolver,
       ServiceQueryResolver,
       CategoryQueryResolver,
+      UserQueryResolver,
     ],
     authChecker: authChecker,
     container: Container,

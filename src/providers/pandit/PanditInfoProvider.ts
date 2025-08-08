@@ -1,4 +1,4 @@
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import { Repository } from "typeorm";
 
 import { Pandit } from "../../entities/Pandit";
@@ -27,18 +27,13 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
-import { UserLocationProvider } from "../user/UserLocationProvider";
-import { UserLocation } from "../../entities/UserLocation";
+// import { UserLocation } from "../../entities/UserLocation";
 
 @Service()
 export class PanditInfoProvider {
   private panditInfoRepository: Repository<Pandit>;
 
-  constructor(
-    private repositoryFactory: RepositoryFactory,
-    @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
-  ) {
+  constructor(private repositoryFactory: RepositoryFactory) {
     this.panditInfoRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
@@ -163,40 +158,56 @@ export class PanditInfoProvider {
     await sendEmail(userEmail, { name: name }, emailTypeMap[status]);
   }
 
-  async findNearbyPandits(userId: string, radiusKm = 10) {
+  async findPanditsInRadius(
+    userLocation: { latitude: number; longitude: number },
+    radiusKm = 10
+  ) {
     // Fetch user's location first
-    const userLocation = await this.userLocationProvider.getLocationDetails(
-      userId
-    );
-
-    if (!userLocation) throw new CustomError("User location not found");
-
     const { latitude, longitude } = userLocation;
 
-    const pandits = await this.panditInfoRepository
+    const { raw, entities } = await this.panditInfoRepository
       .createQueryBuilder("pandit")
       .innerJoin("pandit.user", "user")
-      .innerJoin(UserLocation, "location", "location.userId = user.id")
+      .innerJoin("user.userLocation", "location")
       .where("pandit.isAvailable = :isAvailable", { isAvailable: true })
-      .andWhere("pandit.status = :status", { status: "APPROVED" })
+      .andWhere("pandit.status = :status", { status: "approved" })
       .addSelect(
         `
-      (
-        6371 * acos(
-          cos(radians(:lat)) *
-          cos(radians(location.latitude)) *
-          cos(radians(location.longitude) - radians(:lng)) +
-          sin(radians(:lat)) *
-          sin(radians(location.latitude))
-        )
-      )`,
+    (
+      6371 * acos(
+        cos(radians(:lat)) *
+        cos(radians(location.latitude)) *
+        cos(radians(location.longitude) - radians(:lng)) +
+        sin(radians(:lat)) *
+        sin(radians(location.latitude))
+      )
+    )
+    `,
         "distance"
       )
-      .having("distance <= :radius", { radius: radiusKm })
+      .andWhere(
+        `
+    (
+      6371 * acos(
+        cos(radians(:lat)) *
+        cos(radians(location.latitude)) *
+        cos(radians(location.longitude) - radians(:lng)) +
+        sin(radians(:lat)) *
+        sin(radians(location.latitude))
+      )
+    ) <= :radius
+  `,
+        { radius: radiusKm }
+      )
       .setParameters({ lat: latitude, lng: longitude })
       .orderBy("distance", "ASC")
       .getRawAndEntities();
 
-    return pandits.entities;
+    const resultWithDistance = entities.map((entity, index) => ({
+      ...entity,
+      distance: parseFloat(raw[index]?.distance),
+    }));
+
+    return resultWithDistance;
   }
 }

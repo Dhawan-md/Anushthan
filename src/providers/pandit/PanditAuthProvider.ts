@@ -109,18 +109,6 @@ export class PanditAuthProvider {
       documents: JSON.stringify(uploadedDocuments.map((file) => file.filePath)),
     });
 
-    await this.panditAuthRepository
-      .createQueryBuilder()
-      .relation(Pandit, "categories")
-      .of(newPandit)
-      .add(categories.data.map((cat) => cat.id));
-
-    const fullPandit = await this.panditAuthRepository.findOne({
-      where: { id: newPandit.id },
-      relations: ["categories"],
-    });
-    console.log("Saved categories:", fullPandit?.categories);
-
     await sendEmail(
       user.userEmail,
       {

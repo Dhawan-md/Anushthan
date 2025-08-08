@@ -75,8 +75,9 @@ export class UserMutationResolver {
     @Ctx() ctx: Context // Assuming you attach user info here
   ): Promise<LocationResponse> {
     const userId = ctx.user?.id; // Replace with your actual auth system
+    const userRole = ctx.user?.userRole;
 
-    if (!userId) throw new CustomError("Unauthenticated");
+    if (!userId || !userRole) throw new CustomError("Unauthenticated");
 
     const { latitude, longitude } = data;
     console.log(data);
@@ -84,7 +85,8 @@ export class UserMutationResolver {
     return this.userLocationProvider.getLocation({
       latitude,
       longitude,
-      userId,
+      id: userId,
+      userRole,
     });
   }
 }

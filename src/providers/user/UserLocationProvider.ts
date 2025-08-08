@@ -9,6 +9,12 @@ import { CustomError } from "../../utils/customError";
 import { NO_USER_FOUND } from "../../utils/messages";
 import { UpdateUserProvider } from "./UpdateUserProvider";
 import { isLocationSimilar } from "../../utils/isLocationSimilar";
+import { UserRole } from "../../utils/enums";
+import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
+import {
+  NearByPanditResponse,
+  PanditWithDistance,
+} from "../../types/responses/PanditResponse";
 
 @Service()
 export class UserLocationProvider {
@@ -17,7 +23,9 @@ export class UserLocationProvider {
   constructor(
     private repositoryFactory: RepositoryFactory,
     @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider
+    private updateUserProvider: UpdateUserProvider,
+    @Inject(() => PanditInfoProvider)
+    private panditInfoProvider: PanditInfoProvider
   ) {
     this.userLocationRepository =
       this.repositoryFactory.getRepository(UserLocation);
@@ -26,11 +34,22 @@ export class UserLocationProvider {
   async getLocation(params: {
     latitude: number;
     longitude: number;
-    userId: string;
+    id: string;
+    userRole: UserRole;
   }): Promise<LocationResponse> {
-    const { latitude, longitude, userId } = params;
+    const { latitude, longitude, id, userRole } = params;
     const address = await getAddressFromCoordinates(latitude, longitude);
     logger.info(`[UserInfoProvider.ts] Retrieved address: ${address}`);
+
+    let userId = id;
+
+    if (userRole === UserRole.PANDIT) {
+      const panditDetails = await this.panditInfoProvider.getPandit({
+        data: { id },
+        withUser: true,
+      });
+      userId = panditDetails.user.id;
+    }
 
     const existingLocation = await this.userLocationRepository.findOne({
       where: { userId },
@@ -96,8 +115,22 @@ export class UserLocationProvider {
     );
   }
 
-  async getLocationDetails(userId: string): Promise<UserLocation> {
-    logger.info(`🔍 Searching location details for user: ${userId}`);
+  async getLocationDetails(
+    id: string,
+    userRole: UserRole = UserRole.USER
+  ): Promise<UserLocation> {
+    logger.info(
+      `[UserLocationProvider.ts] 🔍 Searching location details for user: ${id}`
+    );
+    let userId = id;
+
+    if (userRole === UserRole.PANDIT) {
+      const panditDetails = await this.panditInfoProvider.getPandit({
+        data: { id },
+        withUser: true,
+      });
+      userId = panditDetails.user.id;
+    }
 
     const userLocationDetails = await this.userLocationRepository.findOne({
       where: { userId },
@@ -109,5 +142,27 @@ export class UserLocationProvider {
     }
 
     return userLocationDetails;
+  }
+
+  async findNearbyPandits(
+    userId: string,
+    radiusKm = 10
+  ): Promise<NearByPanditResponse> {
+    // Fetch user's location first
+    const userLocation = await this.getLocationDetails(userId);
+
+    if (!userLocation) throw new CustomError("User location not found");
+
+    const panditArray = await this.panditInfoProvider.findPanditsInRadius(
+      userLocation,
+      radiusKm
+    );
+
+    const result: PanditWithDistance[] = panditArray.map((item) => ({
+      id: item.id, // or item.id if id is directly on the object
+      distance: item.distance,
+    }));
+
+    return new NearByPanditResponse(true, "near by pandits found", result);
   }
 }

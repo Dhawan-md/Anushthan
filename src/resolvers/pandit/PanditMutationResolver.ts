@@ -34,7 +34,7 @@ export class PanditMutationResolver {
     @Inject(() => PanditAuthProvider)
     private panditAuthProvider: PanditAuthProvider,
     @Inject(() => PanditPasswordProvider)
-    private panditPaswordProvider: PanditPasswordProvider
+    private panditPaswordProvider: PanditPasswordProvider,
   ) {}
 
   @Mutation(() => SinglePanditResponse)
