@@ -62,6 +62,7 @@ import {
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
 import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
+import { UserLocationProvider } from "../user/UserLocationProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -90,7 +91,9 @@ export class BookingActionProvider {
     @Inject(() => NotificationProvider)
     private notificationProvider: NotificationProvider,
     @Inject(() => PanditInfoProvider)
-    private panditInfoProvider: PanditInfoProvider
+    private panditInfoProvider: PanditInfoProvider,
+    @Inject(() => UserLocationProvider)
+    private userLocationProvider: UserLocationProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -201,19 +204,24 @@ export class BookingActionProvider {
           "Something went wrong while setting up the payment. Please try again."
         );
       }
+    } else {
+      const nearByPandits = await this.userLocationProvider.findNearbyPandits(
+        userId
+      );
+
+      await this.notificationProvider.publish(
+        "booking_notification",
+        "BOOKING_ACCEPTED",
+        {
+          senderUserId: booking.userId,
+          message: `Your booking #${booking.id} has been accepted by the pandit.`,
+          recieverFcmTokens: nearByPandits,
+        }
+      );
     }
+
     logger.info(
       `[bookingActionProvider.ts] ✅ Booking placed with ID: ${booking.id}`
-    );
-
-    await this.notificationProvider.publish(
-      "booking_notification",
-      "BOOKING_ACCEPTED",
-      {
-        userId: booking.userId,
-        message: `Your booking #${booking.id} has been accepted by the pandit.`,
-        fcmToken: true,
-      }
     );
 
     return new SingleBookingResponse(true, BOOKING_PLACED, booking);

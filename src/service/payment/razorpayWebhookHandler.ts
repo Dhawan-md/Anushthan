@@ -16,6 +16,8 @@ import { CustomError } from "../../utils/customError";
 import { INTERNAL_ERROR_OCCURRED } from "../../utils/messages";
 import { MAX_ATTEMPTS } from "../../utils/constants";
 import { RefundStatus, TransactionStatus } from "../../utils/enums";
+import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
+import { NotificationProvider } from "../../providers/notification/notificationProvider";
 
 const RAZORPAY_WEBHOOK_SECRET = process.env["RAZORPAY_KEY_SECRET"];
 
@@ -55,6 +57,8 @@ export const razorpayWebhookHandler = async (
   const updateTransactionProvider = Container.get(UpdateTransactionProvider);
   const updateRefundProvider = Container.get(UpdateRefundProvider);
   const updateBookingProvider = Container.get(UpdateBookingProvider);
+  const userLocationProvider = Container.get(UserLocationProvider);
+  const notificationProvider = Container.get(NotificationProvider);
 
   try {
     switch (payload.event) {
@@ -67,6 +71,8 @@ export const razorpayWebhookHandler = async (
         if (!transactionId) {
           logger.error("❌ Missing transactionId in notes");
         }
+
+        let bookingUserId: string | null = null;
 
         await AppDataSource.manager.transaction(
           async (transactionalEntityManager) => {
@@ -87,6 +93,8 @@ export const razorpayWebhookHandler = async (
               throw new CustomError("Missing Booking ID on Transaction entity");
             }
 
+            bookingUserId = transaction.data.userId;
+
             await updateBookingProvider.updateBooking({
               updatedBookingData: {
                 paid: true,
@@ -98,6 +106,22 @@ export const razorpayWebhookHandler = async (
             logger.info("✅ Booking and transaction updated to SUCCESS!");
           }
         );
+
+        if (bookingUserId) {
+          const nearByPandits = await userLocationProvider.findNearbyPandits(
+            bookingUserId
+          );
+
+          await notificationProvider.publish(
+            "booking_notification",
+            "BOOKING_ACCEPTED",
+            {
+              senderUserId: bookingUserId,
+              message: `You have a new booking.`,
+              recieverFcmTokens: nearByPandits,
+            }
+          );
+        }
 
         break;
       }

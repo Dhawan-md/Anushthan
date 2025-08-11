@@ -14,7 +14,15 @@ export class NotificationProvider {
     @Inject("redisSubscriber") private redisSubscriber: Redis
   ) {}
 
-  async publish(channel: string, eventType: string, payload: any) {
+  async publish(
+    channel: string,
+    eventType: string,
+    payload: {
+      senderUserId: string;
+      message: string;
+      recieverFcmTokens: any;
+    }
+  ) {
     const message = {
       eventType,
       payload,
@@ -39,55 +47,55 @@ export class NotificationProvider {
     await this.redisSubscriber.subscribe(channel);
     logger.info(`[NotificationProvider.ts] Subscribed to "${channel}"`);
 
-    await this.redisSubscriber.on(
-      "message",
-      async (receivedChannel, message) => {
-        try {
-          const { eventType, payload } = JSON.parse(message);
+    await this.redisSubscriber.on("message", async (receivedChannel, msg) => {
+      try {
+        const { eventType, payload } = JSON.parse(msg);
 
-          if (!payload?.userId || !payload?.message) {
-            logger.warn(
-              `[NotificationProvider.ts] Invalid payload on "${receivedChannel}"`
-            );
-            return;
-          }
-
-          const { userId, message: msg, fcmToken } = payload;
-
-          const io = getSocketServerInstance();
-
-          io.to(`user_${userId}`).emit(eventType, {
-            type: eventType,
-            message: msg,
-          });
-
-          if (fcmToken) {
-            await this.sendFCMToUser(eventType, msg);
-          }
-
-          logger.info(
-            `[NotificationProvider.ts] Sent "${eventType}" notification to user_${userId}`
+        if (!payload?.senderUserId || !payload?.message) {
+          logger.warn(
+            `[NotificationProvider.ts] Invalid payload on "${receivedChannel}"`
           );
-        } catch (error) {
-          logger.error(
-            `[NotificationProvider.ts] Failed to process message on "${receivedChannel}": ${error}`
-          );
-
-          throw new CustomError(error);
+          return;
         }
+
+        const { senderUserId, message, recieverFcmTokens } = payload;
+
+        const io = getSocketServerInstance();
+
+        io.to(`user_${senderUserId}`).emit(eventType, {
+          type: eventType,
+          message,
+        });
+
+        if (recieverFcmTokens) {
+          await this.sendFCMToUser(recieverFcmTokens, eventType, message);
+        }
+
+        logger.info(
+          `[NotificationProvider.ts] Sent "${eventType}" notification to user_${senderUserId}`
+        );
+      } catch (error) {
+        logger.error(
+          `[NotificationProvider.ts] Failed to process message on "${receivedChannel}": ${error}`
+        );
+
+        throw new CustomError(error);
       }
-    );
+    });
   }
 
   async sendFCMToUser(
-    // deviceToken: string,
+    fcmTokens: string[],
     title: string,
     // body: string,
     msg: string
   ) {
+    if (!fcmTokens || fcmTokens.length === 0) {
+      logger.warn("[NotificationProvider.ts] No FCM tokens provided");
+      return;
+    }
+
     const message = {
-      token:
-        "dFCdjog4QY-JyxZXr6YpAe:APA91bH8qcXjaouqPO5kzLfS47RyCiV-223jpQMG7QO714LZiZE1rK1c1uXMo9LZUxcAhlCW3Q0ba8JkKFnDj8K--ip3grO0enhduxT5F_xozQ2iVwmx63c",
       notification: {
         title,
         // body,
@@ -96,13 +104,26 @@ export class NotificationProvider {
         click_action: "FLUTTER_NOTIFICATION_CLICK", // for flutter apps
         customData: "value",
       },
+      tokens: fcmTokens,
     };
 
     console.log(msg, "I got the message");
 
     try {
-      const response = await admin.messaging().send(message);
-      console.log("Successfully sent message:", response);
+      const response = await admin.messaging().sendEachForMulticast(message);
+      logger.info(
+        `[NotificationProvider.ts] Successfully sent FCM to ${response.successCount} devices, failed for ${response.failureCount}`
+      );
+
+      if (response.failureCount > 0) {
+        response.responses.forEach((res, idx) => {
+          if (!res.success) {
+            logger.error(
+              `[NotificationProvider.ts] Token: ${fcmTokens[idx]} | Error: ${res.error}`
+            );
+          }
+        });
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     }
