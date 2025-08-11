@@ -20,7 +20,7 @@ export class NotificationProvider {
     payload: {
       senderUserId: string;
       message: string;
-      recieverFcmTokens: any;
+      receiverFcmTokens: any;
     }
   ) {
     const message = {
@@ -58,7 +58,7 @@ export class NotificationProvider {
           return;
         }
 
-        const { senderUserId, message, recieverFcmTokens } = payload;
+        const { senderUserId, message, receiverFcmTokens } = payload;
 
         const io = getSocketServerInstance();
 
@@ -67,8 +67,8 @@ export class NotificationProvider {
           message,
         });
 
-        if (recieverFcmTokens) {
-          await this.sendFCMToUser(recieverFcmTokens, eventType, message);
+        if (Array.isArray(receiverFcmTokens) && receiverFcmTokens.length > 0) {
+          await this.sendFCMToUser(receiverFcmTokens, eventType, message);
         }
 
         logger.info(
@@ -78,18 +78,11 @@ export class NotificationProvider {
         logger.error(
           `[NotificationProvider.ts] Failed to process message on "${receivedChannel}": ${error}`
         );
-
-        throw new CustomError(error);
       }
     });
   }
 
-  async sendFCMToUser(
-    fcmTokens: string[],
-    title: string,
-    // body: string,
-    msg: string
-  ) {
+  async sendFCMToUser(fcmTokens: string[], title: string, body: string) {
     if (!fcmTokens || fcmTokens.length === 0) {
       logger.warn("[NotificationProvider.ts] No FCM tokens provided");
       return;
@@ -98,7 +91,7 @@ export class NotificationProvider {
     const message = {
       notification: {
         title,
-        // body,
+        body,
       },
       data: {
         click_action: "FLUTTER_NOTIFICATION_CLICK", // for flutter apps
@@ -106,8 +99,6 @@ export class NotificationProvider {
       },
       tokens: fcmTokens,
     };
-
-    console.log(msg, "I got the message");
 
     try {
       const response = await admin.messaging().sendEachForMulticast(message);

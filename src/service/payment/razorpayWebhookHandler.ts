@@ -118,7 +118,7 @@ export const razorpayWebhookHandler = async (
             {
               senderUserId: bookingUserId,
               message: `You have a new booking.`,
-              recieverFcmTokens: nearByPandits,
+              receiverFcmTokens: nearByPandits,
             }
           );
         }

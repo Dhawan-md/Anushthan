@@ -11,12 +11,12 @@ import { Refund } from "../entities/Refund";
 import { Transaction } from "../entities/Transaction";
 import { Category } from "../entities/Category";
 import { CancelledBooking } from "../entities/CancelledBooking";
+import { UserLocation } from "../entities/UserLocation";
 
 import { logger } from "../utils/logger";
 
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
-import { UserLocation } from "../entities/UserLocation";
 
 dotenv.config();
 

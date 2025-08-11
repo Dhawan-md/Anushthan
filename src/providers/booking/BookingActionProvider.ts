@@ -205,7 +205,7 @@ export class BookingActionProvider {
         );
       }
     } else {
-      const nearByPandits = await this.userLocationProvider.findNearbyPandits(
+      const nearbyPandits = await this.userLocationProvider.findNearbyPandits(
         userId
       );
 
@@ -215,8 +215,12 @@ export class BookingActionProvider {
         {
           senderUserId: booking.userId,
           message: `Your booking #${booking.id} has been accepted by the pandit.`,
-          recieverFcmTokens: nearByPandits,
+          receiverFcmTokens: nearbyPandits,
         }
+      );
+
+      logger.info(
+        `[bookingActionProvider.ts] 📢 Sent booking notification to ${nearbyPandits.data?.length} nearby Pandits`
       );
     }
 
