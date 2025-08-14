@@ -120,11 +120,11 @@ export class CategoryInfoProvider {
         `[CategoryInfoProvider.ts] ⚠️ Some provided category IDs are invalid. Expected: ${categoryIds.length}, Found: ${categoryIds.length}`
       );
 
-      validateFoundIds(categories, categoryIds, "Invalid Service Ids");
+      validateFoundIds(categories, categoryIds, "Invalid category Ids");
     }
 
     logger.info(
-      `[ServiceInfoProvider.ts] ✅ Successfully fetched ${categories.length} categories`
+      `[CategoryInfoProvider.ts] ✅ Successfully fetched ${categories.length} categories`
     );
     return new MultipleCategoryResponse(true, CATEGORY_IDS_FOUND, categories);
   }

@@ -11,6 +11,8 @@ import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvi
 import { RazorpayProvider } from "../razorpay/RazorpayProvider";
 import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
 import { NotificationProvider } from "../notification/notificationProvider";
+import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
+import { UserLocationProvider } from "../user/UserLocationProvider";
 
 import redis from "../../config/redis";
 
@@ -61,8 +63,6 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
-import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
-import { UserLocationProvider } from "../user/UserLocationProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -214,7 +214,7 @@ export class BookingActionProvider {
         "BOOKING_ACCEPTED",
         {
           senderUserId: booking.userId,
-          message: `Your booking #${booking.id} has been accepted by the pandit.`,
+          message: `New booking #${booking.id} is available.`,
           receiverFcmTokens: nearbyPandits,
         }
       );

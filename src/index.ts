@@ -3,7 +3,7 @@ import "reflect-metadata";
 import express, { Application } from "express";
 import cors from "cors";
 import { createServer, Server } from "http";
-import { Server as ioServer } from "socket.io";
+// import { Server as ioServer } from "socket.io";
 
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -22,12 +22,13 @@ import { context } from "./auth/context";
 import { authChecker } from "./auth/authChecker";
 
 import { intializeDatabase } from "./config/database";
+import { redisPublisher, redisSubscriber } from "./config/redis";
+// import { setSocketServerInstance } from "./config/socket";
 
 import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 
 import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
-import { redisPublisher, redisSubscriber } from "./config/redis";
 
 import { logger } from "./utils/logger";
 
@@ -39,7 +40,6 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
-import { setSocketServerInstance } from "./config/socket";
 import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
 
 const createApp = async () => {
@@ -124,25 +124,25 @@ const startServer = async () => {
     const httpServer = createServer(app);
 
     // Attach socket.io
-    const io = new ioServer(httpServer, {
-      cors: { origin: "*" },
-    });
+    // const io = new ioServer(httpServer, {
+    //   cors: { origin: "*" },
+    // });
 
-    setSocketServerInstance(io);
+    // setSocketServerInstance(io);
 
-    io.on("connection", (socket) => {
-      const userId = socket.handshake.query.userId;
-      if (userId) {
-        socket.join(`user_${userId}`);
-        logger.info(
-          `[index.ts] User ${userId} connected and joined room user_${userId}`
-        );
-      } else {
-        logger.warn(
-          "[index.ts] A socket connected without a userId in handshake query."
-        );
-      }
-    });
+    // io.on("connection", (socket) => {
+    //   const userId = socket.handshake.query.userId;
+    //   if (userId) {
+    //     socket.join(`user_${userId}`);
+    //     logger.info(
+    //       `[index.ts] User ${userId} connected and joined room user_${userId}`
+    //     );
+    //   } else {
+    //     logger.warn(
+    //       "[index.ts] A socket connected without a userId in handshake query."
+    //     );
+    //   }
+    // });
 
     const PORT = process.env.PORT || 5000;
 

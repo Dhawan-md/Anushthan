@@ -74,10 +74,10 @@ export class PanditWithDistance {
 @ObjectType()
 export class NearByPanditResponse extends PanditResponse<PanditWithDistance[]> {
   @Field(() => [PanditWithDistance], { nullable: true })
-  declare data?: PanditWithDistance[] | null;
+  declare data: PanditWithDistance[] | null;
 
   @Field(() => Number, { nullable: true })
-  declare total?: Number | null;
+  declare total: Number | null;
 
   constructor(
     success: boolean,

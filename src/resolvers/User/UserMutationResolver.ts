@@ -1,9 +1,12 @@
+import { plainToInstance } from "class-transformer";
 import { Resolver, Mutation, Arg, Ctx } from "type-graphql";
 import { Inject, Service } from "typedi";
 
 import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
+import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
 
 import { SingleUserResponse } from "../../types/responses/UserResponse";
+import { LocationResponse } from "../../types/responses/LocationResponse";
 
 import { promiseTimeout } from "../../utils/promiseTimeout";
 import { RegisterUserInput } from "../../types/inputTypes/user/RegisterUserInput";
@@ -12,14 +15,11 @@ import {
   RegisterUserDto,
   VerifyUserDto,
 } from "../../types/dtos/User";
-import { plainToInstance } from "class-transformer";
 import { LoginUserInput } from "../../types/inputTypes/user/LoginUserInput";
 import { VerifyInputs } from "../../types/inputTypes/VerifyInputs";
 import { LocationInput } from "../../types/inputTypes/user/LocationInput";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
-import { LocationResponse } from "../../types/responses/LocationResponse";
-import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
 
 @Service()
 @Resolver()
@@ -72,15 +72,14 @@ export class UserMutationResolver {
   @Mutation(() => LocationResponse)
   async getLocation(
     @Arg("data") data: LocationInput,
-    @Ctx() ctx: Context // Assuming you attach user info here
+    @Ctx() ctx: Context
   ): Promise<LocationResponse> {
-    const userId = ctx.user?.id; // Replace with your actual auth system
+    const userId = ctx.user?.id;
     const userRole = ctx.user?.userRole;
 
     if (!userId || !userRole) throw new CustomError("Unauthenticated");
 
     const { latitude, longitude } = data;
-    console.log(data);
 
     return this.userLocationProvider.getLocation({
       latitude,

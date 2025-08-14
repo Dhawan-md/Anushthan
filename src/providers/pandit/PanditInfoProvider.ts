@@ -27,7 +27,6 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
-// import { UserLocation } from "../../entities/UserLocation";
 
 @Service()
 export class PanditInfoProvider {
@@ -108,8 +107,9 @@ export class PanditInfoProvider {
       `🔍 Searching for pandit with params: ${id || normalizedEmail}`
     );
 
-    const whereClause =
-      "userEmail" in params ? { user: { userEmail: normalizedEmail } } : { id };
+    const whereClause = userEmail
+      ? { user: { userEmail: normalizedEmail } }
+      : { id };
 
     const panditData = await this.panditInfoRepository.findOne({
       where: whereClause,
@@ -137,7 +137,9 @@ export class PanditInfoProvider {
       })
     );
 
-    logger.info(`✅ Retrieved pandit documents from S3.`);
+    logger.info(
+      `[PanditInfoProvider.ts]✅ Retrieved pandit documents from S3.`
+    );
     return new MultipleDocumentResponse(
       true,
       FETCH_DOCUMENT_SUCCESS,
@@ -164,6 +166,8 @@ export class PanditInfoProvider {
   ) {
     // Fetch user's location first
     const { latitude, longitude } = userLocation;
+
+    logger.info(`🔍 Searching pandits in ${10} km radius.`);
 
     const { raw, entities } = await this.panditInfoRepository
       .createQueryBuilder("pandit")
@@ -208,6 +212,7 @@ export class PanditInfoProvider {
       distance: parseFloat(raw[index]?.distance),
     }));
 
+    logger.info(`✅ Fetched the results of pandits in ${10} km radius.`);
     return resultWithDistance;
   }
 }

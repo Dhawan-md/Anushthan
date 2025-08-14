@@ -1,11 +1,13 @@
 import { Ctx, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
+import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
+
+import { NearByPanditResponse } from "../../types/responses/PanditResponse";
+
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
-import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
-import { NearByPanditResponse } from "../../types/responses/PanditResponse";
 
 @Service()
 @Resolver()

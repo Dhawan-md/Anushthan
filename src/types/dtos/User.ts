@@ -7,8 +7,6 @@ export class RegisterUserDto {
   password: string;
   phoneNumber: string;
   profileImage?: FileUpload | null;
-  latitude: number;
-  longitude: number;
 }
 
 export class LoginUserDto {

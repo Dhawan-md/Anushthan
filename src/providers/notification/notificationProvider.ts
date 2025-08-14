@@ -2,10 +2,10 @@ import { Inject, Service } from "typedi";
 import Redis from "ioredis";
 
 import { getSocketServerInstance } from "../../config/socket";
+import admin from "../../config/firebase";
 
 import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
-import admin from "../../config/firebase";
 
 @Service()
 export class NotificationProvider {

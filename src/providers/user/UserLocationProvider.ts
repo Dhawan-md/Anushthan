@@ -1,20 +1,25 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
-import { UserLocation } from "../../entities/UserLocation";
-import { RepositoryFactory } from "../../factories/RepositoryFactory";
-import { logger } from "../../utils/logger";
-import { LocationResponse } from "../../types/responses/LocationResponse";
-import { getAddressFromCoordinates } from "../../helpers/getAddressFromCoordinates";
-import { CustomError } from "../../utils/customError";
-import { NO_USER_FOUND } from "../../utils/messages";
-import { UpdateUserProvider } from "./UpdateUserProvider";
-import { isLocationSimilar } from "../../utils/isLocationSimilar";
-import { UserRole } from "../../utils/enums";
+
 import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
+
+import { UserLocation } from "../../entities/UserLocation";
+
+import { RepositoryFactory } from "../../factories/RepositoryFactory";
+
+import { getAddressFromCoordinates } from "../../helpers/getAddressFromCoordinates";
+
+import { LocationResponse } from "../../types/responses/LocationResponse";
 import {
   NearByPanditResponse,
   PanditWithDistance,
 } from "../../types/responses/PanditResponse";
+
+import { CustomError } from "../../utils/customError";
+import { logger } from "../../utils/logger";
+import { NO_USER_FOUND } from "../../utils/messages";
+import { isLocationSimilar } from "../../utils/isLocationSimilar";
+import { UserRole } from "../../utils/enums";
 
 @Service()
 export class UserLocationProvider {
@@ -22,8 +27,6 @@ export class UserLocationProvider {
 
   constructor(
     private repositoryFactory: RepositoryFactory,
-    @Inject(() => UpdateUserProvider)
-    private updateUserProvider: UpdateUserProvider,
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider
   ) {
@@ -38,76 +41,56 @@ export class UserLocationProvider {
     userRole: UserRole;
   }): Promise<LocationResponse> {
     const { latitude, longitude, id, userRole } = params;
-    const address = await getAddressFromCoordinates(latitude, longitude);
-    logger.info(`[UserInfoProvider.ts] Retrieved address: ${address}`);
 
-    let userId = id;
+    const userId = await this.resolveUserId(id, userRole);
 
-    if (userRole === UserRole.PANDIT) {
-      const panditDetails = await this.panditInfoProvider.getPandit({
-        data: { id },
-        withUser: true,
-      });
-      userId = panditDetails.user.id;
-    }
+    const existingLocation = await this.findLocationByUserId(userId);
 
-    const existingLocation = await this.userLocationRepository.findOne({
-      where: { userId },
-    });
-
-    let savedLocation: UserLocation;
-
-    if (existingLocation) {
-      // Update existing location
-      const isSimilar = isLocationSimilar(
+    if (
+      existingLocation &&
+      isLocationSimilar(
         existingLocation.latitude,
         existingLocation.longitude,
         latitude,
         longitude
+      )
+    ) {
+      // Update existing location
+      logger.info(
+        `[UserLocationProvider] Location for user ${userId} is similar, no update performed.`
       );
-
-      if (isSimilar) {
-        logger.info(
-          `[UserInfoProvider] Location for user ${userId} is similar, no update performed.`
-        );
-        return new LocationResponse(
-          true,
-          "Location unchanged (already up to date)",
-          existingLocation.address
-        );
-      }
-
-      existingLocation.latitude = latitude;
-      existingLocation.longitude = longitude;
-      existingLocation.address = address;
-
-      savedLocation = await this.userLocationRepository.save(existingLocation);
-      logger.info(`[UserInfoProvider] Updated location for user ${userId}`);
-    } else {
-      savedLocation = await this.userLocationRepository.manager.transaction(
-        async (transactionalEntityManager) => {
-          const newLocation = transactionalEntityManager.create(UserLocation, {
-            userId,
-            latitude,
-            longitude,
-            address,
-          });
-
-          await this.updateUserProvider.updateUser({
-            updatedUserData: { userLocation: newLocation },
-            userId,
-            manager: transactionalEntityManager,
-          });
-          savedLocation = await transactionalEntityManager.save(newLocation);
-
-          logger.info(
-            `[UserInfoProvider] Created new location for user ${userId}`
-          );
-
-          return savedLocation;
-        }
+      return new LocationResponse(
+        true,
+        "Location unchanged (already up to date)",
+        existingLocation.address
       );
     }
+
+    const address = await getAddressFromCoordinates(latitude, longitude);
+    logger.info(`[UserLocationProvider.ts] Retrieved address: ${address}`);
+
+    const locationEntity = existingLocation
+      ? this.userLocationRepository.merge(existingLocation, {
+          latitude,
+          longitude,
+          address,
+        })
+      : this.userLocationRepository.create({
+          latitude,
+          longitude,
+          address,
+          user: { id: userId },
+        });
+
+    const savedLocation = await this.userLocationRepository.save(
+      locationEntity
+    );
+    logger.info(
+      `[UserLocationProvider] ${
+        existingLocation ? "Updated" : "Created"
+      } location for user ${userId}`
+    );
+
     return new LocationResponse(
       true,
       "Location found successfully",
@@ -122,19 +105,9 @@ export class UserLocationProvider {
     logger.info(
       `[UserLocationProvider.ts] 🔍 Searching location details for user: ${id}`
     );
-    let userId = id;
+    const userId = await this.resolveUserId(id, userRole);
 
-    if (userRole === UserRole.PANDIT) {
-      const panditDetails = await this.panditInfoProvider.getPandit({
-        data: { id },
-        withUser: true,
-      });
-      userId = panditDetails.user.id;
-    }
-
-    const userLocationDetails = await this.userLocationRepository.findOne({
-      where: { userId },
-    });
+    const userLocationDetails = await this.findLocationByUserId(userId);
 
     if (!userLocationDetails) {
       logger.warn(`❌ No location details found for userId: ${userId}`);
@@ -148,7 +121,6 @@ export class UserLocationProvider {
     userId: string,
     radiusKm = 10
   ): Promise<NearByPanditResponse> {
-    // Fetch user's location first
     const userLocation = await this.getLocationDetails(userId);
 
     if (!userLocation) throw new CustomError("User location not found");
@@ -163,6 +135,32 @@ export class UserLocationProvider {
       distance: item.distance,
     }));
 
-    return new NearByPanditResponse(true, "near by pandits found", result);
+    return new NearByPanditResponse(
+      true,
+      "Near by pandits found",
+      result,
+      result.length
+    );
+  }
+
+  private async resolveUserId(id: string, role: UserRole): Promise<string> {
+    if (role === UserRole.PANDIT) {
+      const panditDetails = await this.panditInfoProvider.getPandit({
+        data: { id },
+        withUser: true,
+      });
+      return panditDetails.user.id;
+    }
+    return id;
+  }
+
+  private async findLocationByUserId(userId: string) {
+    logger.info(
+      `[UserLocationProvider.ts] 🔍 Searching location details for user: ${userId}`
+    );
+
+    return this.userLocationRepository.findOne({
+      where: { user: { id: userId } },
+    });
   }
 }

@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
+import { CategoryInfoProvider } from "../category/CategoryInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -44,7 +45,6 @@ import {
   PANDIT_REGISTERED,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
-import { CategoryInfoProvider } from "../category/CategoryInfoProvider";
 
 @Service()
 export class PanditAuthProvider {
