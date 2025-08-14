@@ -10,6 +10,9 @@ import { RefundActionProvider } from "../refund/RefundActionProvider";
 import { UpdateTransactionProvider } from "../transaction/UpdateTransactionProvider";
 import { RazorpayProvider } from "../razorpay/RazorpayProvider";
 import { TransactionActionProvider } from "../transaction/TransactionActionProvider";
+import { NotificationProvider } from "../notification/notificationProvider";
+import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
+import { UserLocationProvider } from "../user/UserLocationProvider";
 
 import redis from "../../config/redis";
 
@@ -84,7 +87,13 @@ export class BookingActionProvider {
     @Inject(() => RefundActionProvider)
     private refundActionProvider: RefundActionProvider,
     @Inject(() => RazorpayProvider)
-    private razorpayProvider: RazorpayProvider
+    private razorpayProvider: RazorpayProvider,
+    @Inject(() => NotificationProvider)
+    private notificationProvider: NotificationProvider,
+    @Inject(() => PanditInfoProvider)
+    private panditInfoProvider: PanditInfoProvider,
+    @Inject(() => UserLocationProvider)
+    private userLocationProvider: UserLocationProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -195,7 +204,26 @@ export class BookingActionProvider {
           "Something went wrong while setting up the payment. Please try again."
         );
       }
+    } else {
+      const nearbyPandits = await this.userLocationProvider.findNearbyPandits(
+        userId
+      );
+
+      await this.notificationProvider.publish(
+        "booking_notification",
+        "BOOKING_ACCEPTED",
+        {
+          senderUserId: booking.userId,
+          message: `New booking #${booking.id} is available.`,
+          receiverFcmTokens: nearbyPandits,
+        }
+      );
+
+      logger.info(
+        `[bookingActionProvider.ts] 📢 Sent booking notification to ${nearbyPandits.data?.length} nearby Pandits`
+      );
     }
+
     logger.info(
       `[bookingActionProvider.ts] ✅ Booking placed with ID: ${booking.id}`
     );
@@ -215,11 +243,29 @@ export class BookingActionProvider {
       bookingId,
     });
 
+    const panditDetails = await this.panditInfoProvider.getPandit({
+      data: { id: panditId },
+      withCategory: true,
+    });
+
     if (bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
         `[bookingActionProvider.ts] ⚠️ Booking has been ${bookingDetails.status}.`
       );
       throw new CustomError(`Booking has been ${bookingDetails.status}`);
+    }
+
+    const hasCategory = panditDetails.categories.some(
+      (category) => category.id === bookingDetails.categoryId
+    );
+
+    if (!hasCategory) {
+      logger.warn(
+        `[bookingActionProvider.ts] ❌ Pandit ${panditId} is not registered in category ${bookingDetails.categoryId}`
+      );
+      throw new CustomError(
+        "You are not eligible to accept this booking category"
+      );
     }
 
     if (

@@ -4,9 +4,8 @@ export class RegisterPanditDto {
   userId: string;
   password: string;
   documents: FileUpload[];
-  serviceIds: string[];
+  categoryIds: string[];
   experience: number;
-  address: string;
 }
 
 export class LoginPanditDto {

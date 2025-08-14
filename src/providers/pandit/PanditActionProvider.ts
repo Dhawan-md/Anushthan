@@ -36,10 +36,10 @@ export class PanditActionProvider {
     const { panditId, status } = params;
     logger.info(`🔍 Verifying documents for pandit ${panditId}.`);
 
-    const panditData = await this.panditInfoProvider.getPandit(
-      { id: panditId },
-      true
-    );
+    const panditData = await this.panditInfoProvider.getPandit({
+      data: { id: panditId },
+      withUser: true,
+    });
 
     await this.panditActionRepository.manager.transaction(
       async (transactionalEntityManager) => {
@@ -57,11 +57,11 @@ export class PanditActionProvider {
           }
           updatedPanditFields.documents = null;
         } else if (status === PanditStatus.APPROVED) {
-          await this.updateUserProvider.updateUser(
-            { userRole: UserRole.PANDIT },
-            panditData.user.id,
-            transactionalEntityManager
-          );
+          await this.updateUserProvider.updateUser({
+            updatedUserData: { userRole: UserRole.PANDIT },
+            userId: panditData.user.id,
+            manager: transactionalEntityManager,
+          });
         }
 
         await this.updatePanditProvider.updatePandit(

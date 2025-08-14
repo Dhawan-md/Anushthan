@@ -26,6 +26,9 @@ declare namespace NodeJS {
     RAZORPAY_KEY_ID: string;
     RAZORPAY_KEY_SECRET: string;
 
+    // google api
+    GOOGLE_API_CREDENTIALS: string;
+
     // Server
     PORT?: string;
   }

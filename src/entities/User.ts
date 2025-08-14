@@ -12,6 +12,7 @@ import {
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";
+import { UserLocation } from "./UserLocation";
 
 @ObjectType()
 @Entity()
@@ -25,7 +26,7 @@ export class User {
   name!: string;
 
   @Field()
-  @Column({name:"user_email", unique: true })
+  @Column({ name: "user_email", unique: true })
   @Index()
   userEmail!: string;
 
@@ -35,7 +36,7 @@ export class User {
 
   @Field()
   @Column({
-    name:"user_role",
+    name: "user_role",
     type: "enum",
     enum: UserRole,
     enumName: "user_role",
@@ -54,6 +55,13 @@ export class User {
   @Field()
   @OneToOne(() => Otp, (otp) => otp.user)
   otp!: Otp;
+
+  @Field(() => UserLocation, { nullable: true })
+  @OneToOne(() => UserLocation, (location) => location.user, {
+    cascade: true,
+    eager: true,
+  })
+  userLocation?: UserLocation;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

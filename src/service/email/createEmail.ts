@@ -1,4 +1,4 @@
-import sgMail from "../../config/sendGrid";
+// import sgMail from "../../config/sendGrid";
 import { EmailType } from "../../utils/enums";
 import { CustomError } from "../../utils/customError";
 import { loadEmailTemplate } from "./loadEmailTemplate";
@@ -13,6 +13,7 @@ export const createEmail = async (
 ): Promise<void> => {
   try {
     const htmlContent = await loadEmailTemplate(templateName, placeholders);
+
     const msg = {
       to,
       from: "mohit2728dhawan45@gmail.com",
@@ -20,10 +21,10 @@ export const createEmail = async (
       html: htmlContent,
     };
 
-    await sgMail.send(msg);
-    logger.info(`Email sent to ${to} successfully.`);
+    // await sgMail.send(msg);
+    logger.info(`Email sent to ${to} successfully.${msg}`);
   } catch (error) {
-    logger.error(`Failed to send email to ${to}}`, error);
+    logger.error(`Failed to send email to ${to}`, error);
     throw new CustomError(FAILED_TO_CREATE_EMAIL);
   }
 };

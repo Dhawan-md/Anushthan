@@ -94,23 +94,27 @@ export class PanditInfoProvider {
     return isExisting;
   }
 
-  async getPandit(
-    params: GetPanditParams,
-    withUser: boolean = false
-  ): Promise<Pandit> {
-    const { userEmail, id } = params;
+  async getPandit(params: {
+    data: GetPanditParams;
+    withUser?: boolean;
+    withCategory?: boolean;
+  }): Promise<Pandit> {
+    const { data, withCategory = false, withUser = false } = params;
+    const { id, userEmail } = data;
 
     const normalizedEmail = userEmail?.trim().toLowerCase();
     logger.info(
       `🔍 Searching for pandit with params: ${id || normalizedEmail}`
     );
 
-    const whereClause =
-      "userEmail" in params ? { user: { userEmail: normalizedEmail } } : { id };
+    const whereClause = userEmail
+      ? { user: { userEmail: normalizedEmail } }
+      : { id };
 
     const panditData = await this.panditInfoRepository.findOne({
       where: whereClause,
       ...(withUser ? { relations: ["user"] } : {}),
+      ...(withCategory ? { relations: ["category"] } : {}),
     });
 
     if (!panditData) {
@@ -126,14 +130,16 @@ export class PanditInfoProvider {
   async getDocument(filePathArray: string): Promise<MultipleDocumentResponse> {
     logger.info(`🔍 Fetching pandit documents from S3.`);
     let parsedFilePathArray = JSON.parse(filePathArray);
-    
+
     let signedUrls = await Promise.all(
       parsedFilePathArray.map((filePath: string) => {
         return generateSignedUrl(filePath, S3BucketType.DOCUMENT);
       })
     );
 
-    logger.info(`✅ Retrieved pandit documents from S3.`);
+    logger.info(
+      `[PanditInfoProvider.ts]✅ Retrieved pandit documents from S3.`
+    );
     return new MultipleDocumentResponse(
       true,
       FETCH_DOCUMENT_SUCCESS,
@@ -152,5 +158,61 @@ export class PanditInfoProvider {
     };
 
     await sendEmail(userEmail, { name: name }, emailTypeMap[status]);
+  }
+
+  async findPanditsInRadius(
+    userLocation: { latitude: number; longitude: number },
+    radiusKm = 10
+  ) {
+    // Fetch user's location first
+    const { latitude, longitude } = userLocation;
+
+    logger.info(`🔍 Searching pandits in ${10} km radius.`);
+
+    const { raw, entities } = await this.panditInfoRepository
+      .createQueryBuilder("pandit")
+      .innerJoin("pandit.user", "user")
+      .innerJoin("user.userLocation", "location")
+      .where("pandit.isAvailable = :isAvailable", { isAvailable: true })
+      .andWhere("pandit.status = :status", { status: "approved" })
+      .addSelect(
+        `
+    (
+      6371 * acos(
+        cos(radians(:lat)) *
+        cos(radians(location.latitude)) *
+        cos(radians(location.longitude) - radians(:lng)) +
+        sin(radians(:lat)) *
+        sin(radians(location.latitude))
+      )
+    )
+    `,
+        "distance"
+      )
+      .andWhere(
+        `
+    (
+      6371 * acos(
+        cos(radians(:lat)) *
+        cos(radians(location.latitude)) *
+        cos(radians(location.longitude) - radians(:lng)) +
+        sin(radians(:lat)) *
+        sin(radians(location.latitude))
+      )
+    ) <= :radius
+  `,
+        { radius: radiusKm }
+      )
+      .setParameters({ lat: latitude, lng: longitude })
+      .orderBy("distance", "ASC")
+      .getRawAndEntities();
+
+    const resultWithDistance = entities.map((entity, index) => ({
+      ...entity,
+      distance: parseFloat(raw[index]?.distance),
+    }));
+
+    logger.info(`✅ Fetched the results of pandits in ${10} km radius.`);
+    return resultWithDistance;
   }
 }

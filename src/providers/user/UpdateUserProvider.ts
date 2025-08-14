@@ -24,11 +24,12 @@ export class UpdateUserProvider {
     this.updateUserRepository = this.repositoryFactory.getRepository(User);
   }
 
-  async updateUser(
-    updatedUserData: Partial<User>,
-    userId: string,
-    manager?: EntityManager
-  ) {
+  async updateUser(params: {
+    updatedUserData: Partial<User>;
+    userId: string;
+    manager?: EntityManager;
+  }) {
+    const { updatedUserData, userId, manager } = params;
     logger.info(`🔄 Updating user with ID: ${userId}`);
     if (Object.keys(updatedUserData).length === 0) {
       logger.warn(`⚠️ No fields provided to update for user ${userId}`);

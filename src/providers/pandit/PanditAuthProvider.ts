@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 import { OtpProvider } from "../otp/OtpProvider";
-import { ServiceInfoProvider } from "../service/ServiceInfoProvider";
+import { CategoryInfoProvider } from "../category/CategoryInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -36,13 +36,13 @@ import {
   UserRole,
 } from "../../utils/enums";
 import {
+  CATEGORY_NOT_FOUND,
   FILE_UPLOAD_FAIL,
   INVALID_PASSWORD,
   LOGIN_SUCCESSFUL,
   PANDIT_ALREADY_EXISTS,
   PANDIT_LOGIN_REQUESTED,
   PANDIT_REGISTERED,
-  SERVICE_NOT_FOUND,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
 
@@ -56,8 +56,8 @@ export class PanditAuthProvider {
     private userInfoProvider: UserInfoProvider,
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
-    @Inject(() => ServiceInfoProvider)
-    private serviceInfoProvider: ServiceInfoProvider,
+    @Inject(() => CategoryInfoProvider)
+    private categoryInfoProvider: CategoryInfoProvider,
     @Inject(() => OtpProvider)
     private otpProvider: OtpProvider
   ) {
@@ -70,8 +70,7 @@ export class PanditAuthProvider {
     logger.info(
       `🔄Processing register Pandit request for user with userId : ${params.userId}`
     );
-    const { userId, password, documents, serviceIds, experience, address } =
-      params;
+    const { userId, password, documents, categoryIds, experience } = params;
 
     validatePassword(password);
     const isExisting = await this.panditInfoProvider.checkPanditExists({
@@ -85,7 +84,9 @@ export class PanditAuthProvider {
 
     const user = await this.userInfoProvider.getUser({ id: userId });
 
-    const services = await this.serviceInfoProvider.getServices(serviceIds);
+    const categories = await this.categoryInfoProvider.getCategories(
+      categoryIds
+    );
 
     const hashedPassword = await hashPassword(password);
 
@@ -96,16 +97,15 @@ export class PanditAuthProvider {
       throw new CustomError(FILE_UPLOAD_FAIL);
     }
 
-    if (!services.data || services.data.length === 0) {
-      throw new CustomError(SERVICE_NOT_FOUND);
+    if (!categories.data || categories.data.length === 0) {
+      throw new CustomError(CATEGORY_NOT_FOUND);
     }
 
     const newPandit = await this.panditAuthRepository.save({
       user,
-      services: services.data,
+      categories: categories.data,
       experience: experience,
       password: hashedPassword,
-      address: address,
       documents: JSON.stringify(uploadedDocuments.map((file) => file.filePath)),
     });
 
@@ -129,7 +129,7 @@ export class PanditAuthProvider {
     validatePassword(password);
 
     const panditData = await this.panditInfoProvider.getPandit({
-      userEmail,
+      data: { userEmail },
     });
 
     const isMatching = await isSamePassword({
@@ -164,7 +164,7 @@ export class PanditAuthProvider {
     );
 
     const panditData = await this.panditInfoProvider.getPandit({
-      userEmail,
+      data: { userEmail },
     });
 
     logger.info(`🔍 Verifying OTP for user with email: ${userEmail}`);

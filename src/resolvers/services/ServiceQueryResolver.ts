@@ -6,7 +6,7 @@ import { ServiceInfoProvider } from "../../providers/service/ServiceInfoProvider
 
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 import { GetServicesInput } from "../../types/inputTypes/service/GetServiceInput";
-import { GetServicesDto } from "../../types/dtos/Service";
+import { GetServicesDto } from "../../types/dtos/service";
 
 @Service()
 @Resolver()

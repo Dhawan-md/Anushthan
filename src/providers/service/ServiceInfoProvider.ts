@@ -6,7 +6,7 @@ import { Service as ServiceEntity } from "../../entities/Service";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
-import { GetServicesDto } from "../../types/dtos/Service";
+import { GetServicesDto } from "../../types/dtos/service";
 
 import { validateFoundIds } from "../../utils/validateFoundIds";
 import { logger } from "../../utils/logger";

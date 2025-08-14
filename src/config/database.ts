@@ -11,6 +11,7 @@ import { Refund } from "../entities/Refund";
 import { Transaction } from "../entities/Transaction";
 import { Category } from "../entities/Category";
 import { CancelledBooking } from "../entities/CancelledBooking";
+import { UserLocation } from "../entities/UserLocation";
 
 import { logger } from "../utils/logger";
 
@@ -37,6 +38,7 @@ export const AppDataSource = new DataSource({
     CancelledBooking,
     Transaction,
     Refund,
+    UserLocation,
   ],
   synchronize: process.env["NODE_ENV"] !== "production",
 });

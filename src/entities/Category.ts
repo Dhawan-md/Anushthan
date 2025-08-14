@@ -7,9 +7,11 @@ import {
   Index,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
 } from "typeorm";
 
 import { Service } from "./Service";
+import { Pandit } from "./Pandit";
 
 @ObjectType()
 @Entity()
@@ -26,6 +28,9 @@ export class Category {
   @Field(() => [Service], { nullable: true })
   @OneToMany(() => Service, (service) => service.category, { eager: true })
   services?: Service[];
+
+  @ManyToMany(() => Pandit, (pandit) => pandit.categories)
+  pandits!: Pandit[];
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

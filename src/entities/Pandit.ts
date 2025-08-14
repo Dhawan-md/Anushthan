@@ -12,8 +12,8 @@ import {
 
 import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
-import { Service } from "./Service";
 import { PanditStatus } from "../utils/enums";
+import { Category } from "./Category";
 
 @ObjectType()
 @Entity()
@@ -27,10 +27,10 @@ export class Pandit {
   @JoinColumn()
   user!: User;
 
-  @Field(() => [Service])
-  @ManyToMany(() => Service, (service) => service.pandits)
+  @Field(() => [Category])
+  @ManyToMany(() => Category, (category) => category.pandits)
   @JoinTable()
-  services: Service[];
+  categories: Category[];
 
   @Field()
   @Column({ type: "int", default: 0 })
@@ -39,18 +39,6 @@ export class Pandit {
   @Field()
   @Column()
   password!: string;
-
-  @Field()
-  @Column({ type: "double precision", nullable: true, default: 0 })
-  latitude?: number;
-
-  @Field()
-  @Column({ type: "double precision", nullable: true, default: 0 })
-  longitude?: number;
-
-  @Field()
-  @Column()
-  address!: string;
 
   @Field()
   @Column({ default: false, name: "is_available" })

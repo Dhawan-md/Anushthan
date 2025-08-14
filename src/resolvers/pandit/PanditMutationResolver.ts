@@ -34,7 +34,7 @@ export class PanditMutationResolver {
     @Inject(() => PanditAuthProvider)
     private panditAuthProvider: PanditAuthProvider,
     @Inject(() => PanditPasswordProvider)
-    private panditPaswordProvider: PanditPasswordProvider
+    private panditPaswordProvider: PanditPasswordProvider,
   ) {}
 
   @Mutation(() => SinglePanditResponse)
@@ -57,9 +57,8 @@ export class PanditMutationResolver {
       userId,
       password: data.password,
       documents: resolvedDocument,
-      serviceIds: data.serviceIds,
+      categoryIds: data.categoryIds,
       experience: data.experience,
-      address: data.address,
     });
   }
 

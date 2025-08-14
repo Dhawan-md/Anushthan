@@ -1,4 +1,4 @@
-import { ObjectType, Field } from "type-graphql";
+import { ObjectType, Field, Float } from "type-graphql";
 
 import { BaseResponse } from "../../utils/response";
 import { AccessToken } from "../globalTypes";
@@ -59,5 +59,33 @@ export class MultiplePanditResponse extends PanditResponse<Pandit[]> {
     this.page = page || null;
     this.limit = limit || null;
     this.totalPages = totalPages || null;
+  }
+}
+
+@ObjectType()
+export class PanditWithDistance {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => Float)
+  distance: number;
+}
+
+@ObjectType()
+export class NearByPanditResponse extends PanditResponse<PanditWithDistance[]> {
+  @Field(() => [PanditWithDistance], { nullable: true })
+  declare data: PanditWithDistance[] | null;
+
+  @Field(() => Number, { nullable: true })
+  declare total: Number | null;
+
+  constructor(
+    success: boolean,
+    message: string,
+    data?: PanditWithDistance[] | null,
+    total?: Number | null
+  ) {
+    super(success, message, data);
+    this.total = total || null;
   }
 }

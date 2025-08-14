@@ -45,30 +45,28 @@ export class UserAuthProvider {
   }
 
   async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
-    logger.info(`🔄Processing register user request for : ${params.userEmail}`);
-    validateEmail(params.userEmail);
+    const { userEmail, username, name, phoneNumber, profileImage } = params;
+    logger.info(`🔄Processing register user request for : ${userEmail}`);
+    validateEmail(userEmail);
 
-    await this.userInfoProvider.checkUserExists(params.userEmail);
-    if (!params.phoneNumber || params.phoneNumber.trim() === "") {
+    await this.userInfoProvider.checkUserExists(userEmail);
+    if (!phoneNumber || phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
     }
 
     let uploadedImages: { filePath: string }[] | { filePath: string } = [];
 
-    if (params.profileImage) {
-      uploadedImages = await uploadFiles(
-        params.profileImage,
-        S3BucketType.IMAGE
-      );
+    if (profileImage) {
+      uploadedImages = await uploadFiles(profileImage, S3BucketType.IMAGE);
     }
 
     return await this.userAuthRepository.manager.transaction(
       async (transactionalEntityManager) => {
         const newUser = await transactionalEntityManager.save(User, {
-          name: params.name,
-          username: params.username,
-          userEmail: params.userEmail.trim().toLowerCase(),
-          phoneNumber: params.phoneNumber,
+          name: name,
+          username: username,
+          userEmail: userEmail.trim().toLowerCase(),
+          phoneNumber: phoneNumber,
           profileImage: JSON.stringify(
             uploadedImages.map((images) => images.filePath)
           ),
@@ -84,9 +82,9 @@ export class UserAuthProvider {
         }
 
         await sendEmail(
-          params.userEmail,
+          userEmail,
           {
-            name: params.name,
+            name: name,
             otpCode: otpData.data?.otpCode,
           },
           EmailType.ACCOUNT_VERIFICATION
@@ -126,9 +124,8 @@ export class UserAuthProvider {
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
     const { userEmail, otpCode } = params;
-    
     logger.info(`🔄 Verification request received for: ${userEmail}`);
-    
+
     const userData = await this.userInfoProvider.getUser({
       userEmail,
     });

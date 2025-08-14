@@ -6,7 +6,11 @@ dist/
 .env
 
 # Logs
-*.log
+logs*
 
 # Ignore logs directory
 logs/
+
+# Firebase keys
+anushthan-test-fcm.json
+
