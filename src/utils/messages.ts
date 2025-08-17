@@ -139,3 +139,6 @@ export const REFUND_UPDATED = "Refund updated successfully.";
 //Location Message
 export const FETCH_LOCATION_ERROR = "Unable to fetch location";
 export const LOCATION_NOT_FOUND = "Location not found";
+
+//Time Slot Message
+export const TIME_SLOT_CREATED_SUCCESS = "Time slot created successfully.";

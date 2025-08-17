@@ -1,0 +1,54 @@
+import { Service } from "typedi";
+import { Repository } from "typeorm";
+
+import { TimeSlot } from "../../../entities/TimeSlot";
+import { RepositoryFactory } from "../../../factories/RepositoryFactory";
+import { logger } from "../../../utils/logger";
+import {
+  MultipleTimeSlotResponse,
+  SingleTimeSlotResponse,
+} from "../../../types/responses/TimeSlotResonse";
+import { TIME_SLOT_CREATED_SUCCESS } from "../../../utils/messages";
+import { CreateTimeSlotDto } from "../../../types/dtos/Admin";
+
+@Service()
+export class TimeSlotProvider {
+  private timeSlotRepository: Repository<TimeSlot>;
+
+  constructor(private repositoryFactory: RepositoryFactory) {
+    this.timeSlotRepository = this.repositoryFactory.getRepository(TimeSlot);
+  }
+
+  async createTimeSlot(
+    params: CreateTimeSlotDto
+  ): Promise<SingleTimeSlotResponse> {
+    const { label, startTime, endTime } = params;
+    const timeSlot = this.timeSlotRepository.create({
+      label,
+      startTime,
+      endTime,
+    });
+
+    const savedTimeSlot = await this.timeSlotRepository.save(timeSlot);
+
+    return new SingleTimeSlotResponse(
+      true,
+      TIME_SLOT_CREATED_SUCCESS,
+      savedTimeSlot
+    );
+  }
+
+  async getAllTimeSlots(): Promise<MultipleTimeSlotResponse> {
+    logger.info(`[TimeSlotProvider.ts] 📦 Fetching timeslots `);
+
+    const [timeSlots, total] = await this.timeSlotRepository.findAndCount();
+
+    logger.info(
+      `[TimeSlotProvider.ts] ✅ Retrieved ${timeSlots.length} timeslots out of ${total} total.`
+    );
+
+    console.log(timeSlots);
+
+    return new MultipleTimeSlotResponse(true, "Booking List", timeSlots, total);
+  }
+}

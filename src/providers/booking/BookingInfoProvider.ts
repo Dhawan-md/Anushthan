@@ -10,7 +10,7 @@ import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
 
-import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/Booking";
+import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/booking";
 import { BookingFilters } from "../../types/globalTypes";
 
 import { CustomError } from "../../utils/customError";

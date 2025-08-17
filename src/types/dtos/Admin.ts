@@ -28,3 +28,9 @@ export class SetPanditApprovalStatusDto {
 export class GetAllPanditsDto extends PaginationDto {
   status?: PanditStatus;
 }
+
+export class CreateTimeSlotDto {
+  label: string;
+  startTime: string;
+  endTime: string;
+}

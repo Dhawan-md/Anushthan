@@ -35,7 +35,7 @@ import {
   CancelPanditBookingDto,
   CancelUserBookingDto,
   PlaceBookingDto,
-} from "../../types/dtos/Booking";
+} from "../../types/dtos/booking";
 
 import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
 

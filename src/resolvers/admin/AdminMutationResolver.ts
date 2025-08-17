@@ -15,6 +15,7 @@ import { AdminRole } from "../../utils/enums";
 import { RegisterAdminInput } from "../../types/inputTypes/admin/RegisterAdminInput";
 import {
   AddServiceDto,
+  CreateTimeSlotDto,
   RegisterAdminDto,
   SetPanditApprovalStatusDto,
 } from "../../types/dtos/Admin";
@@ -23,6 +24,9 @@ import { SetPanditApprovalStatusInput } from "../../types/inputTypes/admin/SetPa
 import { LoginAdminInput } from "../../types/inputTypes/admin/LoginAdminInput";
 import { SingleCategoryResponse } from "../../types/responses/CategoryResponse";
 import { AddCategoryInput } from "../../types/inputTypes/category/AddCategoryInput";
+import { SingleTimeSlotResponse } from "../../types/responses/TimeSlotResonse";
+import { CreateTimeSlotInput } from "../../types/inputTypes/admin/timeSlot/CreateTimeSlotInput";
+import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
 
 @Service()
 @Resolver()
@@ -35,7 +39,8 @@ export class AdminMutationResolver {
     @Inject(() => PanditActionProvider)
     private panditActionProvider: PanditActionProvider,
     @Inject(() => CategoryActionProvdier)
-    private categoryActionProvider: CategoryActionProvdier
+    private categoryActionProvider: CategoryActionProvdier,
+    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -79,5 +84,15 @@ export class AdminMutationResolver {
     const dto = plainToInstance(SetPanditApprovalStatusDto, data);
 
     return this.panditActionProvider.setPanditApprovalStatus(dto);
+  }
+
+  @Mutation(() => SingleTimeSlotResponse)
+  @Authorized([AdminRole.ADMIN, AdminRole.SUPERADMIN])
+  async createTimeSlot(
+    @Arg("data") data: CreateTimeSlotInput
+  ): Promise<SingleTimeSlotResponse> {
+    const dto = plainToInstance(CreateTimeSlotDto, data);
+
+    return this.timeSlotProvider.createTimeSlot(dto);
   }
 }
