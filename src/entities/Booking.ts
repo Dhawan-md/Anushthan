@@ -53,8 +53,15 @@ export class Booking {
   status!: BookingStatus;
 
   @Field()
-  @Column({ name: "time_slot", type: "timestamp" })
-  timeSlot!: Date;
+  @Column({ name: "time_id" })
+  timeSlotId!: string;
+
+  @Field()
+  @Column({ name: "booking_date", type: "date" })
+  bookingDate!: Date;
+
+  @Field(() => Float, { defaultValue: 10, name: "radius_km" })
+  radiusKm: number = 10;
 
   @Field(() => Float)
   @Column("float", { name: "total_price" })

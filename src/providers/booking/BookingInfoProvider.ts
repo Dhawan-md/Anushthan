@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { FindOptionsWhere, Repository } from "typeorm";
+import { FindOptionsWhere, In, Repository } from "typeorm";
 import isEqual from "lodash/isEqual";
 
 import { Booking } from "../../entities/Booking";
@@ -109,7 +109,8 @@ export class BookingInfoProvider {
     const possibleConflicts = await this.bookingInfoRepository.find({
       where: {
         userId: params.userId,
-        timeSlot: params.timeSlot,
+        timeSlotId: params.timeSlotId,
+        bookingDate: params.bookingDate,
         status: BookingStatus.PENDING,
       },
     });
@@ -158,5 +159,75 @@ export class BookingInfoProvider {
         `You have a pending penalty of ₹${booking.cancelled_booking.amount} from booking #${booking.id}. Please clear the due before placing a new booking.`
       );
     }
+  }
+
+  async getAllBusyPandits(
+    ids: string[],
+    filters?: { timeSlotId: string; bookingDate: Date }
+  ): Promise<MultipleBookingResponse> {
+    logger.info(
+      `[bookingInfoProvider.ts] 📦 Fetching pandits with active bookings`
+    );
+
+    const { timeSlotId, bookingDate } = filters ?? {};
+
+    const where: FindOptionsWhere<Booking> = {
+      panditId: In(ids),
+      status: BookingStatus.ACCEPTED,
+    };
+
+    if (timeSlotId) {
+      where.timeSlotId = timeSlotId;
+    }
+
+    if (bookingDate) {
+      where.bookingDate = bookingDate;
+    }
+
+    const bookingList = await this.bookingInfoRepository.find({
+      where,
+      select: { panditId: true },
+    });
+
+    logger.info(
+      `[bookingInfoProvider.ts] ✅ Retrieved ${bookingList.length} bookings.`
+    );
+
+    return new MultipleBookingResponse(true, "Booking List", bookingList);
+  }
+
+  async IsBusyPandit(params: {
+    id: string;
+    filters?: { timeSlotId: string; bookingDate: Date };
+  }): Promise<Boolean> {
+    const { id, filters } = params;
+    logger.info(
+      `[bookingInfoProvider.ts] 📦 Fetching if pandit has an active booking.`
+    );
+
+    const { timeSlotId, bookingDate } = filters ?? {};
+
+    const where: FindOptionsWhere<Booking> = {
+      panditId: id,
+      status: BookingStatus.ACCEPTED,
+    };
+
+    if (timeSlotId) {
+      where.timeSlotId = timeSlotId;
+    }
+
+    if (bookingDate) {
+      where.bookingDate = bookingDate;
+    }
+
+    const booking = await this.bookingInfoRepository.findOne({
+      where,
+    });
+
+    logger.info(
+      `[bookingInfoProvider.ts] ✅ Retrieved booking with id: ${booking?.id}.`
+    );
+
+    return booking ? true : false;
   }
 }

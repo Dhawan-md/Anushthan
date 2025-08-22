@@ -112,6 +112,8 @@ export const NO_PANDIT_FOUND = "No pandit with this ID or email found.";
 export const STATUS_UPDATED = "Document status has been updated";
 export const PANDIT_UPDATED = "Pandit has been updated.";
 export const PANDIT_ONLY = "Only Pandit can perform this action.";
+export const ACTIVE_BOOKING_FOUND =
+  "You already have an active booking in this slot.";
 
 // Category messages
 export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";
@@ -142,3 +144,4 @@ export const LOCATION_NOT_FOUND = "Location not found";
 
 //Time Slot Message
 export const TIME_SLOT_CREATED_SUCCESS = "Time slot created successfully.";
+export const TIME_SLOT_NOT_FOUND = "Time slot not found.";

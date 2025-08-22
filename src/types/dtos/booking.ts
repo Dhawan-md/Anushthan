@@ -11,7 +11,8 @@ export class PlaceBookingDto {
   serviceIds: string[];
   categoryId: string;
   location: string;
-  timeSlot: Date;
+  timeSlotId: string;
+  bookingDate: Date;
   totalPrice: number;
   estimatedTime: number;
   paid: boolean;

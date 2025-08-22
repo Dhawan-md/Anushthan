@@ -20,6 +20,7 @@ import { logger } from "../../utils/logger";
 import { NO_USER_FOUND } from "../../utils/messages";
 import { isLocationSimilar } from "../../utils/isLocationSimilar";
 import { UserRole } from "../../utils/enums";
+import { NearByPanditFiltersDto } from "../../types/dtos/Pandit";
 
 @Service()
 export class UserLocationProvider {
@@ -118,17 +119,28 @@ export class UserLocationProvider {
   }
 
   async findNearbyPandits(
-    userId: string,
-    radiusKm = 10
+    params: NearByPanditFiltersDto
   ): Promise<NearByPanditResponse> {
+    const {
+      userId,
+      radiusKm = 10,
+      timeSlotId,
+      bookingDate,
+      categoryId,
+    } = params;
     const userLocation = await this.getLocationDetails(userId);
 
     if (!userLocation) throw new CustomError("User location not found");
 
-    const panditArray = await this.panditInfoProvider.findPanditsInRadius(
+    const panditArray = await this.panditInfoProvider.findPanditsInRadius({
       userLocation,
-      radiusKm
-    );
+      radiusKm,
+      filters: {
+        timeSlotId,
+        bookingDate,
+      },
+      categoryId,
+    });
 
     const result: PanditWithDistance[] = panditArray.map((item) => ({
       id: item.id, // or item.id if id is directly on the object

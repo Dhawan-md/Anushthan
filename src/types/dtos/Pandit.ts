@@ -31,3 +31,11 @@ export class ResetPasswordDto {
   newPassword: string;
   otpToken: string;
 }
+
+export class NearByPanditFiltersDto {
+  userId: string;
+  timeSlotId: string;
+  bookingDate: Date;
+  radiusKm: number = 10;
+  categoryId?: string;
+}

@@ -49,6 +49,7 @@ import {
   UserRole,
 } from "../../utils/enums";
 import {
+  ACTIVE_BOOKING_FOUND,
   BOOKING_ACCEPTED,
   BOOKING_CANCELLED_PANDIT,
   BOOKING_CANCELLED_USER,
@@ -63,6 +64,8 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
+import { TimeSlotProvider } from "../admin/timeSlot/TimeSlotProvider";
+import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 @Service()
 export class BookingActionProvider {
@@ -93,7 +96,8 @@ export class BookingActionProvider {
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
     @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    private userLocationProvider: UserLocationProvider,
+    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -205,9 +209,12 @@ export class BookingActionProvider {
         );
       }
     } else {
-      const nearbyPandits = await this.userLocationProvider.findNearbyPandits(
-        userId
-      );
+      const nearbyPandits = await this.userLocationProvider.findNearbyPandits({
+        userId,
+        timeSlotId: booking.timeSlotId,
+        bookingDate: booking.bookingDate,
+        radiusKm: booking.radiusKm,
+      });
 
       await this.notificationProvider.publish(
         "booking_notification",
@@ -243,10 +250,51 @@ export class BookingActionProvider {
       bookingId,
     });
 
+    const IsBusyPandit = await this.bookingInfoProvider.IsBusyPandit({
+      id: panditId,
+      filters: {
+        timeSlotId: bookingDetails.timeSlotId,
+        bookingDate: bookingDetails.bookingDate,
+      },
+    });
+
+    if (IsBusyPandit) {
+      logger.info(
+        `Pandit ${panditId} already has an active booking in this time slot.`
+      );
+
+      throw new CustomError(ACTIVE_BOOKING_FOUND);
+    }
+
     const panditDetails = await this.panditInfoProvider.getPandit({
       data: { id: panditId },
       withCategory: true,
     });
+
+    const userLocationDetails =
+      await this.userLocationProvider.getLocationDetails(bookingDetails.userId);
+    const panditLocationDetails =
+      await this.userLocationProvider.getLocationDetails(
+        panditDetails.id,
+        UserRole.PANDIT
+      );
+
+    const isPanditWithinRadius = this.panditInfoProvider.isPanditWithinRadius(
+      userLocationDetails.latitude,
+      userLocationDetails.longitude,
+      panditLocationDetails.latitude,
+      panditLocationDetails.longitude,
+      bookingDetails.radiusKm
+    );
+
+    if (!isPanditWithinRadius) {
+      logger.warn(
+        `[bookingActionProvider.ts] ❌ Pandit ${panditId} is not within the required radius of ${bookingDetails.radiusKm} km.`
+      );
+      throw new CustomError(
+        "You are not eligible to accept this booking category"
+      );
+    }
 
     if (bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
@@ -554,10 +602,14 @@ export class BookingActionProvider {
       );
     }
 
-    const now = new Date();
+    const timeSlot = await this.timeSlotProvider.getTimeSlot(
+      booking.timeSlotId
+    );
 
-    const diffHours =
-      (booking.timeSlot.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const diffHours = getHoursDiffFromStartTime(
+      booking.bookingDate,
+      timeSlot?.startTime
+    );
 
     const isLateCancellation = diffHours < CANCELLATION_WINDOW_HOURS;
 

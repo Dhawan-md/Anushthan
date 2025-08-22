@@ -8,8 +8,12 @@ import {
   MultipleTimeSlotResponse,
   SingleTimeSlotResponse,
 } from "../../../types/responses/TimeSlotResonse";
-import { TIME_SLOT_CREATED_SUCCESS } from "../../../utils/messages";
+import {
+  TIME_SLOT_CREATED_SUCCESS,
+  TIME_SLOT_NOT_FOUND,
+} from "../../../utils/messages";
 import { CreateTimeSlotDto } from "../../../types/dtos/Admin";
+import { CustomError } from "../../../utils/customError";
 
 @Service()
 export class TimeSlotProvider {
@@ -38,6 +42,22 @@ export class TimeSlotProvider {
     );
   }
 
+  async getTimeSlot(id: string): Promise<TimeSlot> {
+    logger.info(`[TimeSlotProvider.ts] 📦 Fetching timeslot with id: ${id} `);
+    const timeSlot = await this.timeSlotRepository.findOne({ where: { id } });
+
+    logger.info(`[TimeSlotProvider.ts] ✅ Retrieved ${timeSlot?.label} `);
+
+    if (!timeSlot) {
+      logger.warn(
+        `[TimeSlotProvider.ts] ⚠️ Time slot details not found for ID: ${id}`
+      );
+      throw new CustomError(TIME_SLOT_NOT_FOUND);
+    }
+
+    return timeSlot;
+  }
+
   async getAllTimeSlots(): Promise<MultipleTimeSlotResponse> {
     logger.info(`[TimeSlotProvider.ts] 📦 Fetching timeslots `);
 
@@ -46,8 +66,6 @@ export class TimeSlotProvider {
     logger.info(
       `[TimeSlotProvider.ts] ✅ Retrieved ${timeSlots.length} timeslots out of ${total} total.`
     );
-
-    console.log(timeSlots);
 
     return new MultipleTimeSlotResponse(true, "Booking List", timeSlots, total);
   }

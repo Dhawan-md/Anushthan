@@ -27,4 +27,13 @@ export class PlaceBookingInput {
 
   @Field({ nullable: true })
   transactionId?: string;
+
+  @Field()
+  timeSlotId: string;
+
+  @Field(() => Date)
+  bookingDate: Date;
+
+  @Field(() => Float, { defaultValue: 10 })
+  radiusKm: number = 10;
 }
