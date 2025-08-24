@@ -1,4 +1,5 @@
 import { GraphQLScalarType, Kind } from "graphql";
+
 import { CustomError } from "../../utils/customError";
 
 export const TimeScalar = new GraphQLScalarType({

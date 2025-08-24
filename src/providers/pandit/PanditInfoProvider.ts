@@ -16,9 +16,12 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 
 import { logger } from "../../utils/logger";
+import { getDistanceInKm } from "../../utils/getDistanceInKm";
+
 import {
   FETCH_DOCUMENT_SUCCESS,
   NO_PANDIT_FOUND,
+  NO_PANDITS_NEARBY,
   PANDIT_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
@@ -29,7 +32,6 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
-import { getDistanceInKm } from "../../utils/getDistanceInKm";
 
 @Service()
 export class PanditInfoProvider {
@@ -229,6 +231,9 @@ export class PanditInfoProvider {
       .orderBy("distance", "ASC");
 
     if (params.categoryId) {
+      logger.info(
+        `[PanditInfoProvider.ts] 📂 Applying category filter: ${params.categoryId}`
+      );
       query
         .innerJoin("pandit.categories", "category")
         .andWhere("category.id = :categoryId", {
@@ -236,8 +241,14 @@ export class PanditInfoProvider {
         });
     }
 
-    const entities = await query.getMany();
-    const raw = await query.getRawMany();
+    const [entities, raw] = await Promise.all([
+      query.getMany(),
+      query.getRawMany(),
+    ]);
+
+    logger.info(
+      `[PanditInfoProvider.ts] 📦 Retrieved ${entities.length} nearby pandits before filtering busy ones.`
+    );
 
     const distanceMap = raw.reduce((acc, row) => {
       acc[row.pandit_id] = parseFloat(row.distance); // check raw alias for id
@@ -248,20 +259,27 @@ export class PanditInfoProvider {
     let availablePandits = entities;
 
     if (filters?.timeSlotId || filters?.bookingDate) {
+      logger.info(
+        `[PanditInfoProvider.ts] ⏰ Applying time filter: timeSlotId=${filters.timeSlotId}, bookingDate=${filters.bookingDate}`
+      );
+
       const busyPandits = await this.bookingInfoProvider.getAllBusyPandits(
         nearbyPanditIds,
         filters
       );
 
       if (!busyPandits.data) {
-        logger.info(
-          "[PanditInfoProvider.ts] ❌ Error occured while fetching busy pandits."
+        logger.error(
+          "[PanditInfoProvider.ts] ❌ Failed to fetch busy pandits."
         );
-        throw new CustomError("No Pandits found right now.");
+        throw new CustomError(NO_PANDITS_NEARBY);
       }
 
       const busyPanditIds = busyPandits.data.map((b) => b.panditId);
 
+      logger.info(
+        `[PanditInfoProvider.ts] 🚫 Found ${busyPanditIds.length} busy pandits, filtering them out.`
+      );
       availablePandits = entities.filter((p) => !busyPanditIds.includes(p.id));
     }
 
@@ -271,7 +289,7 @@ export class PanditInfoProvider {
     }));
 
     logger.info(
-      `[PanditInfoProvider.ts] ✅ Fetched the results of pandits in ${10} km radius.`
+      `[PanditInfoProvider.ts] ✅ Final result: ${resultWithDistance.length} pandits available within ${radiusKm} km.`
     );
     return resultWithDistance;
   }

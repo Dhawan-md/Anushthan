@@ -2,14 +2,19 @@ import { Service } from "typedi";
 import { Repository } from "typeorm";
 
 import { TimeSlot } from "../../../entities/TimeSlot";
+
 import { RepositoryFactory } from "../../../factories/RepositoryFactory";
-import { logger } from "../../../utils/logger";
+
 import {
   MultipleTimeSlotResponse,
   SingleTimeSlotResponse,
 } from "../../../types/responses/TimeSlotResonse";
+
+import { logger } from "../../../utils/logger";
 import {
   TIME_SLOT_CREATED_SUCCESS,
+  TIME_SLOT_FOUND,
+  TIME_SLOT_LIST,
   TIME_SLOT_NOT_FOUND,
 } from "../../../utils/messages";
 import { CreateTimeSlotDto } from "../../../types/dtos/Admin";
@@ -42,7 +47,7 @@ export class TimeSlotProvider {
     );
   }
 
-  async getTimeSlot(id: string): Promise<TimeSlot> {
+  async getTimeSlot(id: string): Promise<SingleTimeSlotResponse> {
     logger.info(`[TimeSlotProvider.ts] 📦 Fetching timeslot with id: ${id} `);
     const timeSlot = await this.timeSlotRepository.findOne({ where: { id } });
 
@@ -54,8 +59,9 @@ export class TimeSlotProvider {
       );
       throw new CustomError(TIME_SLOT_NOT_FOUND);
     }
+    logger.info(`[TimeSlotProvider.ts] ✅ Retrieved ${timeSlot.label}`);
 
-    return timeSlot;
+    return new SingleTimeSlotResponse(true, TIME_SLOT_FOUND, timeSlot);
   }
 
   async getAllTimeSlots(): Promise<MultipleTimeSlotResponse> {
@@ -67,6 +73,6 @@ export class TimeSlotProvider {
       `[TimeSlotProvider.ts] ✅ Retrieved ${timeSlots.length} timeslots out of ${total} total.`
     );
 
-    return new MultipleTimeSlotResponse(true, "Booking List", timeSlots, total);
+    return new MultipleTimeSlotResponse(true, TIME_SLOT_LIST, timeSlots, total);
   }
 }

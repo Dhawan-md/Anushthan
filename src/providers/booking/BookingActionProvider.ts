@@ -13,6 +13,7 @@ import { TransactionActionProvider } from "../transaction/TransactionActionProvi
 import { NotificationProvider } from "../notification/notificationProvider";
 import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
 import { UserLocationProvider } from "../user/UserLocationProvider";
+import { TimeSlotProvider } from "../admin/timeSlot/TimeSlotProvider";
 
 import redis from "../../config/redis";
 
@@ -38,6 +39,7 @@ import {
 } from "../../types/dtos/booking";
 
 import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
+import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 import {
   ActiveStatus,
@@ -56,6 +58,7 @@ import {
   BOOKING_OTP_SENT,
   BOOKING_PLACED,
   INTERNAL_ERROR_OCCURRED,
+  TIME_SLOT_NOT_FOUND,
 } from "../../utils/messages";
 import {
   CANCELLATION_WINDOW_HOURS,
@@ -64,8 +67,6 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
-import { TimeSlotProvider } from "../admin/timeSlot/TimeSlotProvider";
-import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 @Service()
 export class BookingActionProvider {
@@ -250,7 +251,7 @@ export class BookingActionProvider {
       bookingId,
     });
 
-    const IsBusyPandit = await this.bookingInfoProvider.IsBusyPandit({
+    const IsBusyPandit = await this.bookingInfoProvider.isPanditBusy({
       id: panditId,
       filters: {
         timeSlotId: bookingDetails.timeSlotId,
@@ -606,9 +607,16 @@ export class BookingActionProvider {
       booking.timeSlotId
     );
 
+    if (!timeSlot.data) {
+      logger.error(
+        `[bookingActionProvider.ts]❌ Booking ${bookingId} cancelling action failed due to time slot fetch faliure.`
+      );
+      throw new CustomError(TIME_SLOT_NOT_FOUND);
+    }
+
     const diffHours = getHoursDiffFromStartTime(
       booking.bookingDate,
-      timeSlot?.startTime
+      timeSlot.data.startTime
     );
 
     const isLateCancellation = diffHours < CANCELLATION_WINDOW_HOURS;

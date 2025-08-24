@@ -1,5 +1,6 @@
 import { Arg, Ctx, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
+import { plainToInstance } from "class-transformer";
 
 import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
 
@@ -9,7 +10,6 @@ import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
 import { NearByPanditInput } from "../../types/inputTypes/pandit/NearByPanditInput";
-import { plainToInstance } from "class-transformer";
 import { NearByPanditFiltersDto } from "../../types/dtos/Pandit";
 
 @Service()

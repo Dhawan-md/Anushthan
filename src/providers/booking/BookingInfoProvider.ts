@@ -15,6 +15,7 @@ import { BookingFilters } from "../../types/globalTypes";
 
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
+import { PANDIT_LIST } from "../../utils/messages";
 
 @Service()
 export class BookingInfoProvider {
@@ -169,65 +170,58 @@ export class BookingInfoProvider {
       `[bookingInfoProvider.ts] 📦 Fetching pandits with active bookings`
     );
 
-    const { timeSlotId, bookingDate } = filters ?? {};
+    const where = this.buildBookingWhere(ids, filters);
 
-    const where: FindOptionsWhere<Booking> = {
-      panditId: In(ids),
-      status: BookingStatus.ACCEPTED,
-    };
-
-    if (timeSlotId) {
-      where.timeSlotId = timeSlotId;
-    }
-
-    if (bookingDate) {
-      where.bookingDate = bookingDate;
-    }
-
-    const bookingList = await this.bookingInfoRepository.find({
+    const panditList = await this.bookingInfoRepository.find({
       where,
       select: { panditId: true },
     });
 
     logger.info(
-      `[bookingInfoProvider.ts] ✅ Retrieved ${bookingList.length} bookings.`
+      `[bookingInfoProvider.ts] ✅ Retrieved ${panditList.length} bookings.`
     );
 
-    return new MultipleBookingResponse(true, "Booking List", bookingList);
+    return new MultipleBookingResponse(true, PANDIT_LIST, panditList);
   }
 
-  async IsBusyPandit(params: {
+  async isPanditBusy(params: {
     id: string;
     filters?: { timeSlotId: string; bookingDate: Date };
   }): Promise<Boolean> {
     const { id, filters } = params;
-    logger.info(
-      `[bookingInfoProvider.ts] 📦 Fetching if pandit has an active booking.`
-    );
+    logger.info(`[bookingInfoProvider.ts] 📦 Checking if pandit is busy.`);
 
-    const { timeSlotId, bookingDate } = filters ?? {};
+    const where = this.buildBookingWhere(id, filters);
 
-    const where: FindOptionsWhere<Booking> = {
-      panditId: id,
-      status: BookingStatus.ACCEPTED,
-    };
-
-    if (timeSlotId) {
-      where.timeSlotId = timeSlotId;
-    }
-
-    if (bookingDate) {
-      where.bookingDate = bookingDate;
-    }
-
-    const booking = await this.bookingInfoRepository.findOne({
+    const isBusy = await this.bookingInfoRepository.exists({
       where,
     });
 
-    logger.info(
-      `[bookingInfoProvider.ts] ✅ Retrieved booking with id: ${booking?.id}.`
-    );
+    if (isBusy) {
+      logger.info(
+        `[bookingInfoProvider.ts] ✅ Pandit does have an active booking.`
+      );
+    } else {
+      logger.info(
+        `[bookingInfoProvider.ts] ✅ Pandit does not have any active bookings for the given parameters.`
+      );
+    }
 
-    return booking ? true : false;
+    return isBusy;
+  }
+
+  private buildBookingWhere(
+    panditIds: string[] | string,
+    filters?: { timeSlotId: string; bookingDate: Date }
+  ): FindOptionsWhere<Booking> {
+    const where: FindOptionsWhere<Booking> = {
+      panditId: Array.isArray(panditIds) ? In(panditIds) : panditIds,
+      status: BookingStatus.ACCEPTED,
+    };
+
+    if (filters?.timeSlotId) where.timeSlotId = filters.timeSlotId;
+    if (filters?.bookingDate) where.bookingDate = filters.bookingDate;
+
+    return where;
   }
 }

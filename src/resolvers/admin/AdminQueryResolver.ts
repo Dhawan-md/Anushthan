@@ -3,10 +3,12 @@ import { Inject, Service } from "typedi";
 
 import { PanditInfoProvider } from "../../providers/pandit/PanditInfoProvider";
 import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
+import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
 
 import { MultiplePanditResponse } from "../../types/responses/PanditResponse";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
+import { MultipleTimeSlotResponse } from "../../types/responses/TimeSlotResonse";
 
 import { AdminRole, UserRole } from "../../utils/enums";
 import { GetAllPanditsInput } from "../../types/inputTypes/admin/GetAllPanditsInput";
@@ -15,8 +17,6 @@ import { GetAllPanditsDto } from "../../types/dtos/Admin";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { GetDocumentInput } from "../../types/inputTypes/admin/GetDocumentInput";
 import { PaginationDto } from "../../types/dtos/Pagination";
-import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
-import { MultipleTimeSlotResponse } from "../../types/responses/TimeSlotResonse";
 
 @Service()
 @Resolver()
