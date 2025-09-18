@@ -32,6 +32,7 @@ export class User {
 
   @Field()
   @Column({ unique: true, name: "phone_number" })
+  @Index()
   phoneNumber!: string;
 
   @Field()

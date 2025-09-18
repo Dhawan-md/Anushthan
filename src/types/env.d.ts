@@ -29,6 +29,12 @@ declare namespace NodeJS {
     // google api
     GOOGLE_API_CREDENTIALS: string;
 
+    // twilio
+    TWILIO_ACCOUNT_SID: string;
+    TWILIO_AUTH_TOKEN: string;
+    TWILIO_PHONE_NUMBER: string;
+    TWILIO_MESSAGING_SERVICE_SID: string;
+
     // Server
     PORT?: string;
   }
