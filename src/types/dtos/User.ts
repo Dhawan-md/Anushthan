@@ -10,10 +10,10 @@ export class RegisterUserDto {
 }
 
 export class LoginUserDto {
-  userEmail: string;
+  phoneNumber: string;
 }
 
 export class VerifyUserDto {
-  userEmail: string;
+  phoneNumber: string;
   otpCode: string;
 }

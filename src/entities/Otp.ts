@@ -25,9 +25,9 @@ export class Otp {
   user!: User;
 
   @Field()
-  @Column({ name: "user_email" })
+  @Column({ name: "phone_number" })
   @Index()
-  userEmail!: string;
+  phoneNumber!: string;
 
   @Field()
   @Column({ name: "otp_code" })

@@ -62,19 +62,20 @@ export class UserInfoProvider {
     }
   }
 
-  async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
-    const normalizedEmail = params.userEmail?.trim().toLowerCase();
+  async getUser(params: { phoneNumber?: string; id?: string }): Promise<User> {
     logger.info(
-      `🔍 Searching for user with params: ${params.id || normalizedEmail}`
+      `🔍 Searching for user with params: ${params.id || params.phoneNumber}`
     );
 
     const userData = await this.userInfoRepository.findOne({
-      where: [{ id: params.id }, { userEmail: normalizedEmail }],
+      where: [{ id: params.id }, { phoneNumber: params.phoneNumber }],
     });
 
     if (!userData) {
       logger.warn(
-        `❌ No user found with email or id: ${normalizedEmail || params.id}`
+        `❌ No user found with phone number or id: ${
+          params.phoneNumber || params.id
+        }`
       );
       throw new CustomError(NO_USER_FOUND);
     }

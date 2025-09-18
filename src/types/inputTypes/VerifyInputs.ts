@@ -1,13 +1,12 @@
 import { InputType, Field } from "type-graphql";
-import { IsEmail, Length } from "class-validator";
+import { Length } from "class-validator";
 
 @InputType()
 export class VerifyInputs {
   @Field()
-  @IsEmail()
-  userEmail: string;
+  phoneNumber: string;
 
   @Field()
-  @Length(6)
+  @Length(4)
   otpCode: string;
 }

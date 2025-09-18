@@ -9,21 +9,22 @@ export class RegisterPanditDto {
 }
 
 export class LoginPanditDto {
-  userEmail: string;
+  phoneNumber: string;
   password: string;
 }
 
 export class VerifyPanditDto {
-  userEmail: string;
+  phoneNumber: string;
   otpCode: string;
 }
 
 export class ForgetPasswordDto {
+  phoneNumber: string;
   userEmail: string;
 }
 
 export class VerifyResetPasswordDto {
-  userEmail: string;
+  phoneNumber: string;
   otpCode: string;
 }
 

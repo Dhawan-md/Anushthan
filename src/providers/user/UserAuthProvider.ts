@@ -11,8 +11,6 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { uploadFiles } from "../../helpers/uploadS3Files";
 
-import { sendEmail } from "../../service/email/sendEmail";
-
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 
 import { logger } from "../../utils/logger";
@@ -24,13 +22,14 @@ import {
   PHONE_NUMBER_REQUIRED,
   USER_REGISTERED,
 } from "../../utils/messages";
-import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
+import { OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
 import {
   LoginUserDto,
   RegisterUserDto,
   VerifyUserDto,
 } from "../../types/dtos/User";
+import { sendOtpSMS } from "../../service/sms/sendOtpSms";
 
 @Service()
 export class UserAuthProvider {
@@ -80,15 +79,10 @@ export class UserAuthProvider {
         if (!otpData.data || !otpData.success) {
           throw new CustomError(OTP_GENERATION_FAILED);
         }
+        console.log(phoneNumber);
 
-        await sendEmail(
-          userEmail,
-          {
-            name: name,
-            otpCode: otpData.data?.otpCode,
-          },
-          EmailType.ACCOUNT_VERIFICATION
-        );
+        await sendOtpSMS(phoneNumber, otpData.data.otpCode);
+
         logger.info(`✅ User ${newUser.id} registered successfully.`);
         return new SingleUserResponse(true, USER_REGISTERED, newUser);
       }
@@ -96,43 +90,45 @@ export class UserAuthProvider {
   }
 
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
-    const { userEmail } = params;
+    const { phoneNumber } = params;
 
-    logger.info(`🔄Logging in user: ${userEmail}.`);
-    validateEmail(userEmail);
-
-    const userData = await this.userInfoProvider.getUser({ userEmail });
+    logger.info(`🔄Logging in user: ${phoneNumber}.`);
+    // validateEmail(phoneNumber);
 
     const otp = await this.otpProvider.generateAndSaveNewOtp(
-      userEmail,
+      phoneNumber,
       OtpType.USER
     );
 
-    await sendEmail(
-      userEmail,
-      {
-        name: userData.name,
-        otpCode: otp.otpCode,
-      },
-      EmailType.ACCOUNT_VERIFICATION
-    );
+    await sendOtpSMS(phoneNumber, otp.otpCode);
 
-    logger.info(`✅ User with ${userEmail} logged in requested.`);
+    // await sendEmail(
+    //   userEmail,
+    //   {
+    //     name: userData.name,
+    //     otpCode: otp.otpCode,
+    //   },
+    //   EmailType.ACCOUNT_VERIFICATION
+    // );
+
+    logger.info(
+      `✅ User with phone number ${phoneNumber} logged in requested.`
+    );
 
     return new SingleUserResponse(true, LOGIN_REQUESTED);
   }
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
-    const { userEmail, otpCode } = params;
-    logger.info(`🔄 Verification request received for: ${userEmail}`);
+    const { phoneNumber, otpCode } = params;
+    logger.info(`🔄 Verification request received for: ${phoneNumber}`);
 
     const userData = await this.userInfoProvider.getUser({
-      userEmail,
+      phoneNumber,
     });
 
-    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    logger.info(`🔍 Verifying OTP for ${phoneNumber}`);
     await this.otpProvider.verifyOtp({
-      userEmail,
+      phoneNumber,
       otpCode,
       otpType: OtpType.USER,
     });
