@@ -13,7 +13,7 @@ export async function sendOtpSMS(to: string, otp: string) {
       to, // recipient number e.g. +91XXXXXXXXXX
     });
 
-    console.log("OTP sent successfully:", message.sid);
+    console.log(`OTP sent successfully to : ${to}`, message.sid);
     return message.sid;
   } catch (error) {
     console.error("Error sending OTP:", error);

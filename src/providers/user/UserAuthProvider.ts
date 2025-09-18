@@ -79,7 +79,6 @@ export class UserAuthProvider {
         if (!otpData.data || !otpData.success) {
           throw new CustomError(OTP_GENERATION_FAILED);
         }
-        console.log(phoneNumber);
 
         await sendOtpSMS(phoneNumber, otpData.data.otpCode);
 
@@ -93,7 +92,6 @@ export class UserAuthProvider {
     const { phoneNumber } = params;
 
     logger.info(`🔄Logging in user: ${phoneNumber}.`);
-    // validateEmail(phoneNumber);
 
     const otp = await this.otpProvider.generateAndSaveNewOtp(
       phoneNumber,
@@ -101,15 +99,6 @@ export class UserAuthProvider {
     );
 
     await sendOtpSMS(phoneNumber, otp.otpCode);
-
-    // await sendEmail(
-    //   userEmail,
-    //   {
-    //     name: userData.name,
-    //     otpCode: otp.otpCode,
-    //   },
-    //   EmailType.ACCOUNT_VERIFICATION
-    // );
 
     logger.info(
       `✅ User with phone number ${phoneNumber} logged in requested.`

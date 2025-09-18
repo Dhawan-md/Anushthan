@@ -6,7 +6,7 @@ import { OtpType } from "../../../utils/enums";
 @InputType()
 export class ResendOtpInput {
   @Field()
-  @IsPhoneNumber()
+  @IsPhoneNumber('IN')
   phoneNumber: string;
 
   @Field(() => OtpType)

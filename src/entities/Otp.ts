@@ -25,7 +25,7 @@ export class Otp {
   user!: User;
 
   @Field()
-  @Column({ name: "phone_number" })
+  @Column({ name: "phone_number", unique: true })
   @Index()
   phoneNumber!: string;
 

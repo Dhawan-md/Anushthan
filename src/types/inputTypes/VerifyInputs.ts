@@ -1,9 +1,10 @@
 import { InputType, Field } from "type-graphql";
-import { Length } from "class-validator";
+import { IsPhoneNumber, Length } from "class-validator";
 
 @InputType()
 export class VerifyInputs {
   @Field()
+  @IsPhoneNumber("IN")
   phoneNumber: string;
 
   @Field()
