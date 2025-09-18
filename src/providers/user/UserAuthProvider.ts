@@ -44,7 +44,7 @@ export class UserAuthProvider {
   }
 
   async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
-    const { userEmail, username, name, phoneNumber, profileImage } = params;
+    const { userEmail, name, phoneNumber, profileImage } = params;
     logger.info(`🔄Processing register user request for : ${userEmail}`);
     validateEmail(userEmail);
 
@@ -63,7 +63,6 @@ export class UserAuthProvider {
       async (transactionalEntityManager) => {
         const newUser = await transactionalEntityManager.save(User, {
           name: name,
-          username: username,
           userEmail: userEmail.trim().toLowerCase(),
           phoneNumber: phoneNumber,
           profileImage: JSON.stringify(
