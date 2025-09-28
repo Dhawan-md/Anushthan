@@ -3,7 +3,7 @@ import { Inject, Service } from "typedi";
 
 import { OtpProvider } from "../../providers/otp/OtpProvider";
 
-import { OtpResponse } from "../../types/responses/OtpResponse";
+import { OtpResponse } from "../../types/responses/Otpresponse";
 
 import { ResendOtpInput } from "../../types/inputTypes/otp/ResendOtpInput";
 import { plainToInstance } from "class-transformer";

@@ -47,17 +47,16 @@ export class UserInfoProvider {
     );
   }
 
-  async checkUserExists(userEmail: string) {
-    const normalizedEmail = userEmail.trim().toLowerCase();
-    logger.info(`🔍 Searching for user with params: ${normalizedEmail}`);
+  async checkUserExists(phoneNumber: string) {
+    logger.info(`🔍 Searching for user with params: ${phoneNumber}`);
 
     const isExisting = await this.userInfoRepository
       .createQueryBuilder("u")
-      .where("u.user_email = :email", { email: normalizedEmail })
+      .where("u.phone_number = :phoneNumber", { phoneNumber })
       .getExists();
 
     if (isExisting) {
-      logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
+      logger.warn(`⚠️ User with phone number: "${phoneNumber}" already exists.`);
       throw new CustomError(USER_ALREADY_EXISTS);
     }
   }

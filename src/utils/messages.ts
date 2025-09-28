@@ -36,7 +36,7 @@ export const USER_REGISTERED = "User registered.";
 export const USER_FOUND = "User found.";
 export const USER_LIST = "Users list.";
 export const NO_USER_FOUND = "No user with this ID or email found.";
-export const USER_ALREADY_EXISTS = "User with this email already exists.";
+export const USER_ALREADY_EXISTS = "User with this phone number already exists.";
 export const ERROR_FETCHING_USER_DATA =
   "Error occurred while fetching user data.";
 export const USER_UPDATED = "User has been updated.";
