@@ -48,7 +48,8 @@ export class UserAuthProvider {
     logger.info(`🔄Processing register user request for : ${userEmail}`);
     validateEmail(userEmail);
 
-    await this.userInfoProvider.checkUserExists(userEmail);
+    await this.userInfoProvider.checkUserExists(phoneNumber);
+    
     if (!phoneNumber || phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
     }

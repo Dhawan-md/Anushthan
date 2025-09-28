@@ -32,7 +32,6 @@ import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler
 
 import { logger } from "./utils/logger";
 
-import { UserMutationResolver } from "./resolvers/user/UserMutationResolver";
 import { OtpMutationResolver } from "./resolvers/otp/OtpMutationResolver";
 import { AdminMutationResolver } from "./resolvers/admin/AdminMutationResolver";
 import { PanditMutationResolver } from "./resolvers/pandit/PanditMutationResolver";
@@ -40,7 +39,8 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
-import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
+import { UserMutationResolver } from "./resolvers/User/UserMutationResolver";
+import { UserQueryResolver } from "./resolvers/User/UserQueryResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -63,6 +63,10 @@ const createApp = async () => {
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
     scalarsMap: [{ type: Upload, scalar: UploadScalar }],
+    emitSchemaFile:{
+      path: "./schema.gql",
+      sortedSchema: false,
+    }
   });
 
   const resolvers = {

@@ -7,12 +7,12 @@ import { User } from "../../entities/User";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { OtpResponse } from "../../types/responses/OtpResponse";
+import { OtpResponse } from "../../types/responses/Otpresponse";
 import { ResendOtpDto } from "../../types/dtos/Otp";
 import { OtpToken } from "../../types/globalTypes";
 
 import { generateUserSecret } from "../../helpers/generateUserSecret";
-import { generateOtp } from "../../helpers/generateOtp";
+import { generateOtp } from "../../helpers/generateOtp"
 import { logger } from "../../utils/logger";
 import { CustomError } from "../../utils/customError";
 
