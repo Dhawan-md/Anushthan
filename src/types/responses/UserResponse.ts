@@ -2,7 +2,7 @@ import { ObjectType, Field } from "type-graphql";
 
 import { User } from "../../entities/User";
 import { BaseResponse } from "../../utils/response";
-import { AccessToken } from "../globalTypes";
+import { AccessToken, RefreshToken } from "../globalTypes";
 
 @ObjectType()
 class UserResponse<T> extends BaseResponse<T> {
@@ -17,14 +17,19 @@ export class SingleUserResponse extends UserResponse<User> {
   @Field(() => AccessToken, { nullable: true })
   accessToken?: AccessToken | null;
 
+  @Field(() => RefreshToken, { nullable: true })
+  refreshToken?: RefreshToken | null;
+
   constructor(
     success: boolean,
     message: string,
     data?: User | null,
-    accessToken?: AccessToken | null
+    accessToken?: AccessToken | null,
+    refreshToken?: RefreshToken | null
   ) {
     super(success, message, data);
     this.accessToken = accessToken || null;
+    this.refreshToken = refreshToken || null;
   }
 }
 

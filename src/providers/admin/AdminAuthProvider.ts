@@ -12,11 +12,11 @@ import {
 } from "../../utils/messages";
 import { hashPassword } from "../../utils/hashPassword";
 import { validatePassword } from "../../utils/validatePassword";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { logger } from "../../utils/logger";
 import { AdminInfoProvider } from "./AdminInfoProvider";
 import { LoginAdminDto, RegisterAdminDto } from "../../types/dtos/Admin";
+import { generateAccessToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class AdminAuthProvider {
@@ -64,15 +64,9 @@ export class AdminAuthProvider {
       throw new CustomError(INVALID_PASSWORD);
     }
 
-    const jwtToken = generateJwtToken(
-      {
-        adminId: adminData.id,
-        adminRole: adminData.adminRole,
-      },
-      "2h"
-    );
+    const accessToken = generateAccessToken({ adminId: adminData.id, adminRole: adminData.adminRole });
 
     logger.info(`✅ Admin with email: ${email} logged in successfully.`);
-    return new SingleAdminResponse(true, ADMIN_LOGIN_SUCCESS, null, jwtToken);
+    return new SingleAdminResponse(true, ADMIN_LOGIN_SUCCESS, null, accessToken);
   }
 }

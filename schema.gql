@@ -10,6 +10,9 @@ type Query {
   getAllServices(data: GetServicesInput): MultipleServiceResponse!
   getAllCategories(data: PaginationInput!): MultipleCategoryResponse!
   findNearbyPandits: NearByPanditResponse!
+  searchLocationSuggestions(query: String!): [LocationSuggestionResponse!]!
+  getAllAddressesForUser: MultipleUserLocationResponse!
+  verifyAccessToken: Boolean!
 }
 
 type MultiplePanditResponse {
@@ -41,11 +44,13 @@ type User {
   name: String!
   userEmail: String!
   phoneNumber: String!
+  refreshToken: String
   userRole: String!
   profileImage: String
   pandit: Pandit!
   otp: Otp!
-  userLocation: UserLocation
+  addresses: [UserLocation!]
+  selectedAddress: UserLocation
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -82,10 +87,13 @@ scalar DateTimeISO
 
 type UserLocation {
   id: String!
-  user: User!
+  userId: String!
   latitude: Float!
   longitude: Float!
-  address: String
+  label: String!
+  phoneNumber: String!
+  addressDetails: String!
+  user: User!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -188,6 +196,19 @@ type PanditWithDistance {
   distance: Float!
 }
 
+type LocationSuggestionResponse {
+  description: String!
+  latitude: Float!
+  longitude: Float!
+}
+
+type MultipleUserLocationResponse {
+  success: Boolean!
+  message: String!
+  data: [UserLocation!]
+  total: Float
+}
+
 type Mutation {
   resendOtp(data: ResendOtpInput!): OtpResponse!
   registerAdmin(data: RegisterAdminInput!): SingleAdminResponse!
@@ -210,7 +231,9 @@ type Mutation {
   registerUser(data: RegisterUserInput!): SingleUserResponse!
   loginUser(data: LoginUserInput!): SingleUserResponse!
   verifyUser(data: VerifyInputs!): SingleUserResponse!
+  refreshAccessToken(refreshToken: String!): TokenResponse!
   getLocation(data: LocationInput!): LocationResponse!
+  addAdress(data: AddAddressInput!): LocationResponse!
 }
 
 type OtpResponse {
@@ -292,6 +315,12 @@ type SinglePanditResponse {
   message: String!
   data: Pandit
   accessToken: AccessToken
+  refreshToken: RefreshToken
+}
+
+type RefreshToken {
+  token: String!
+  expiresIn: Float!
 }
 
 input SetPanditApprovalStatusInput {
@@ -424,6 +453,7 @@ type SingleUserResponse {
   message: String!
   data: User
   accessToken: AccessToken
+  refreshToken: RefreshToken
 }
 
 input RegisterUserInput {
@@ -437,6 +467,13 @@ input LoginUserInput {
   phoneNumber: String!
 }
 
+type TokenResponse {
+  success: Boolean!
+  message: String!
+  accessToken: AccessToken!
+  refreshToken: RefreshToken!
+}
+
 type LocationResponse {
   success: Boolean!
   message: String!
@@ -446,4 +483,12 @@ type LocationResponse {
 input LocationInput {
   latitude: Float!
   longitude: Float!
+}
+
+input AddAddressInput {
+  addressDetails: String!
+  label: String!
+  latitude: Float!
+  longitude: Float!
+  phoneNumber: String!
 }

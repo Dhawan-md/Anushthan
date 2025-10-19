@@ -5,7 +5,6 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { UpdatePanditProvider } from "./UpdatePanditProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 import { sendEmail } from "../../service/email/sendEmail";
 
@@ -31,6 +30,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
+import { generateVerifivationToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditPasswordProvider {
@@ -85,10 +85,7 @@ export class PanditPasswordProvider {
       data: { phoneNumber },
     });
 
-    const verificationToken = generateJwtToken(
-      { panditId: panditData.id },
-      "15m"
-    );
+    const verificationToken = generateVerifivationToken({ panditId: panditData.id });
 
     return new VerifyResetResponse(
       isValidOTp.success,
@@ -100,7 +97,7 @@ export class PanditPasswordProvider {
   async resetPassword(params: ResetPasswordDto): Promise<SinglePanditResponse> {
     const { newPassword, otpToken } = params;
 
-    const jwtSecret = process.env["JWT_SECRET"];
+    const jwtSecret = process.env["ACCESS_TOKEN_SECRET"];
     if (!jwtSecret) {
       throw new CustomError(MISSING_ENV_VARIABLES);
     }

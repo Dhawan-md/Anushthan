@@ -7,7 +7,7 @@ import { User } from "../../entities/User";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { OtpResponse } from "../../types/responses/Otpresponse";
+import { OtpResponse } from "../../types/responses/OtpResponse";
 import { ResendOtpDto } from "../../types/dtos/Otp";
 import { OtpToken } from "../../types/globalTypes";
 

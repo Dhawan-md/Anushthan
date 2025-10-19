@@ -10,7 +10,8 @@ declare namespace NodeJS {
     DB_PORT?: string;
 
     // JWT
-    JWT_SECRET: string;
+    ACCESS_TOKEN_SECRET: string;
+    REFRESH_TOKEN_SECRET
     JWT_EXPIRY?: string;
 
     // AWS

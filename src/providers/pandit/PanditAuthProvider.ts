@@ -11,7 +11,6 @@ import { Pandit } from "../../entities/Pandit";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { uploadFiles } from "../../helpers/uploadS3Files";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 import { sendEmail } from "../../service/email/sendEmail";
 
@@ -28,12 +27,7 @@ import { CustomError } from "../../utils/customError";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 
-import {
-  EmailType,
-  OtpType,
-  S3BucketType,
-  UserRole,
-} from "../../utils/enums";
+import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import {
   CATEGORY_NOT_FOUND,
   FILE_UPLOAD_FAIL,
@@ -45,6 +39,10 @@ import {
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
 import { sendOtpSMS } from "../../service/sms/sendOtpSms";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditAuthProvider {
@@ -84,9 +82,8 @@ export class PanditAuthProvider {
 
     const user = await this.userInfoProvider.getUser({ id: userId });
 
-    const categories = await this.categoryInfoProvider.getCategories(
-      categoryIds
-    );
+    const categories =
+      await this.categoryInfoProvider.getCategories(categoryIds);
 
     const hashedPassword = await hashPassword(password);
 
@@ -172,17 +169,21 @@ export class PanditAuthProvider {
       otpType: OtpType.PANDIT,
     });
 
-    const jwtToken = generateJwtToken({
+    const accessToken = generateAccessToken({
       id: panditData.id,
       userRole: UserRole.PANDIT,
     });
+    const refreshToken = generateRefreshToken({ id: panditData.id });
 
-    logger.info(`✅ Pandit with phone number ${phoneNumber} logged in successfully.`);
+    logger.info(
+      `✅ Pandit with phone number ${phoneNumber} logged in successfully.`
+    );
     return new SinglePanditResponse(
       true,
       LOGIN_SUCCESSFUL,
       panditData,
-      jwtToken
+      accessToken,
+      refreshToken
     );
   }
 }

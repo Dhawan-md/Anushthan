@@ -14,6 +14,8 @@ export const INVALID_TOKEN = "Unauthorized: Invalid token or expired token.";
 export const VALID_TOKEN = "Authorized: Valid token.";
 export const NOT_AUTHENTICATED = "Not authenticated.";
 export const UNAUTHORIZED = "Unauthorized: User ID, not found in context";
+export const FAILED_TO_VERIFY_TOKEN =
+  "Error occurred during token verification.";
 
 // Password messages
 export const MIN_PASSWORD_LENGTH =
@@ -36,7 +38,8 @@ export const USER_REGISTERED = "User registered.";
 export const USER_FOUND = "User found.";
 export const USER_LIST = "Users list.";
 export const NO_USER_FOUND = "No user with this ID or email found.";
-export const USER_ALREADY_EXISTS = "User with this phone number already exists.";
+export const USER_ALREADY_EXISTS =
+  "User with this phone number already exists.";
 export const ERROR_FETCHING_USER_DATA =
   "Error occurred while fetching user data.";
 export const USER_UPDATED = "User has been updated.";

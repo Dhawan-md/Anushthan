@@ -8,3 +8,4 @@ export class LocationInput {
   @Field(() => Float)
   longitude: number;
 }
+
