@@ -17,6 +17,20 @@ export class AccessToken {
 }
 
 @ObjectType()
+export class RefreshToken {
+  @Field()
+  token: string;
+
+  @Field()
+  expiresIn: number;
+
+  constructor(token: string, expiresIn: number) {
+    this.token = token;
+    this.expiresIn = expiresIn;
+  }
+}
+
+@ObjectType()
 export class OtpToken {
   @Field()
   otpCode: string;

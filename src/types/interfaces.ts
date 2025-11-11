@@ -18,3 +18,9 @@ export interface RetryRefundJobData {
   attemptNumber: number;
   originalAmount: number;
 }
+
+export interface LocationSuggestion {
+  description: string;
+  latitude: number;
+  longitude: number;
+}

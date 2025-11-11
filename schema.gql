@@ -10,6 +10,9 @@ type Query {
   getAllServices(data: GetServicesInput): MultipleServiceResponse!
   getAllCategories(data: PaginationInput!): MultipleCategoryResponse!
   findNearbyPandits: NearByPanditResponse!
+  searchLocationSuggestions(query: String!): [LocationSuggestionResponse!]!
+  getAllAddressesForUser: MultipleUserLocationResponse!
+  verifyAccessToken: Boolean!
 }
 
 type MultiplePanditResponse {
@@ -41,11 +44,14 @@ type User {
   name: String!
   userEmail: String!
   phoneNumber: String!
+  refreshToken: String
   userRole: String!
   profileImage: String
   pandit: Pandit!
   otp: Otp!
-  userLocation: UserLocation
+  cart: Cart!
+  addresses: [UserLocation!]
+  selectedAddress: UserLocation
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -80,12 +86,25 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTimeISO
 
-type UserLocation {
-  id: String!
+type Cart {
+  id: ID!
   user: User!
-  latitude: Float!
-  longitude: Float!
-  address: String
+  categoryId: String
+  services: [Service!]!
+  totalPrice: Float!
+  createdAt: DateTimeISO!
+  updatedAt: DateTimeISO!
+}
+
+type Service {
+  id: String!
+  name: String!
+  description: String!
+  price: Int!
+  duration: Int!
+  imagePath: String!
+  imageUrl: String
+  category: Category!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -96,13 +115,15 @@ type Category {
   services: [Service!]
 }
 
-type Service {
+type UserLocation {
   id: String!
-  name: String!
-  description: String!
-  price: Int!
-  duration: Int!
-  category: Category!
+  userId: String!
+  latitude: Float!
+  longitude: Float!
+  label: String!
+  phoneNumber: String!
+  addressDetails: String!
+  user: User!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -188,6 +209,19 @@ type PanditWithDistance {
   distance: Float!
 }
 
+type LocationSuggestionResponse {
+  description: String!
+  latitude: Float!
+  longitude: Float!
+}
+
+type MultipleUserLocationResponse {
+  success: Boolean!
+  message: String!
+  data: [UserLocation!]
+  total: Float
+}
+
 type Mutation {
   resendOtp(data: ResendOtpInput!): OtpResponse!
   registerAdmin(data: RegisterAdminInput!): SingleAdminResponse!
@@ -210,7 +244,14 @@ type Mutation {
   registerUser(data: RegisterUserInput!): SingleUserResponse!
   loginUser(data: LoginUserInput!): SingleUserResponse!
   verifyUser(data: VerifyInputs!): SingleUserResponse!
+  refreshAccessToken(refreshToken: String!): TokenResponse!
   getLocation(data: LocationInput!): LocationResponse!
+  addAdress(data: AddAddressInput!): LocationResponse!
+  getCart: MultipleCartResponse!
+  clearCart: MultipleCartResponse!
+  addToCart(categoryId: String!, serviceIds: [String!]!): MultipleCartResponse!
+  removeFromCart(serviceId: String!): MultipleCartResponse!
+  syncCart(categoryId: String!, serviceIds: [String!]!): MultipleCartResponse!
 }
 
 type OtpResponse {
@@ -275,7 +316,11 @@ input AddServiceInput {
   price: Float!
   duration: Int!
   categoryId: String!
+  image: Upload!
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 type SingleCategoryResponse {
   success: Boolean!
@@ -292,6 +337,12 @@ type SinglePanditResponse {
   message: String!
   data: Pandit
   accessToken: AccessToken
+  refreshToken: RefreshToken
+}
+
+type RefreshToken {
+  token: String!
+  expiresIn: Float!
 }
 
 input SetPanditApprovalStatusInput {
@@ -305,9 +356,6 @@ input RegisterPanditInput {
   categoryIds: [String!]!
   experience: Int!
 }
-
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
 
 input LoginPanditInput {
   phoneNumber: String!
@@ -424,6 +472,7 @@ type SingleUserResponse {
   message: String!
   data: User
   accessToken: AccessToken
+  refreshToken: RefreshToken
 }
 
 input RegisterUserInput {
@@ -437,6 +486,13 @@ input LoginUserInput {
   phoneNumber: String!
 }
 
+type TokenResponse {
+  success: Boolean!
+  message: String!
+  accessToken: AccessToken!
+  refreshToken: RefreshToken!
+}
+
 type LocationResponse {
   success: Boolean!
   message: String!
@@ -446,4 +502,19 @@ type LocationResponse {
 input LocationInput {
   latitude: Float!
   longitude: Float!
+}
+
+input AddAddressInput {
+  addressDetails: String!
+  label: String!
+  latitude: Float!
+  longitude: Float!
+  phoneNumber: String!
+}
+
+type MultipleCartResponse {
+  success: Boolean!
+  message: String!
+  data: Cart
+  total: Float
 }

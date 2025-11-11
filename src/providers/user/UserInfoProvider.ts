@@ -61,13 +61,14 @@ export class UserInfoProvider {
     }
   }
 
-  async getUser(params: { phoneNumber?: string; id?: string }): Promise<User> {
+  async getUser(params: { phoneNumber?: string; id?: string, relations?: string[]}): Promise<User> {
     logger.info(
       `🔍 Searching for user with params: ${params.id || params.phoneNumber}`
     );
 
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { phoneNumber: params.phoneNumber }],
+      relations: params.relations || []
     });
 
     if (!userData) {

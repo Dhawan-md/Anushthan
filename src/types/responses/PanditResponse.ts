@@ -1,7 +1,7 @@
 import { ObjectType, Field, Float } from "type-graphql";
 
 import { BaseResponse } from "../../utils/response";
-import { AccessToken } from "../globalTypes";
+import { AccessToken, RefreshToken } from "../globalTypes";
 import { Pandit } from "../../entities/Pandit";
 
 @ObjectType()
@@ -17,14 +17,19 @@ export class SinglePanditResponse extends PanditResponse<Pandit> {
   @Field(() => AccessToken, { nullable: true })
   accessToken?: AccessToken | null;
 
+  @Field(() => RefreshToken, { nullable: true })
+  refreshToken?: RefreshToken | null;
+
   constructor(
     success: boolean,
     message: string,
     data?: Pandit | null,
-    accessToken?: AccessToken | null
+    accessToken?: AccessToken | null,
+    refreshToken?: RefreshToken | null
   ) {
     super(success, message, data);
     this.accessToken = accessToken || null;
+    this.refreshToken = refreshToken || null;
   }
 }
 

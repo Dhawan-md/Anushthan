@@ -19,6 +19,8 @@ import {
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
+import { S3BucketType } from "../../utils/enums";
+import { generateSignedUrl } from "../../helpers/generateSignedUrl";
 
 @Service()
 export class ServiceInfoProvider {
@@ -93,6 +95,25 @@ export class ServiceInfoProvider {
       take: limit,
     });
 
+    const serviceListWithUrls = await Promise.all(
+      serviceList.map(async (service) => {
+        try {
+          const signedUrl = await generateSignedUrl(
+            service.imagePath,
+            S3BucketType.IMAGE
+          );
+          (service as any).imageUrl = signedUrl; // not stored in DB, just added to response
+        } catch (err) {
+          logger.warn(
+            `⚠️ Failed to generate signed URL for ${service.id}`,
+            err
+          );
+        }
+
+        return service;
+      })
+    );
+
     const totalPages = Math.ceil(total / limit);
 
     logger.info(
@@ -101,7 +122,7 @@ export class ServiceInfoProvider {
     return new MultipleServiceResponse(
       true,
       SERVICE_LIST,
-      serviceList,
+      serviceListWithUrls,
       total,
       page,
       limit,
@@ -109,7 +130,10 @@ export class ServiceInfoProvider {
     );
   }
 
-  async getServices(serviceIds: string[]): Promise<MultipleServiceResponse> {
+  async getServices(
+    serviceIds: string[],
+    categoryId: string
+  ): Promise<MultipleServiceResponse> {
     logger.info(
       `[ServiceInfoProvider.ts] 📩 Received request to fetch services with IDs: ${serviceIds.join(
         ", "
@@ -122,6 +146,7 @@ export class ServiceInfoProvider {
 
     const services = await this.serviceInfoRepository.find({
       where: { id: In(serviceIds) },
+      relations: ["category"],
     });
 
     if (!services || services.length !== serviceIds.length) {
@@ -130,6 +155,7 @@ export class ServiceInfoProvider {
       );
       validateFoundIds(services, serviceIds, "Invalid Service Ids");
     }
+    await this.doServicesBelongToCategory(serviceIds, categoryId);
 
     logger.info(
       `[ServiceInfoProvider.ts] ✅ Successfully fetched ${services.length} service(s)`
@@ -155,6 +181,7 @@ export class ServiceInfoProvider {
       logger.warn(
         `[ServiceInfoProvider.ts] ⚠️ Some services do not belong to category ${categoryId}. Expected ${serviceIds.length}, found ${count}.`
       );
+
       throw new CustomError(SERVICE_DOES_NOT_BELONG_TO_THIS_CATEGORY);
     }
 
