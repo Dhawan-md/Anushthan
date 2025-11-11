@@ -5,7 +5,6 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { UpdatePanditProvider } from "./UpdatePanditProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 import { sendEmail } from "../../service/email/sendEmail";
 
@@ -16,7 +15,6 @@ import { logger } from "../../utils/logger";
 import { EmailName, OtpType } from "../../utils/enums";
 import {
   MISSING_ENV_VARIABLES,
-  NO_PANDIT_FOUND,
   OLD_PASSWORD_ERROR,
   OTP_SENT,
   OTP_VERIFICATION_REQUIRED,
@@ -32,6 +30,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
+import { generateVerifivationToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditPasswordProvider {
@@ -46,26 +45,23 @@ export class PanditPasswordProvider {
   async forgetPassword(
     params: ForgetPasswordDto
   ): Promise<SinglePanditResponse> {
-    const { userEmail } = params;
+    const { userEmail, phoneNumber } = params;
     logger.info(
       `🔄 Forget password request received for pandit with email: ${userEmail}`
     );
 
-    const isExisting = await this.panditInfoProvider.checkPanditExists({
-      userEmail,
+    const panditDetails = await this.panditInfoProvider.getPandit({
+      data: { phoneNumber },
+      withUser: true,
     });
 
-    if (!isExisting) {
-      throw new CustomError(NO_PANDIT_FOUND);
-    }
-
     const otp = await this.otpProvider.generateAndSaveNewOtp(
-      userEmail,
+      phoneNumber,
       OtpType.FORGET_PASSWORD
     );
 
     await sendEmail(
-      userEmail,
+      panditDetails.user.userEmail,
       { name: EmailName.PANDIT, otpCode: otp.otpCode },
       getEmailTypeByOtpType(OtpType.FORGET_PASSWORD)
     );
@@ -76,23 +72,20 @@ export class PanditPasswordProvider {
   async verifyResetPassword(
     params: VerifyResetPasswordDto
   ): Promise<VerifyResetResponse> {
-    const { userEmail, otpCode } = params;
-    logger.info(`📨 Verifying OTP for email: ${userEmail}`);
+    const { phoneNumber, otpCode } = params;
+    logger.info(`📨 Verifying OTP for phoneNumber: ${phoneNumber}`);
 
     const isValidOTp = await this.otpProvider.verifyOtp({
-      userEmail,
+      phoneNumber,
       otpCode,
       otpType: OtpType.FORGET_PASSWORD,
     });
 
     const panditData = await this.panditInfoProvider.getPandit({
-      data: { userEmail },
+      data: { phoneNumber },
     });
 
-    const verificationToken = generateJwtToken(
-      { panditId: panditData.id },
-      "15m"
-    );
+    const verificationToken = generateVerifivationToken({ panditId: panditData.id });
 
     return new VerifyResetResponse(
       isValidOTp.success,
@@ -104,7 +97,7 @@ export class PanditPasswordProvider {
   async resetPassword(params: ResetPasswordDto): Promise<SinglePanditResponse> {
     const { newPassword, otpToken } = params;
 
-    const jwtSecret = process.env["JWT_SECRET"];
+    const jwtSecret = process.env["ACCESS_TOKEN_SECRET"];
     if (!jwtSecret) {
       throw new CustomError(MISSING_ENV_VARIABLES);
     }

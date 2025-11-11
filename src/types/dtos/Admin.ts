@@ -1,3 +1,5 @@
+import { FileUpload } from "graphql-upload-minimal";
+
 import { PanditStatus } from "../../utils/enums";
 import { PaginationDto } from "./Pagination";
 
@@ -18,6 +20,7 @@ export class AddServiceDto {
   price: number;
   duration: number;
   categoryId: string;
+  image: FileUpload;
 }
 
 export class SetPanditApprovalStatusDto {

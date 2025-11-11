@@ -2,7 +2,6 @@ import { FileUpload } from "graphql-upload-minimal";
 
 export class RegisterUserDto {
   name: string;
-  username: string;
   userEmail: string;
   password: string;
   phoneNumber: string;
@@ -10,10 +9,10 @@ export class RegisterUserDto {
 }
 
 export class LoginUserDto {
-  userEmail: string;
+  phoneNumber: string;
 }
 
 export class VerifyUserDto {
-  userEmail: string;
+  phoneNumber: string;
   otpCode: string;
 }

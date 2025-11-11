@@ -3,12 +3,12 @@ import { FileUpload } from "graphql-upload-minimal";
 import { PanditStatus } from "./enums";
 
 export type CheckPanditExists =
-  | { userId: string; userEmail?: never }
-  | { userEmail: string; userId?: never };
+  | { userId: string; phoneNumber?: never }
+  | { phoneNumber: string; userId?: never };
 
 export type GetPanditParams =
-  | { id: string; userEmail?: never }
-  | { userEmail: string; id?: never };
+  | { id: string; phoneNumber?: never }
+  | { phoneNumber: string; id?: never };
 
 export interface NotifyPanditParams {
   userEmail: string;

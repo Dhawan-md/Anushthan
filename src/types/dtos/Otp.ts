@@ -1,6 +1,6 @@
 import { OtpType } from "../../utils/enums";
 
 export class ResendOtpDto {
-  userEmail: string;
+  phoneNumber: string;
   otpType: OtpType;
 }

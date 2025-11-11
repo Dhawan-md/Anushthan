@@ -8,10 +8,7 @@ import { User } from "../../entities/User";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 import { uploadFiles } from "../../helpers/uploadS3Files";
-
-import { sendEmail } from "../../service/email/sendEmail";
 
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 
@@ -24,13 +21,21 @@ import {
   PHONE_NUMBER_REQUIRED,
   USER_REGISTERED,
 } from "../../utils/messages";
-import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
+import { OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
 import {
   LoginUserDto,
   RegisterUserDto,
   VerifyUserDto,
 } from "../../types/dtos/User";
+import { sendOtpSMS } from "../../service/sms/sendOtpSms";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../helpers/generateJwtToken";
+import { UpdateUserProvider } from "./UpdateUserProvider";
+import { verifyRefreshToken } from "../../helpers/verifyJwtToken";
+import { TokenResponse } from "../../types/responses/TokenResponse";
 
 @Service()
 export class UserAuthProvider {
@@ -39,17 +44,20 @@ export class UserAuthProvider {
   constructor(
     private repositoryFactory: RepositoryFactory,
     @Inject(() => UserInfoProvider) private userInfoProvider: UserInfoProvider,
+    @Inject(() => UpdateUserProvider)
+    private updateUserProvider: UpdateUserProvider,
     @Inject(() => OtpProvider) private otpProvider: OtpProvider
   ) {
     this.userAuthRepository = this.repositoryFactory.getRepository(User);
   }
 
   async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
-    const { userEmail, username, name, phoneNumber, profileImage } = params;
+    const { userEmail, name, phoneNumber, profileImage } = params;
     logger.info(`🔄Processing register user request for : ${userEmail}`);
     validateEmail(userEmail);
 
-    await this.userInfoProvider.checkUserExists(userEmail);
+    await this.userInfoProvider.checkUserExists(phoneNumber);
+
     if (!phoneNumber || phoneNumber.trim() === "") {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
     }
@@ -64,7 +72,6 @@ export class UserAuthProvider {
       async (transactionalEntityManager) => {
         const newUser = await transactionalEntityManager.save(User, {
           name: name,
-          username: username,
           userEmail: userEmail.trim().toLowerCase(),
           phoneNumber: phoneNumber,
           profileImage: JSON.stringify(
@@ -81,14 +88,8 @@ export class UserAuthProvider {
           throw new CustomError(OTP_GENERATION_FAILED);
         }
 
-        await sendEmail(
-          userEmail,
-          {
-            name: name,
-            otpCode: otpData.data?.otpCode,
-          },
-          EmailType.ACCOUNT_VERIFICATION
-        );
+        await sendOtpSMS(phoneNumber, otpData.data.otpCode);
+
         logger.info(`✅ User ${newUser.id} registered successfully.`);
         return new SingleUserResponse(true, USER_REGISTERED, newUser);
       }
@@ -96,53 +97,97 @@ export class UserAuthProvider {
   }
 
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
-    const { userEmail } = params;
+    const { phoneNumber } = params;
 
-    logger.info(`🔄Logging in user: ${userEmail}.`);
-    validateEmail(userEmail);
-
-    const userData = await this.userInfoProvider.getUser({ userEmail });
+    logger.info(`🔄Logging in user: ${phoneNumber}.`);
 
     const otp = await this.otpProvider.generateAndSaveNewOtp(
-      userEmail,
+      phoneNumber,
       OtpType.USER
     );
 
-    await sendEmail(
-      userEmail,
-      {
-        name: userData.name,
-        otpCode: otp.otpCode,
-      },
-      EmailType.ACCOUNT_VERIFICATION
-    );
+    await sendOtpSMS(phoneNumber, otp.otpCode);
 
-    logger.info(`✅ User with ${userEmail} logged in requested.`);
+    logger.info(
+      `✅ User with phone number ${phoneNumber} logged in requested.`
+    );
 
     return new SingleUserResponse(true, LOGIN_REQUESTED);
   }
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
-    const { userEmail, otpCode } = params;
-    logger.info(`🔄 Verification request received for: ${userEmail}`);
+    const { phoneNumber, otpCode } = params;
+    logger.info(`🔄 Verification request received for: ${phoneNumber}`);
 
     const userData = await this.userInfoProvider.getUser({
-      userEmail,
+      phoneNumber,
     });
 
-    logger.info(`🔍 Verifying OTP for ${userEmail}`);
+    logger.info(`🔍 Verifying OTP for ${phoneNumber}`);
     await this.otpProvider.verifyOtp({
-      userEmail,
+      phoneNumber,
       otpCode,
       otpType: OtpType.USER,
     });
 
-    const jwtToken = generateJwtToken({
+    const accessToken = generateAccessToken({
       id: userData.id,
       userRole: UserRole.USER,
     });
+    const refreshToken = generateRefreshToken({ id: userData.id });
+
+    await this.updateUserProvider.updateUser({
+      updatedUserData: { refreshToken: refreshToken.token },
+      userId: userData.id,
+    });
 
     logger.info(`✅ User ${userData.userEmail} logged in successfully.`);
-    return new SingleUserResponse(true, LOGIN_SUCCESSFUL, userData, jwtToken);
+    return new SingleUserResponse(
+      true,
+      LOGIN_SUCCESSFUL,
+      userData,
+      accessToken,
+      refreshToken
+    );
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+    const payload = verifyRefreshToken(refreshToken);
+    if (!payload) throw new CustomError("Invalid or expired refresh token");
+
+    const user = await this.userInfoProvider.getUser({ id: payload.id });
+    if (!user) throw new CustomError("User not found");
+
+    // Optional: verify stored token matches
+    if (user.refreshToken !== refreshToken) {
+      throw new CustomError("Token mismatch or revoked");
+    }
+
+    // Issue new tokens
+    const newAccessToken = generateAccessToken({
+      id: user.id,
+      userRole: UserRole.USER,
+    });
+    const newRefreshToken = generateRefreshToken({ id: user.id });
+
+    // Save new refresh token (rotation)
+    user.refreshToken = newRefreshToken.token;
+    await this.updateUserProvider.updateUser({
+      updatedUserData: { refreshToken: newRefreshToken.token },
+      userId: user.id,
+    });
+
+    return {
+      success: true,
+      message: "Tokens refreshed successfully",
+      accessToken: {
+        token: newAccessToken.token,
+        expiresIn: newAccessToken.expiresIn,
+      }, // 15 min
+      refreshToken: {
+        token: newRefreshToken.token,
+        expiresIn: newRefreshToken.expiresIn,
+      }, // 7 days
+    };
   }
 }

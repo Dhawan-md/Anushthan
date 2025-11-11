@@ -1,5 +1,6 @@
 import { InputType, Field, Float, Int } from "type-graphql";
 import { Length, Min } from "class-validator";
+import { FileUpload, GraphQLUpload } from "graphql-upload-minimal";
 
 @InputType()
 export class AddServiceInput {
@@ -21,4 +22,7 @@ export class AddServiceInput {
 
   @Field()
   categoryId: string;
+
+  @Field(() => GraphQLUpload)
+  image: FileUpload;
 }

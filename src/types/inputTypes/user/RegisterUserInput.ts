@@ -1,6 +1,6 @@
 import { InputType, Field } from "type-graphql";
 import { GraphQLUpload, FileUpload } from "graphql-upload-minimal";
-import { IsEmail, Length } from "class-validator";
+import { IsEmail, IsPhoneNumber, Length } from "class-validator";
 
 @InputType()
 export class RegisterUserInput {
@@ -9,14 +9,11 @@ export class RegisterUserInput {
   name: string;
 
   @Field()
-  @Length(3, 30)
-  username: string;
-
-  @Field()
   @IsEmail()
   userEmail: string;
 
   @Field()
+  @IsPhoneNumber('IN')
   phoneNumber: string;
 
   @Field(() => GraphQLUpload, { nullable: true })

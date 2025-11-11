@@ -47,34 +47,35 @@ export class UserInfoProvider {
     );
   }
 
-  async checkUserExists(userEmail: string) {
-    const normalizedEmail = userEmail.trim().toLowerCase();
-    logger.info(`🔍 Searching for user with params: ${normalizedEmail}`);
+  async checkUserExists(phoneNumber: string) {
+    logger.info(`🔍 Searching for user with params: ${phoneNumber}`);
 
     const isExisting = await this.userInfoRepository
       .createQueryBuilder("u")
-      .where("u.user_email = :email", { email: normalizedEmail })
+      .where("u.phone_number = :phoneNumber", { phoneNumber })
       .getExists();
 
     if (isExisting) {
-      logger.warn(`⚠️ User with email "${userEmail}" already exists.`);
+      logger.warn(`⚠️ User with phone number: "${phoneNumber}" already exists.`);
       throw new CustomError(USER_ALREADY_EXISTS);
     }
   }
 
-  async getUser(params: { userEmail?: string; id?: string }): Promise<User> {
-    const normalizedEmail = params.userEmail?.trim().toLowerCase();
+  async getUser(params: { phoneNumber?: string; id?: string, relations?: string[]}): Promise<User> {
     logger.info(
-      `🔍 Searching for user with params: ${params.id || normalizedEmail}`
+      `🔍 Searching for user with params: ${params.id || params.phoneNumber}`
     );
 
     const userData = await this.userInfoRepository.findOne({
-      where: [{ id: params.id }, { userEmail: normalizedEmail }],
+      where: [{ id: params.id }, { phoneNumber: params.phoneNumber }],
+      relations: params.relations || []
     });
 
     if (!userData) {
       logger.warn(
-        `❌ No user found with email or id: ${normalizedEmail || params.id}`
+        `❌ No user found with phone number or id: ${
+          params.phoneNumber || params.id
+        }`
       );
       throw new CustomError(NO_USER_FOUND);
     }

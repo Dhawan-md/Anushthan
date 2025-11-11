@@ -5,41 +5,48 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  Unique,
-  OneToOne,
-  JoinColumn,
+  ManyToOne,
   RelationId,
+  JoinColumn,
 } from "typeorm";
-import { ObjectType, Field, Float } from "type-graphql";
+import { ObjectType, Field } from "type-graphql";
 import { User } from "./User";
 
 @ObjectType()
 @Entity()
-@Unique(["user"])
 export class UserLocation {
   @Field()
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field(() => User)
-  @OneToOne(() => User, (user) => user.userLocation)
-  @JoinColumn({ name: "user_Id" }) // this links to User.id
-  user: User;
-
+  @Field()
   @RelationId((location: UserLocation) => location.user)
   userId: string;
 
-  @Field(() => Float)
-  @Column("double precision")
-  latitude: number;
+  @Field()
+  @Column("decimal", { precision: 10, scale: 7 })
+  latitude!: number;
 
-  @Field(() => Float)
-  @Column("double precision")
-  longitude: number;
+  @Field()
+  @Column("decimal", { precision: 10, scale: 7 })
+  longitude!: number;
 
-  @Field({ nullable: true })
+  @Field()
+  @Column()
+  label!: string;
+
+  @Field()
+  @Column({ name: "phone_number" })
+  phoneNumber!: string;
+
+  @Field()
   @Column({ nullable: true })
-  address?: string;
+  addressDetails?: string;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.addresses, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
+  user!: User;
 
   @Field()
   @CreateDateColumn()

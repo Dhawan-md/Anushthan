@@ -8,6 +8,7 @@ export const generateOtp = (userSecret: string) => {
     secret: userSecret + createdAt.toString(),
     encoding: "base32",
     step: 300,
+    digits: 4,
   });
 
   return {

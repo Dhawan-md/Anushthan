@@ -1,13 +1,13 @@
 import { InputType, Field } from "type-graphql";
-import { IsEmail, IsEnum } from "class-validator";
+import { IsEnum, IsPhoneNumber } from "class-validator";
 
 import { OtpType } from "../../../utils/enums";
 
 @InputType()
 export class ResendOtpInput {
   @Field()
-  @IsEmail()
-  userEmail: string;
+  @IsPhoneNumber('IN')
+  phoneNumber: string;
 
   @Field(() => OtpType)
   @IsEnum(OtpType)

@@ -79,7 +79,7 @@ export class PanditInfoProvider {
   }
 
   async checkPanditExists(params: CheckPanditExists) {
-    const { userId, userEmail } = params;
+    const { userId, phoneNumber } = params;
 
     const query = this.panditInfoRepository
       .createQueryBuilder("pandit")
@@ -92,13 +92,12 @@ export class PanditInfoProvider {
       query.where("user.id = :userId", { userId });
     }
 
-    if (userEmail) {
-      const normalizedEmail = userEmail.trim().toLowerCase();
+    if (phoneNumber) {
       logger.info(
-        `[PanditInfoProvider.ts] 🔍 Checking if pandit exists with userEmail: ${normalizedEmail}`
+        `🔍 Checking if pandit exists with phoneNumber: ${phoneNumber}`
       );
-      query.where("LOWER(user.userEmail) = :userEmail", {
-        userEmail: normalizedEmail,
+      query.where("LOWER(user.phoneNumber) = :phoneNumber", {
+        phoneNumber: phoneNumber,
       });
     }
 
@@ -113,18 +112,11 @@ export class PanditInfoProvider {
     withCategory?: boolean;
   }): Promise<Pandit> {
     const { data, withCategory = false, withUser = false } = params;
-    const { id, userEmail } = data;
+    const { id, phoneNumber } = data;
 
-    const normalizedEmail = userEmail?.trim().toLowerCase();
-    logger.info(
-      `[PanditInfoProvider.ts] 🔍 Searching for pandit with params: ${
-        id || normalizedEmail
-      }`
-    );
+    logger.info(`🔍 Searching for pandit with params: ${id || phoneNumber}`);
 
-    const whereClause = userEmail
-      ? { user: { userEmail: normalizedEmail } }
-      : { id };
+    const whereClause = phoneNumber ? { user: { phoneNumber } } : { id };
 
     const panditData = await this.panditInfoRepository.findOne({
       where: whereClause,
@@ -134,9 +126,7 @@ export class PanditInfoProvider {
 
     if (!panditData) {
       logger.warn(
-        `[PanditInfoProvider.ts] ❌ No pandit found with email or id: ${
-          normalizedEmail || id
-        }`
+        `❌ No pandit found with phone number or id: ${phoneNumber || id}`
       );
       throw new CustomError(NO_PANDIT_FOUND);
     }
@@ -250,10 +240,13 @@ export class PanditInfoProvider {
       `[PanditInfoProvider.ts] 📦 Retrieved ${entities.length} nearby pandits before filtering busy ones.`
     );
 
-    const distanceMap = raw.reduce((acc, row) => {
-      acc[row.pandit_id] = parseFloat(row.distance); // check raw alias for id
-      return acc;
-    }, {} as Record<string, number>);
+    const distanceMap = raw.reduce(
+      (acc, row) => {
+        acc[row.pandit_id] = parseFloat(row.distance); // check raw alias for id
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const nearbyPanditIds = entities.map((p) => p.id);
     let availablePandits = entities;

@@ -8,6 +8,10 @@ export interface CustomUserJwtPayload extends JwtPayload {
   userRole: UserRole;
 }
 
+export interface CustomRefreshJwtPayload extends JwtPayload {
+  id: string;
+}
+
 export interface CustomAdminJwtPayload extends JwtPayload {
   adminId: string;
   adminRole: AdminRole;

@@ -7,12 +7,15 @@ import {
   OneToOne,
   UpdateDateColumn,
   Index,
+  OneToMany,
+  JoinColumn,
 } from "typeorm";
 
 import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";
 import { UserLocation } from "./UserLocation";
+import { Cart } from "./Cart";
 
 @ObjectType()
 @Entity()
@@ -32,7 +35,12 @@ export class User {
 
   @Field()
   @Column({ unique: true, name: "phone_number" })
+  @Index()
   phoneNumber!: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  refreshToken?: string;
 
   @Field()
   @Column({
@@ -56,12 +64,22 @@ export class User {
   @OneToOne(() => Otp, (otp) => otp.user)
   otp!: Otp;
 
-  @Field(() => UserLocation, { nullable: true })
-  @OneToOne(() => UserLocation, (location) => location.user, {
+  @Field()
+  @OneToOne(() => Cart, (cart) => cart.user)
+  cart!: Cart;
+
+  @Field(() => [UserLocation], { nullable: true })
+  @OneToMany(() => UserLocation, (location) => location.user, {
     cascade: true,
     eager: true,
   })
-  userLocation?: UserLocation;
+  addresses?: UserLocation[];
+
+  // But only one currently selected address
+  @Field(() => UserLocation, { nullable: true })
+  @OneToOne(() => UserLocation, { nullable: true })
+  @JoinColumn({ name: "selected_address_id" })
+  selectedAddress?: UserLocation;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

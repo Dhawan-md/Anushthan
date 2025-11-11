@@ -31,10 +31,10 @@ export const context = ({
     const token = userAuthHeader.split(" ")[1];
 
     try {
-      if (token && process.env["JWT_SECRET"]) {
+      if (token && process.env["ACCESS_TOKEN_SECRET"]) {
         const payload = verify(
           token,
-          process.env["JWT_SECRET"]
+          process.env["ACCESS_TOKEN_SECRET"]
         ) as CustomUserJwtPayload;
 
         user = payload;
@@ -49,10 +49,10 @@ export const context = ({
     const token = adminAuthHeader.split(" ")[1];
 
     try {
-      if (token && process.env["JWT_SECRET"]) {
+      if (token && process.env["ACCESS_TOKEN_SECRET"]) {
         const payload = verify(
           token,
-          process.env["JWT_SECRET"]
+          process.env["ACCESS_TOKEN_SECRET"]
         ) as CustomAdminJwtPayload;
 
         admin = payload;

@@ -11,7 +11,6 @@ import { Pandit } from "../../entities/Pandit";
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { uploadFiles } from "../../helpers/uploadS3Files";
-import { generateJwtToken } from "../../helpers/generateJwtToken";
 
 import { sendEmail } from "../../service/email/sendEmail";
 
@@ -28,13 +27,7 @@ import { CustomError } from "../../utils/customError";
 import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 
-import {
-  EmailName,
-  EmailType,
-  OtpType,
-  S3BucketType,
-  UserRole,
-} from "../../utils/enums";
+import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
 import {
   CATEGORY_NOT_FOUND,
   FILE_UPLOAD_FAIL,
@@ -45,6 +38,11 @@ import {
   PANDIT_REGISTERED,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
+import { sendOtpSMS } from "../../service/sms/sendOtpSms";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditAuthProvider {
@@ -84,9 +82,8 @@ export class PanditAuthProvider {
 
     const user = await this.userInfoProvider.getUser({ id: userId });
 
-    const categories = await this.categoryInfoProvider.getCategories(
-      categoryIds
-    );
+    const categories =
+      await this.categoryInfoProvider.getCategories(categoryIds);
 
     const hashedPassword = await hashPassword(password);
 
@@ -122,14 +119,14 @@ export class PanditAuthProvider {
   }
 
   async loginPandit(params: LoginPanditDto): Promise<SinglePanditResponse> {
-    const { userEmail, password } = params;
-    logger.info(`🔄Logging in pandit with email: ${userEmail}.`);
+    const { phoneNumber, password } = params;
+    logger.info(`🔄Logging in pandit with number: ${phoneNumber}.`);
 
-    validateEmail(userEmail);
+    validateEmail(phoneNumber);
     validatePassword(password);
 
     const panditData = await this.panditInfoProvider.getPandit({
-      data: { userEmail },
+      data: { phoneNumber },
     });
 
     const isMatching = await isSamePassword({
@@ -142,49 +139,51 @@ export class PanditAuthProvider {
     }
 
     const otp = await this.otpProvider.generateAndSaveNewOtp(
-      userEmail,
+      phoneNumber,
       OtpType.PANDIT
     );
 
-    await sendEmail(
-      userEmail,
-      { name: EmailName.PANDIT, otpCode: otp.otpCode },
-      EmailType.PANDIT_LOGIN
-    );
+    await sendOtpSMS(phoneNumber, otp.otpCode);
 
-    logger.info(`✅ Pandit with email ${userEmail} logged in requested.`);
+    logger.info(
+      `✅ Pandit with phone number ${phoneNumber} logged in requested.`
+    );
 
     return new SinglePanditResponse(true, PANDIT_LOGIN_REQUESTED);
   }
 
   async verifyPandit(params: VerifyPanditDto): Promise<SinglePanditResponse> {
-    const { userEmail, otpCode } = params;
+    const { phoneNumber, otpCode } = params;
     logger.info(
-      `🔄 Verification request received for pandit with email: ${userEmail}`
+      `🔄 Verification request received for pandit with phone number: ${phoneNumber}`
     );
 
     const panditData = await this.panditInfoProvider.getPandit({
-      data: { userEmail },
+      data: { phoneNumber },
     });
 
-    logger.info(`🔍 Verifying OTP for user with email: ${userEmail}`);
+    logger.info(`🔍 Verifying OTP for user with phone number: ${phoneNumber}`);
     await this.otpProvider.verifyOtp({
-      userEmail,
+      phoneNumber,
       otpCode,
       otpType: OtpType.PANDIT,
     });
 
-    const jwtToken = generateJwtToken({
+    const accessToken = generateAccessToken({
       id: panditData.id,
       userRole: UserRole.PANDIT,
     });
+    const refreshToken = generateRefreshToken({ id: panditData.id });
 
-    logger.info(`✅ Pandit with ${userEmail} logged in successfully.`);
+    logger.info(
+      `✅ Pandit with phone number ${phoneNumber} logged in successfully.`
+    );
     return new SinglePanditResponse(
       true,
       LOGIN_SUCCESSFUL,
       panditData,
-      jwtToken
+      accessToken,
+      refreshToken
     );
   }
 }

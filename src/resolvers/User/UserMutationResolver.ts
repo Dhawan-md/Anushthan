@@ -1,5 +1,5 @@
 import { plainToInstance } from "class-transformer";
-import { Resolver, Mutation, Arg, Ctx } from "type-graphql";
+import { Resolver, Mutation, Arg, Ctx, Authorized } from "type-graphql";
 import { Inject, Service } from "typedi";
 
 import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
@@ -20,6 +20,9 @@ import { VerifyInputs } from "../../types/inputTypes/VerifyInputs";
 import { LocationInput } from "../../types/inputTypes/user/LocationInput";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
+import { AddAddressInput } from "../../types/inputTypes/user/AddAddressInput";
+import { UserRole } from "../../utils/enums";
+import { TokenResponse } from "../../types/responses/TokenResponse";
 
 @Service()
 @Resolver()
@@ -69,6 +72,15 @@ export class UserMutationResolver {
     return this.userAuthProvider.verifyUser(dto);
   }
 
+  @Mutation(() => TokenResponse)
+  async refreshAccessToken(
+    @Arg("refreshToken") refreshToken: string
+  ): Promise<TokenResponse> {
+    return this.userAuthProvider.refreshAccessToken(refreshToken);
+  }
+
+  
+
   @Mutation(() => LocationResponse)
   async getLocation(
     @Arg("data") data: LocationInput,
@@ -81,11 +93,35 @@ export class UserMutationResolver {
 
     const { latitude, longitude } = data;
 
-    return this.userLocationProvider.getLocation({
+    return this.userLocationProvider.getLocationByCoordinates({
       latitude,
       longitude,
       id: userId,
       userRole,
+    });
+  }
+
+  @Mutation(() => LocationResponse)
+  @Authorized([UserRole.USER, UserRole.PANDIT])
+  async addAdress(
+    @Arg("data") data: AddAddressInput,
+    @Ctx() ctx: Context
+  ): Promise<LocationResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError("Unauthenticated");
+
+    const { latitude, longitude, label, addressDetails, phoneNumber } = data;
+
+    return this.userLocationProvider.addAddress({
+      latitude,
+      longitude,
+      label,
+      addressDetails,
+      id: userId,
+      userRole,
+      phoneNumber,
     });
   }
 }
