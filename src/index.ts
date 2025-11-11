@@ -41,6 +41,7 @@ import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver"
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
 import { UserMutationResolver } from "./resolvers/User/UserMutationResolver";
 import { UserQueryResolver } from "./resolvers/User/UserQueryResolver";
+import { CartMutationResolver } from "./resolvers/cart/CartMutationResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -58,15 +59,16 @@ const createApp = async () => {
       ServiceQueryResolver,
       CategoryQueryResolver,
       UserQueryResolver,
+      CartMutationResolver,
     ],
     authChecker: authChecker,
     container: Container,
     globalMiddlewares: [loggerMiddlware, globalErrorHandler],
     scalarsMap: [{ type: Upload, scalar: UploadScalar }],
-    emitSchemaFile:{
+    emitSchemaFile: {
       path: "./schema.gql",
       sortedSchema: false,
-    }
+    },
   });
 
   const resolvers = {

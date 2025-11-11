@@ -31,7 +31,9 @@ export const uploadFiles = async (
 
   try {
     await Promise.all(
-      files.map(async (document) => {
+      files.map(async (documentPromise) => {
+        const document = await documentPromise; // 👈 Await the promise here
+
         if (!document.filename) throw new CustomError(FILENAME_MISSING);
 
         const fileName = `${uuidv4()}-${document.filename}`;
@@ -47,6 +49,7 @@ export const uploadFiles = async (
             ACL: ObjectCannedACL.private,
           },
         });
+
         await upload.done();
 
         logger.info(`✅ File uploaded successfully: ${filePath}`);

@@ -141,4 +141,4 @@ export const REFUND_UPDATED = "Refund updated successfully.";
 
 //Location Message
 export const FETCH_LOCATION_ERROR = "Unable to fetch location";
-export const LOCATION_NOT_FOUND = "Location not found";
+export const LOCATION_NOT_FOUND = "Unknown location.";

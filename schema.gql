@@ -49,6 +49,7 @@ type User {
   profileImage: String
   pandit: Pandit!
   otp: Otp!
+  cart: Cart!
   addresses: [UserLocation!]
   selectedAddress: UserLocation
   createdAt: DateTimeISO!
@@ -85,15 +86,25 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTimeISO
 
-type UserLocation {
-  id: String!
-  userId: String!
-  latitude: Float!
-  longitude: Float!
-  label: String!
-  phoneNumber: String!
-  addressDetails: String!
+type Cart {
+  id: ID!
   user: User!
+  categoryId: String
+  services: [Service!]!
+  totalPrice: Float!
+  createdAt: DateTimeISO!
+  updatedAt: DateTimeISO!
+}
+
+type Service {
+  id: String!
+  name: String!
+  description: String!
+  price: Int!
+  duration: Int!
+  imagePath: String!
+  imageUrl: String
+  category: Category!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -104,13 +115,15 @@ type Category {
   services: [Service!]
 }
 
-type Service {
+type UserLocation {
   id: String!
-  name: String!
-  description: String!
-  price: Int!
-  duration: Int!
-  category: Category!
+  userId: String!
+  latitude: Float!
+  longitude: Float!
+  label: String!
+  phoneNumber: String!
+  addressDetails: String!
+  user: User!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -234,6 +247,11 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): TokenResponse!
   getLocation(data: LocationInput!): LocationResponse!
   addAdress(data: AddAddressInput!): LocationResponse!
+  getCart: MultipleCartResponse!
+  clearCart: MultipleCartResponse!
+  addToCart(categoryId: String!, serviceIds: [String!]!): MultipleCartResponse!
+  removeFromCart(serviceId: String!): MultipleCartResponse!
+  syncCart(categoryId: String!, serviceIds: [String!]!): MultipleCartResponse!
 }
 
 type OtpResponse {
@@ -298,7 +316,11 @@ input AddServiceInput {
   price: Float!
   duration: Int!
   categoryId: String!
+  image: Upload!
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 type SingleCategoryResponse {
   success: Boolean!
@@ -334,9 +356,6 @@ input RegisterPanditInput {
   categoryIds: [String!]!
   experience: Int!
 }
-
-"""The `Upload` scalar type represents a file upload."""
-scalar Upload
 
 input LoginPanditInput {
   phoneNumber: String!
@@ -491,4 +510,11 @@ input AddAddressInput {
   latitude: Float!
   longitude: Float!
   phoneNumber: String!
+}
+
+type MultipleCartResponse {
+  success: Boolean!
+  message: String!
+  data: Cart
+  total: Float
 }

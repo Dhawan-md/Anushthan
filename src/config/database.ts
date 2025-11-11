@@ -17,6 +17,7 @@ import { logger } from "../utils/logger";
 
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
+import { Cart } from "../entities/Cart";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ export const AppDataSource = new DataSource({
     Transaction,
     Refund,
     UserLocation,
+    Cart,
   ],
   synchronize: process.env["NODE_ENV"] !== "production",
 });

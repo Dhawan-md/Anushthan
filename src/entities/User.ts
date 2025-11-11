@@ -15,6 +15,7 @@ import { UserRole } from "../utils/enums";
 import { Pandit } from "./Pandit";
 import { Otp } from "./Otp";
 import { UserLocation } from "./UserLocation";
+import { Cart } from "./Cart";
 
 @ObjectType()
 @Entity()
@@ -62,6 +63,10 @@ export class User {
   @Field()
   @OneToOne(() => Otp, (otp) => otp.user)
   otp!: Otp;
+
+  @Field()
+  @OneToOne(() => Cart, (cart) => cart.user)
+  cart!: Cart;
 
   @Field(() => [UserLocation], { nullable: true })
   @OneToMany(() => UserLocation, (location) => location.user, {

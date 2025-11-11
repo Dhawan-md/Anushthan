@@ -24,7 +24,7 @@ export class Service {
   name!: string;
 
   @Field(() => String)
-  @Column({ type: "text"})
+  @Column({ type: "text" })
   description: string | null;
 
   @Field(() => Int)
@@ -34,6 +34,13 @@ export class Service {
   @Field(() => Int)
   @Column({ type: "int", default: 30 })
   duration!: number;
+
+  @Field(() => String)
+  @Column({ type: "text" })
+  imagePath!: string;
+
+  @Field({ nullable: true })
+  imageUrl?: string;
 
   @Field(() => Category)
   @ManyToOne(() => Category, (category) => category.services)
