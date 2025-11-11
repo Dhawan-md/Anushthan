@@ -36,7 +36,7 @@ export class Service {
   duration!: number;
 
   @Field(() => String)
-  @Column({ type: "text" })
+  @Column({ type: "text", name: "image_path", nullable: true })
   imagePath!: string;
 
   @Field({ nullable: true })

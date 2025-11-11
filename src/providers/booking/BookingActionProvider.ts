@@ -116,9 +116,8 @@ export class BookingActionProvider {
       categoryId
     );
 
-    const isDuplicate = await this.bookingInfoProvider.isDuplicateBooking(
-      params
-    );
+    const isDuplicate =
+      await this.bookingInfoProvider.isDuplicateBooking(params);
 
     if (isDuplicate) {
       logger.warn(
@@ -273,9 +272,11 @@ export class BookingActionProvider {
     });
 
     const userLocationDetails =
-      await this.userLocationProvider.getLocationDetails(bookingDetails.userId);
+      await this.userLocationProvider.getResolvedLocationDetails(
+        bookingDetails.userId
+      );
     const panditLocationDetails =
-      await this.userLocationProvider.getLocationDetails(
+      await this.userLocationProvider.getResolvedLocationDetails(
         panditDetails.id,
         UserRole.PANDIT
       );
