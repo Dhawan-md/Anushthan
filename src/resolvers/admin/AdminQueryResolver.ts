@@ -3,12 +3,14 @@ import { Inject, Service } from "typedi";
 
 import { PanditInfoProvider } from "../../providers/pandit/PanditInfoProvider";
 import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
+import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
 
 import { MultiplePanditResponse } from "../../types/responses/PanditResponse";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 import { MultipleUserResponse } from "../../types/responses/UserResponse";
+import { MultipleTimeSlotResponse } from "../../types/responses/TimeSlotResonse";
 
-import { AdminRole } from "../../utils/enums";
+import { AdminRole, UserRole } from "../../utils/enums";
 import { GetAllPanditsInput } from "../../types/inputTypes/admin/GetAllPanditsInput";
 import { plainToInstance } from "class-transformer";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
@@ -21,9 +23,11 @@ import { PaginationDto } from "../../types/dtos/Pagination";
 export class AminQueryResolver {
   constructor(
     @Inject(() => PanditInfoProvider)
-    private panditInfoProvider: PanditInfoProvider,
+    private readonly panditInfoProvider: PanditInfoProvider,
     @Inject(() => UserInfoProvider)
-    private readonly userInfoProvider: UserInfoProvider
+    private readonly userInfoProvider: UserInfoProvider,
+    @Inject(() => TimeSlotProvider)
+    private readonly timeSlotProvider: TimeSlotProvider
   ) {}
 
   @Query(() => MultiplePanditResponse)
@@ -52,5 +56,11 @@ export class AminQueryResolver {
     @Arg("data") data: GetDocumentInput
   ): Promise<MultipleDocumentResponse> {
     return this.panditInfoProvider.getDocument(data.filePathArray);
+  }
+
+  @Query(() => MultipleTimeSlotResponse)
+  @Authorized([AdminRole.ADMIN, AdminRole.SUPERADMIN, UserRole.USER])
+  async getAllTimeSlots(): Promise<MultipleTimeSlotResponse> {
+    return this.timeSlotProvider.getAllTimeSlots();
   }
 }

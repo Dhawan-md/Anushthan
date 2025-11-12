@@ -7,7 +7,7 @@ import { BookingInfoProvider } from "../../providers/booking/BookingInfoProvider
 import { Context } from "../../types/context";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
-import { MyBookingsDto } from "../../types/dtos/Booking";
+import { MyBookingsDto } from "../../types/dtos/booking";
 
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";

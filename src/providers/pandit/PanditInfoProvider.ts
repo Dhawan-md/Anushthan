@@ -1,5 +1,8 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
+
+
+import { BookingInfoProvider } from "../booking/BookingInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -14,9 +17,12 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 
 import { logger } from "../../utils/logger";
+import { getDistanceInKm } from "../../utils/getDistanceInKm";
+
 import {
   FETCH_DOCUMENT_SUCCESS,
   NO_PANDIT_FOUND,
+  NO_PANDITS_NEARBY,
   PANDIT_LIST,
 } from "../../utils/messages";
 import { CustomError } from "../../utils/customError";
@@ -32,7 +38,11 @@ import { GetAllPanditsDto } from "../../types/dtos/Admin";
 export class PanditInfoProvider {
   private panditInfoRepository: Repository<Pandit>;
 
-  constructor(private repositoryFactory: RepositoryFactory) {
+  constructor(
+    private repositoryFactory: RepositoryFactory,
+    @Inject(() => BookingInfoProvider)
+    private bookingInfoProvider: BookingInfoProvider
+  ) {
     this.panditInfoRepository = this.repositoryFactory.getRepository(Pandit);
   }
 
@@ -41,7 +51,7 @@ export class PanditInfoProvider {
   ): Promise<MultiplePanditResponse> {
     const { page = 1, limit = 10, status } = params;
     logger.info(
-      `🔄 Fetching pandits for page ${page} with limit ${limit}, status: ${
+      `[PanditInfoProvider.ts] 🔄 Fetching pandits for page ${page} with limit ${limit}, status: ${
         status || "ALL"
       }`
     );
@@ -55,7 +65,12 @@ export class PanditInfoProvider {
 
     const totalPages = Math.ceil(total / limit);
 
-    logger.info(`✅ Retrieved ${panditList.length} pandits from the database.`);
+    logger.info(
+      `[PanditInfoProvider.ts] ✅ Retrieved ${panditList.length} pandits from the database.`
+    );
+    logger.info(
+      `[PanditInfoProvider.ts] ✅ Retrieved ${panditList.length} pandits from the database.`
+    );
     return new MultiplePanditResponse(
       true,
       PANDIT_LIST,
@@ -75,7 +90,10 @@ export class PanditInfoProvider {
       .innerJoin("pandit.user", "user");
 
     if (userId) {
-      logger.info(`🔍 Checking if pandit exists with userId: ${userId}`);
+      logger.info(
+        `[PanditInfoProvider.ts] 🔍 Checking if pandit exists with userId: ${userId}`
+      );
+
       query.where("user.id = :userId", { userId });
     }
 
@@ -108,7 +126,7 @@ export class PanditInfoProvider {
     const panditData = await this.panditInfoRepository.findOne({
       where: whereClause,
       ...(withUser ? { relations: ["user"] } : {}),
-      ...(withCategory ? { relations: ["category"] } : {}),
+      ...(withCategory ? { relations: ["categories"] } : {}),
     });
 
     if (!panditData) {
@@ -122,7 +140,9 @@ export class PanditInfoProvider {
   }
 
   async getDocument(filePathArray: string): Promise<MultipleDocumentResponse> {
-    logger.info(`🔍 Fetching pandit documents from S3.`);
+    logger.info(
+      `[PanditInfoProvider.ts] 🔍 Fetching pandit documents from S3.`
+    );
     let parsedFilePathArray = JSON.parse(filePathArray);
 
     let signedUrls = await Promise.all(
@@ -154,19 +174,24 @@ export class PanditInfoProvider {
     await sendEmail(userEmail, { name: name }, emailTypeMap[status]);
   }
 
-  async findPanditsInRadius(
-    userLocation: { latitude: number; longitude: number },
-    radiusKm = 10
-  ) {
+  async findPanditsInRadius(params: {
+    userLocation: { latitude: number; longitude: number };
+    filters?: { timeSlotId: string; bookingDate: Date };
+    radiusKm;
+    categoryId?: string;
+  }) {
     // Fetch user's location first
+    const { userLocation, filters, radiusKm } = params;
     const { latitude, longitude } = userLocation;
 
-    logger.info(`🔍 Searching pandits in ${10} km radius.`);
+    logger.info(
+      `[PanditInfoProvider.ts] 🔍 Searching pandits in ${radiusKm} km radius.`
+    );
 
-    const { raw, entities } = await this.panditInfoRepository
+    const query = this.panditInfoRepository
       .createQueryBuilder("pandit")
-      .innerJoin("pandit.user", "user")
-      .innerJoin("user.userLocation", "location")
+      .innerJoinAndSelect("pandit.user", "user")
+      .innerJoinAndSelect("user.userLocation", "location")
       .where("pandit.isAvailable = :isAvailable", { isAvailable: true })
       .andWhere("pandit.status = :status", { status: "approved" })
       .addSelect(
@@ -180,7 +205,7 @@ export class PanditInfoProvider {
         sin(radians(location.latitude))
       )
     )
-    `,
+  `,
         "distance"
       )
       .andWhere(
@@ -198,15 +223,86 @@ export class PanditInfoProvider {
         { radius: radiusKm }
       )
       .setParameters({ lat: latitude, lng: longitude })
-      .orderBy("distance", "ASC")
-      .getRawAndEntities();
+      .orderBy("distance", "ASC");
 
-    const resultWithDistance = entities.map((entity, index) => ({
+    if (params.categoryId) {
+      logger.info(
+        `[PanditInfoProvider.ts] 📂 Applying category filter: ${params.categoryId}`
+      );
+      query
+        .innerJoin("pandit.categories", "category")
+        .andWhere("category.id = :categoryId", {
+          categoryId: params.categoryId,
+        });
+    }
+
+    const [entities, raw] = await Promise.all([
+      query.getMany(),
+      query.getRawMany(),
+    ]);
+
+    logger.info(
+      `[PanditInfoProvider.ts] 📦 Retrieved ${entities.length} nearby pandits before filtering busy ones.`
+    );
+
+    const distanceMap = raw.reduce(
+      (acc, row) => {
+        acc[row.pandit_id] = parseFloat(row.distance); // check raw alias for id
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const nearbyPanditIds = entities.map((p) => p.id);
+    let availablePandits = entities;
+
+    if (filters?.timeSlotId || filters?.bookingDate) {
+      logger.info(
+        `[PanditInfoProvider.ts] ⏰ Applying time filter: timeSlotId=${filters.timeSlotId}, bookingDate=${filters.bookingDate}`
+      );
+
+      const busyPandits = await this.bookingInfoProvider.getAllBusyPandits(
+        nearbyPanditIds,
+        filters
+      );
+
+      if (!busyPandits.data) {
+        logger.error(
+          "[PanditInfoProvider.ts] ❌ Failed to fetch busy pandits."
+        );
+        throw new CustomError(NO_PANDITS_NEARBY);
+      }
+
+      const busyPanditIds = busyPandits.data.map((b) => b.panditId);
+
+      logger.info(
+        `[PanditInfoProvider.ts] 🚫 Found ${busyPanditIds.length} busy pandits, filtering them out.`
+      );
+      availablePandits = entities.filter((p) => !busyPanditIds.includes(p.id));
+    }
+
+    const resultWithDistance = availablePandits.map((entity) => ({
       ...entity,
-      distance: parseFloat(raw[index]?.distance),
+      distance: distanceMap[entity.id] ?? null,
     }));
 
-    logger.info(`✅ Fetched the results of pandits in ${10} km radius.`);
+    logger.info(
+      `[PanditInfoProvider.ts] ✅ Final result: ${resultWithDistance.length} pandits available within ${radiusKm} km.`
+    );
     return resultWithDistance;
+  }
+
+  isPanditWithinRadius(
+    userLat: number,
+    userLng: number,
+    panditLat: number,
+    panditLng: number,
+    radiusKm: number
+  ): boolean {
+    const distance = getDistanceInKm(
+      { lat1: userLat, lon1: userLng },
+      { lat2: panditLat, lon2: panditLng }
+    );
+    return distance <= radiusKm;
   }
 }

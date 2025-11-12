@@ -7,9 +7,10 @@ type Query {
   getAllPandits(data: GetAllPanditsInput): MultiplePanditResponse!
   getAllUsers(data: PaginationInput): MultipleUserResponse!
   getDocument(data: GetDocumentInput!): MultipleDocumentResponse!
+  getAllTimeSlots: MultipleTimeSlotResponse!
   getAllServices(data: GetServicesInput): MultipleServiceResponse!
   getAllCategories(data: PaginationInput!): MultipleCategoryResponse!
-  findNearbyPandits: NearByPanditResponse!
+  findNearbyPandits(filters: NearByPanditInput): NearByPanditResponse!
   searchLocationSuggestions(query: String!): [LocationSuggestionResponse!]!
   getAllAddressesForUser: MultipleUserLocationResponse!
   verifyAccessToken: Boolean!
@@ -167,6 +168,20 @@ input GetDocumentInput {
   filePathArray: String!
 }
 
+type MultipleTimeSlotResponse {
+  success: Boolean!
+  message: String!
+  data: [TimeSlot!]
+  total: Float
+}
+
+type TimeSlot {
+  id: String!
+  label: String!
+  startTime: String!
+  endTime: String!
+}
+
 type MultipleServiceResponse {
   success: Boolean!
   message: String!
@@ -209,6 +224,13 @@ type PanditWithDistance {
   distance: Float!
 }
 
+input NearByPanditInput {
+  timeSlotId: String!
+  bookingDate: DateTimeISO!
+  radiusKm: Float! = 10
+  categoryId: String
+}
+
 type LocationSuggestionResponse {
   description: String!
   latitude: Float!
@@ -229,6 +251,7 @@ type Mutation {
   addService(data: AddServiceInput!): SingleServiceResponse!
   addCategory(data: AddCategoryInput!): SingleCategoryResponse!
   setPanditApprovalStatus(data: SetPanditApprovalStatusInput!): SinglePanditResponse!
+  createTimeSlot(data: CreateTimeSlotInput!): SingleTimeSlotResponse!
   registerPandit(data: RegisterPanditInput!): SinglePanditResponse!
   loginPandit(data: LoginPanditInput!): SinglePanditResponse!
   verifyPandit(data: VerifyInputs!): SinglePanditResponse!
@@ -350,6 +373,21 @@ input SetPanditApprovalStatusInput {
   status: PanditStatus!
 }
 
+type SingleTimeSlotResponse {
+  success: Boolean!
+  message: String!
+  data: TimeSlot
+}
+
+input CreateTimeSlotInput {
+  label: String!
+  startTime: Time!
+  endTime: Time!
+}
+
+"""Custom scalar for time in HH:mm:ss format"""
+scalar Time
+
 input RegisterPanditInput {
   password: String!
   documents: [Upload!]!
@@ -396,7 +434,9 @@ type Booking {
   categoryId: String!
   location: String!
   status: BookingStatus!
-  timeSlot: DateTimeISO!
+  timeSlotId: String!
+  bookingDate: DateTimeISO!
+  radius_km: Float!
   totalPrice: Float!
   estimatedTime: Int!
   paid: Boolean!
@@ -433,6 +473,9 @@ input PlaceBookingInput {
   paymentType: PaymentType!
   estimatedTime: Int!
   transactionId: String
+  timeSlotId: String!
+  bookingDate: DateTimeISO!
+  radiusKm: Float! = 10
 }
 
 input CancelPanditBookingInput {

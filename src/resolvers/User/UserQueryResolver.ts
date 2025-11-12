@@ -1,5 +1,6 @@
 import { Arg, Authorized, Ctx, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
+import { plainToInstance } from "class-transformer";
 
 import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
 
@@ -8,6 +9,8 @@ import { NearByPanditResponse } from "../../types/responses/PanditResponse";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
+import { NearByPanditInput } from "../../types/inputTypes/pandit/NearByPanditInput";
+import { NearByPanditFiltersDto } from "../../types/dtos/Pandit";
 import { UserRole } from "../../utils/enums";
 import { LocationSuggestion } from "../../types/interfaces";
 import { LocationSuggestionResponse } from "../../types/responses/LocationResponse";
@@ -23,14 +26,21 @@ export class UserQueryResolver {
   ) {}
 
   @Query(() => NearByPanditResponse)
-  @Authorized(UserRole.USER)
-  async findNearbyPandits(@Ctx() ctx: Context): Promise<NearByPanditResponse> {
+  async findNearbyPandits(
+    @Ctx() ctx: Context,
+    @Arg("filters", { nullable: true }) filters?: NearByPanditInput
+  ): Promise<NearByPanditResponse> {
     const userId = ctx.user?.id;
     const userRole = ctx.user?.userRole;
 
     if (!userId || !userRole) throw new CustomError(UNAUTHORIZED);
 
-    return this.userLocationProvider.findNearbyPandits(userId);
+    const dto: NearByPanditFiltersDto = plainToInstance(
+      NearByPanditFiltersDto,
+      { userId, ...filters }
+    );
+
+    return this.userLocationProvider.findNearbyPandits(dto);
   }
 
   @Query(() => [LocationSuggestionResponse])

@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { FindOptionsWhere, Repository } from "typeorm";
+import { FindOptionsWhere, In, Repository } from "typeorm";
 import isEqual from "lodash/isEqual";
 
 import { Booking } from "../../entities/Booking";
@@ -10,11 +10,12 @@ import { logger } from "../../utils/logger";
 
 import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
 
-import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/Booking";
+import { MyBookingsDto, PlaceBookingDto } from "../../types/dtos/booking";
 import { BookingFilters } from "../../types/globalTypes";
 
 import { CustomError } from "../../utils/customError";
 import { BookingStatus } from "../../utils/enums";
+import { PANDIT_LIST } from "../../utils/messages";
 
 @Service()
 export class BookingInfoProvider {
@@ -109,7 +110,8 @@ export class BookingInfoProvider {
     const possibleConflicts = await this.bookingInfoRepository.find({
       where: {
         userId: params.userId,
-        timeSlot: params.timeSlot,
+        timeSlotId: params.timeSlotId,
+        bookingDate: params.bookingDate,
         status: BookingStatus.PENDING,
       },
     });
@@ -158,5 +160,68 @@ export class BookingInfoProvider {
         `You have a pending penalty of ₹${booking.cancelled_booking.amount} from booking #${booking.id}. Please clear the due before placing a new booking.`
       );
     }
+  }
+
+  async getAllBusyPandits(
+    ids: string[],
+    filters?: { timeSlotId: string; bookingDate: Date }
+  ): Promise<MultipleBookingResponse> {
+    logger.info(
+      `[bookingInfoProvider.ts] 📦 Fetching pandits with active bookings`
+    );
+
+    const where = this.buildBookingWhere(ids, filters);
+
+    const panditList = await this.bookingInfoRepository.find({
+      where,
+      select: { panditId: true },
+    });
+
+    logger.info(
+      `[bookingInfoProvider.ts] ✅ Retrieved ${panditList.length} bookings.`
+    );
+
+    return new MultipleBookingResponse(true, PANDIT_LIST, panditList);
+  }
+
+  async isPanditBusy(params: {
+    id: string;
+    filters?: { timeSlotId: string; bookingDate: Date };
+  }): Promise<Boolean> {
+    const { id, filters } = params;
+    logger.info(`[bookingInfoProvider.ts] 📦 Checking if pandit is busy.`);
+
+    const where = this.buildBookingWhere(id, filters);
+
+    const isBusy = await this.bookingInfoRepository.exists({
+      where,
+    });
+
+    if (isBusy) {
+      logger.info(
+        `[bookingInfoProvider.ts] ✅ Pandit does have an active booking.`
+      );
+    } else {
+      logger.info(
+        `[bookingInfoProvider.ts] ✅ Pandit does not have any active bookings for the given parameters.`
+      );
+    }
+
+    return isBusy;
+  }
+
+  private buildBookingWhere(
+    panditIds: string[] | string,
+    filters?: { timeSlotId: string; bookingDate: Date }
+  ): FindOptionsWhere<Booking> {
+    const where: FindOptionsWhere<Booking> = {
+      panditId: Array.isArray(panditIds) ? In(panditIds) : panditIds,
+      status: BookingStatus.ACCEPTED,
+    };
+
+    if (filters?.timeSlotId) where.timeSlotId = filters.timeSlotId;
+    if (filters?.bookingDate) where.bookingDate = filters.bookingDate;
+
+    return where;
   }
 }

@@ -74,7 +74,7 @@ export const razorpayWebhookHandler = async (
 
         let bookingUserId: string | null = null;
 
-        await AppDataSource.manager.transaction(
+        const bookingDetails = await AppDataSource.manager.transaction(
           async (transactionalEntityManager) => {
             const transaction =
               await updateTransactionProvider.updateTransaction({
@@ -95,7 +95,7 @@ export const razorpayWebhookHandler = async (
 
             bookingUserId = transaction.data.userId;
 
-            await updateBookingProvider.updateBooking({
+            const updatedBooking = await updateBookingProvider.updateBooking({
               updatedBookingData: {
                 paid: true,
               },
@@ -104,13 +104,17 @@ export const razorpayWebhookHandler = async (
             });
 
             logger.info("✅ Booking and transaction updated to SUCCESS!");
+            return updatedBooking.data;
           }
         );
 
-        if (bookingUserId) {
-          const nearByPandits = await userLocationProvider.findNearbyPandits(
-            bookingUserId
-          );
+        if (bookingUserId && bookingDetails) {
+          const nearByPandits = await userLocationProvider.findNearbyPandits({
+            userId: bookingDetails.userId,
+            timeSlotId: bookingDetails.timeSlotId,
+            bookingDate: bookingDetails.bookingDate,
+            radiusKm: bookingDetails.radiusKm,
+          });
 
           await notificationProvider.publish(
             "booking_notification",

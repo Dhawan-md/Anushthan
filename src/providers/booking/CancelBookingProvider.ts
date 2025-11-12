@@ -7,7 +7,7 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { logger } from "../../utils/logger";
 
-import { CreateCancellationDto } from "../../types/dtos/Booking";
+import { CreateCancellationDto } from "../../types/dtos/booking";
 
 @Service()
 export class CancelBookingProvider {

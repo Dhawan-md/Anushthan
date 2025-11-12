@@ -13,6 +13,7 @@ import { TransactionActionProvider } from "../transaction/TransactionActionProvi
 import { NotificationProvider } from "../notification/notificationProvider";
 import { PanditInfoProvider } from "../pandit/PanditInfoProvider";
 import { UserLocationProvider } from "../user/UserLocationProvider";
+import { TimeSlotProvider } from "../admin/timeSlot/TimeSlotProvider";
 
 import redis from "../../config/redis";
 
@@ -35,7 +36,7 @@ import {
   CancelPanditBookingDto,
   CancelUserBookingDto,
   PlaceBookingDto,
-} from "../../types/dtos/Booking";
+} from "../../types/dtos/booking";
 
 import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
 
@@ -49,12 +50,14 @@ import {
   UserRole,
 } from "../../utils/enums";
 import {
+  ACTIVE_BOOKING_FOUND,
   BOOKING_ACCEPTED,
   BOOKING_CANCELLED_PANDIT,
   BOOKING_CANCELLED_USER,
   BOOKING_OTP_SENT,
   BOOKING_PLACED,
   INTERNAL_ERROR_OCCURRED,
+  TIME_SLOT_NOT_FOUND,
 } from "../../utils/messages";
 import {
   CANCELLATION_WINDOW_HOURS,
@@ -63,6 +66,7 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
+import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 @Service()
 export class BookingActionProvider {
@@ -93,7 +97,8 @@ export class BookingActionProvider {
     @Inject(() => PanditInfoProvider)
     private panditInfoProvider: PanditInfoProvider,
     @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    private userLocationProvider: UserLocationProvider,
+    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -111,9 +116,8 @@ export class BookingActionProvider {
       categoryId
     );
 
-    const isDuplicate = await this.bookingInfoProvider.isDuplicateBooking(
-      params
-    );
+    const isDuplicate =
+      await this.bookingInfoProvider.isDuplicateBooking(params);
 
     if (isDuplicate) {
       logger.warn(
@@ -205,9 +209,12 @@ export class BookingActionProvider {
         );
       }
     } else {
-      const nearbyPandits = await this.userLocationProvider.findNearbyPandits(
-        userId
-      );
+      const nearbyPandits = await this.userLocationProvider.findNearbyPandits({
+        userId,
+        timeSlotId: booking.timeSlotId,
+        bookingDate: booking.bookingDate,
+        radiusKm: booking.radiusKm,
+      });
 
       await this.notificationProvider.publish(
         "booking_notification",
@@ -243,10 +250,53 @@ export class BookingActionProvider {
       bookingId,
     });
 
+    const IsBusyPandit = await this.bookingInfoProvider.isPanditBusy({
+      id: panditId,
+      filters: {
+        timeSlotId: bookingDetails.timeSlotId,
+        bookingDate: bookingDetails.bookingDate,
+      },
+    });
+
+    if (IsBusyPandit) {
+      logger.info(
+        `Pandit ${panditId} already has an active booking in this time slot.`
+      );
+
+      throw new CustomError(ACTIVE_BOOKING_FOUND);
+    }
+
     const panditDetails = await this.panditInfoProvider.getPandit({
       data: { id: panditId },
       withCategory: true,
     });
+
+    const userLocationDetails =
+      await this.userLocationProvider.getResolvedLocationDetails(
+        bookingDetails.userId
+      );
+    const panditLocationDetails =
+      await this.userLocationProvider.getResolvedLocationDetails(
+        panditDetails.id,
+        UserRole.PANDIT
+      );
+
+    const isPanditWithinRadius = this.panditInfoProvider.isPanditWithinRadius(
+      userLocationDetails.latitude,
+      userLocationDetails.longitude,
+      panditLocationDetails.latitude,
+      panditLocationDetails.longitude,
+      bookingDetails.radiusKm
+    );
+
+    if (!isPanditWithinRadius) {
+      logger.warn(
+        `[bookingActionProvider.ts] ❌ Pandit ${panditId} is not within the required radius of ${bookingDetails.radiusKm} km.`
+      );
+      throw new CustomError(
+        "You are not eligible to accept this booking category"
+      );
+    }
 
     if (bookingDetails.status !== BookingStatus.PENDING) {
       logger.warn(
@@ -554,10 +604,21 @@ export class BookingActionProvider {
       );
     }
 
-    const now = new Date();
+    const timeSlot = await this.timeSlotProvider.getTimeSlot(
+      booking.timeSlotId
+    );
 
-    const diffHours =
-      (booking.timeSlot.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (!timeSlot.data) {
+      logger.error(
+        `[bookingActionProvider.ts]❌ Booking ${bookingId} cancelling action failed due to time slot fetch faliure.`
+      );
+      throw new CustomError(TIME_SLOT_NOT_FOUND);
+    }
+
+    const diffHours = getHoursDiffFromStartTime(
+      booking.bookingDate,
+      timeSlot.data.startTime
+    );
 
     const isLateCancellation = diffHours < CANCELLATION_WINDOW_HOURS;
 
