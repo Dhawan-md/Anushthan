@@ -39,7 +39,6 @@ import {
 } from "../../types/dtos/booking";
 
 import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
-import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 import {
   ActiveStatus,
@@ -67,6 +66,7 @@ import {
 } from "../../utils/constants";
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
+import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
 
 @Service()
 export class BookingActionProvider {

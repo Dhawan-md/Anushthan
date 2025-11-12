@@ -1,6 +1,7 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
+
 import { BookingInfoProvider } from "../booking/BookingInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
@@ -16,7 +17,6 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 
 import { logger } from "../../utils/logger";
-import { getDistanceInKm } from "../../utils/getDistanceInKm";
 
 import {
   FETCH_DOCUMENT_SUCCESS,
@@ -32,6 +32,7 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
+import { getDistanceInKm } from "../../utils/getDistanceInKm";
 
 @Service()
 export class PanditInfoProvider {
@@ -67,6 +68,9 @@ export class PanditInfoProvider {
     logger.info(
       `[PanditInfoProvider.ts] ✅ Retrieved ${panditList.length} pandits from the database.`
     );
+    logger.info(
+      `[PanditInfoProvider.ts] ✅ Retrieved ${panditList.length} pandits from the database.`
+    );
     return new MultiplePanditResponse(
       true,
       PANDIT_LIST,
@@ -89,6 +93,7 @@ export class PanditInfoProvider {
       logger.info(
         `[PanditInfoProvider.ts] 🔍 Checking if pandit exists with userId: ${userId}`
       );
+
       query.where("user.id = :userId", { userId });
     }
 
