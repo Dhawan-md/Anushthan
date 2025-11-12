@@ -17,6 +17,7 @@ import { sendEmail } from "../../service/email/sendEmail";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
 
 import { logger } from "../../utils/logger";
+import { getDistanceInKm } from "../../utils/getDistanceInKm";
 
 import {
   FETCH_DOCUMENT_SUCCESS,
@@ -32,7 +33,6 @@ import {
 } from "../../utils/interfaces";
 import { EmailType, PanditStatus, S3BucketType } from "../../utils/enums";
 import { GetAllPanditsDto } from "../../types/dtos/Admin";
-import { getDistanceInKm } from "../../utils/getDistanceInKm";
 
 @Service()
 export class PanditInfoProvider {

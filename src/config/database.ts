@@ -12,12 +12,12 @@ import { Transaction } from "../entities/Transaction";
 import { Category } from "../entities/Category";
 import { CancelledBooking } from "../entities/CancelledBooking";
 import { UserLocation } from "../entities/UserLocation";
+import { TimeSlot } from "../entities/TimeSlot";
 
 import { logger } from "../utils/logger";
 
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
-import { TimeSlot } from "../entities/TimeSlot";
 import { Cart } from "../entities/Cart";
 
 dotenv.config();
