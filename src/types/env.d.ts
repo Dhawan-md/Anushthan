@@ -11,7 +11,7 @@ declare namespace NodeJS {
 
     // JWT
     ACCESS_TOKEN_SECRET: string;
-    REFRESH_TOKEN_SECRET
+    REFRESH_TOKEN_SECRET;
     JWT_EXPIRY?: string;
 
     // AWS
@@ -19,6 +19,7 @@ declare namespace NodeJS {
     AWS_SECRET_KEY: string;
     AWS_REGION: string;
     AWS_BUCKET_NAME: string;
+    AWS_CF_DOMAIN: string;
 
     // Sendgrid
     SENDGRID_API_KEY: string;

@@ -11,6 +11,7 @@ import { MyBookingsDto } from "../../types/dtos/booking";
 
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
+import { UserRole } from "../../utils/enums";
 
 @Service()
 @Resolver()
@@ -20,7 +21,7 @@ export class BookingQueryResolver {
     private bookingInfoProvider: BookingInfoProvider
   ) {}
 
-  @Authorized()
+  @Authorized(UserRole.USER)
   @Query(() => MultipleBookingResponse)
   async myBookings(
     @Arg("data", () => PaginationInput, { nullable: true })

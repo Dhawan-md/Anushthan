@@ -13,8 +13,17 @@ export class SingleBookingResponse extends BaseResponse<Booking> {
   @Field(() => Booking, { nullable: true })
   declare data?: Booking | null;
 
-  constructor(success: boolean, message: string, data?: Booking | null) {
+  @Field(() => String, { nullable: true })
+  declare orderId?: String | null;
+
+  constructor(
+    success: boolean,
+    message: string,
+    data?: Booking | null,
+    orderId?: String | null
+  ) {
     super(success, message, data);
+    this.orderId = orderId || null;
   }
 }
 

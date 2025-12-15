@@ -1,28 +1,28 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
-import { FileUpload } from "graphql-upload-minimal";
+import { Arg, Mutation, Resolver } from "type-graphql";
+// import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 
-import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
+// import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
 import { PanditPasswordProvider } from "../../providers/pandit/PanditPasswordProvider";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 
-import { Context } from "../../types/context";
-import { promiseTimeout } from "../../utils/promiseTimeout";
-import { CustomError } from "../../utils/customError";
-import { UNAUTHORIZED } from "../../utils/messages";
-import { UserRole } from "../../utils/enums";
-import { RegisterPanditInput } from "../../types/inputTypes/pandit/RegisterPanditInput";
-import { LoginPanditInput } from "../../types/inputTypes/pandit/LoginPanditInput";
+// import { Context } from "../../types/context";
+// import { promiseTimeout } from "../../utils/promiseTimeout";
+// import { CustomError } from "../../utils/customError";
+// import { UNAUTHORIZED } from "../../utils/messages";
+// import { UserRole } from "../../utils/enums";
+// import { RegisterPanditInput } from "../../types/inputTypes/pandit/RegisterPanditInput";
+// import { LoginPanditInput } from "../../types/inputTypes/pandit/LoginPanditInput";
 import { EmailInput } from "../../types/inputTypes/EmailInput";
 import { VerifyInputs } from "../../types/inputTypes/VerifyInputs";
 import { ResetPasswordInput } from "../../types/inputTypes/pandit/ResetPasswordInput";
 import {
   ForgetPasswordDto,
-  LoginPanditDto,
+  // LoginPanditDto,
   ResetPasswordDto,
-  VerifyPanditDto,
+  // VerifyPanditDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
 import { plainToInstance } from "class-transformer";
@@ -31,50 +31,50 @@ import { plainToInstance } from "class-transformer";
 @Resolver()
 export class PanditMutationResolver {
   constructor(
-    @Inject(() => PanditAuthProvider)
-    private panditAuthProvider: PanditAuthProvider,
+    // @Inject(() => PanditAuthProvider)
+    // private panditAuthProvider: PanditAuthProvider,
     @Inject(() => PanditPasswordProvider)
-    private panditPaswordProvider: PanditPasswordProvider,
+    private panditPaswordProvider: PanditPasswordProvider
   ) {}
 
-  @Mutation(() => SinglePanditResponse)
-  @Authorized(UserRole.USER)
-  async registerPandit(
-    @Arg("data") data: RegisterPanditInput,
-    @Ctx() ctx: Context
-  ): Promise<SinglePanditResponse> {
-    const userId = ctx.user?.id;
+  // @Mutation(() => SinglePanditResponse)
+  // @Authorized(UserRole.USER)
+  // async registerPandit(
+  //   @Arg("data") data: RegisterPanditInput,
+  //   @Ctx() ctx: Context
+  // ): Promise<SinglePanditResponse> {
+  //   const userId = ctx.user?.id;
 
-    if (!userId) throw new CustomError(UNAUTHORIZED);
+  //   if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    const resolvedDocument: FileUpload[] = [];
-    for (const docPromise of data.documents) {
-      const doc = await promiseTimeout(docPromise, 15000);
-      resolvedDocument.push(doc);
-    }
+  //   const resolvedDocument: FileUpload[] = [];
+  //   for (const docPromise of data.documents) {
+  //     const doc = await promiseTimeout(docPromise, 15000);
+  //     resolvedDocument.push(doc);
+  //   }
 
-    return this.panditAuthProvider.registerPandit({
-      userId,
-      password: data.password,
-      documents: resolvedDocument,
-      categoryIds: data.categoryIds,
-      experience: data.experience,
-    });
-  }
+  //   return this.panditAuthProvider.registerPandit({
+  //     userId,
+  //     password: data.password,
+  //     documents: resolvedDocument,
+  //     categoryIds: data.categoryIds,
+  //     experience: data.experience,
+  //   });
+  // }
 
-  @Mutation(() => SinglePanditResponse)
-  async loginPandit(@Arg("data") data: LoginPanditInput) {
-    const dto: LoginPanditDto = plainToInstance(LoginPanditDto, data);
+  // @Mutation(() => SinglePanditResponse)
+  // async loginPandit(@Arg("data") data: LoginPanditInput) {
+  //   const dto: LoginPanditDto = plainToInstance(LoginPanditDto, data);
 
-    return this.panditAuthProvider.loginPandit(dto);
-  }
+  //   return this.panditAuthProvider.loginPandit(dto);
+  // }
 
-  @Mutation(() => SinglePanditResponse)
-  async verifyPandit(@Arg("data") data: VerifyInputs) {
-    const dto: VerifyPanditDto = plainToInstance(VerifyPanditDto, data);
+  // @Mutation(() => SinglePanditResponse)
+  // async verifyPandit(@Arg("data") data: VerifyInputs) {
+  //   const dto: VerifyPanditDto = plainToInstance(VerifyPanditDto, data);
 
-    return this.panditAuthProvider.verifyPandit(dto);
-  }
+  //   return this.panditAuthProvider.verifyPandit(dto);
+  // }
 
   @Mutation(() => SinglePanditResponse)
   async forgetPassword(@Arg("data") data: EmailInput) {

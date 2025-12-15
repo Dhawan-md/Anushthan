@@ -19,8 +19,6 @@ import {
   SERVICE_IDS_FOUND,
   SERVICE_LIST,
 } from "../../utils/messages";
-import { S3BucketType } from "../../utils/enums";
-import { generateSignedUrl } from "../../helpers/generateSignedUrl";
 
 @Service()
 export class ServiceInfoProvider {
@@ -95,25 +93,6 @@ export class ServiceInfoProvider {
       take: limit,
     });
 
-    const serviceListWithUrls = await Promise.all(
-      serviceList.map(async (service) => {
-        try {
-          const signedUrl = await generateSignedUrl(
-            service.imagePath,
-            S3BucketType.IMAGE
-          );
-          (service as any).imageUrl = signedUrl; // not stored in DB, just added to response
-        } catch (err) {
-          logger.warn(
-            `⚠️ Failed to generate signed URL for ${service.id}`,
-            err
-          );
-        }
-
-        return service;
-      })
-    );
-
     const totalPages = Math.ceil(total / limit);
 
     logger.info(
@@ -122,7 +101,7 @@ export class ServiceInfoProvider {
     return new MultipleServiceResponse(
       true,
       SERVICE_LIST,
-      serviceListWithUrls,
+      serviceList,
       total,
       page,
       limit,

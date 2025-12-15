@@ -10,10 +10,12 @@ type Query {
   getAllTimeSlots: MultipleTimeSlotResponse!
   getAllServices(data: GetServicesInput): MultipleServiceResponse!
   getAllCategories(data: PaginationInput!): MultipleCategoryResponse!
+  fetchUserDetails: SingleUserResponse!
   findNearbyPandits(filters: NearByPanditInput): NearByPanditResponse!
   searchLocationSuggestions(query: String!): [LocationSuggestionResponse!]!
   getAllAddressesForUser: MultipleUserLocationResponse!
   verifyAccessToken: Boolean!
+  myBookings(data: PaginationInput): MultipleBookingResponse!
 }
 
 type MultiplePanditResponse {
@@ -53,6 +55,8 @@ type User {
   cart: Cart!
   addresses: [UserLocation!]
   selectedAddress: UserLocation
+  deviceToken: String
+  deviceType: String
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -103,7 +107,8 @@ type Service {
   description: String!
   price: Int!
   duration: Int!
-  imagePath: String!
+  imageThumbUrl: String
+  imageSmallUrl: String
   imageUrl: String
   category: Category!
   createdAt: DateTimeISO!
@@ -127,6 +132,8 @@ type UserLocation {
   user: User!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
+  isDeleted: Boolean!
+  deletedAt: DateTimeISO
 }
 
 """Status of pandit approval"""
@@ -212,6 +219,24 @@ type MultipleCategoryResponse {
   totalPages: Float
 }
 
+type SingleUserResponse {
+  success: Boolean!
+  message: String!
+  data: User
+  accessToken: AccessToken
+  refreshToken: RefreshToken
+}
+
+type AccessToken {
+  token: String!
+  expiresIn: Float!
+}
+
+type RefreshToken {
+  token: String!
+  expiresIn: Float!
+}
+
 type NearByPanditResponse {
   success: Boolean!
   message: String!
@@ -244,6 +269,58 @@ type MultipleUserLocationResponse {
   total: Float
 }
 
+type MultipleBookingResponse {
+  success: Boolean!
+  message: String!
+  data: [Booking!]
+  total: Float
+  page: Float
+  limit: Float
+  totalPages: Float
+}
+
+type Booking {
+  id: String!
+  userId: String!
+  panditId: String
+  serviceIds: [String!]!
+  categoryId: String!
+  location: String!
+  status: BookingStatus!
+  timeSlotId: String!
+  bookingDate: DateTimeISO!
+  radius_km: Float!
+  totalPrice: Float!
+  subTotalPrice: Float!
+  gstTax: Float!
+  platformFee: Float!
+  discount: Float!
+  estimatedTime: Int!
+  paid: Boolean!
+  paymentType: PaymentType!
+  cancelledAt: DateTimeISO
+  startedAt: DateTimeISO
+  completedAt: DateTimeISO
+  rating: Float
+  review: String
+  createdAt: DateTimeISO!
+  updatedAt: DateTimeISO!
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  STARTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentType {
+  COD
+  ONLINE
+}
+
 type Mutation {
   resendOtp(data: ResendOtpInput!): OtpResponse!
   registerAdmin(data: RegisterAdminInput!): SingleAdminResponse!
@@ -252,9 +329,6 @@ type Mutation {
   addCategory(data: AddCategoryInput!): SingleCategoryResponse!
   setPanditApprovalStatus(data: SetPanditApprovalStatusInput!): SinglePanditResponse!
   createTimeSlot(data: CreateTimeSlotInput!): SingleTimeSlotResponse!
-  registerPandit(data: RegisterPanditInput!): SinglePanditResponse!
-  loginPandit(data: LoginPanditInput!): SinglePanditResponse!
-  verifyPandit(data: VerifyInputs!): SinglePanditResponse!
   forgetPassword(data: EmailInput!): SinglePanditResponse!
   verifyResetPassword(data: VerifyInputs!): VerifyResetResponse!
   resetPassword(data: ResetPasswordInput!): SinglePanditResponse!
@@ -270,6 +344,10 @@ type Mutation {
   refreshAccessToken(refreshToken: String!): TokenResponse!
   getLocation(data: LocationInput!): LocationResponse!
   addAdress(data: AddAddressInput!): LocationResponse!
+  setSelectedAddress(addressId: String!): LocationResponse!
+  deleteAddress(addressId: String!): LocationResponse!
+  sendUserUpdateOtp(updatedFields: UpdatedUserInput!): SendUpdateOtpResponse!
+  verifyUserUpdateOtp(otp: String!): SingleUserResponse!
   getCart: MultipleCartResponse!
   clearCart: MultipleCartResponse!
   addToCart(categoryId: String!, serviceIds: [String!]!): MultipleCartResponse!
@@ -309,11 +387,6 @@ type Admin {
   employId: String!
   adminRole: String!
   createdAt: DateTimeISO!
-}
-
-type AccessToken {
-  token: String!
-  expiresIn: Float!
 }
 
 input RegisterAdminInput {
@@ -363,11 +436,6 @@ type SinglePanditResponse {
   refreshToken: RefreshToken
 }
 
-type RefreshToken {
-  token: String!
-  expiresIn: Float!
-}
-
 input SetPanditApprovalStatusInput {
   panditId: String!
   status: PanditStatus!
@@ -388,23 +456,6 @@ input CreateTimeSlotInput {
 """Custom scalar for time in HH:mm:ss format"""
 scalar Time
 
-input RegisterPanditInput {
-  password: String!
-  documents: [Upload!]!
-  categoryIds: [String!]!
-  experience: Int!
-}
-
-input LoginPanditInput {
-  phoneNumber: String!
-  password: String!
-}
-
-input VerifyInputs {
-  phoneNumber: String!
-  otpCode: String!
-}
-
 input EmailInput {
   userEmail: String!
 }
@@ -413,6 +464,12 @@ type VerifyResetResponse {
   success: Boolean!
   message: String!
   data: AccessToken
+}
+
+input VerifyInputs {
+  phoneNumber: String!
+  otpCode: String!
+  deviceToken: String!
 }
 
 input ResetPasswordInput {
@@ -424,52 +481,17 @@ type SingleBookingResponse {
   success: Boolean!
   message: String!
   data: Booking
-}
-
-type Booking {
-  id: String!
-  userId: String!
-  panditId: String
-  serviceIds: [String!]!
-  categoryId: String!
-  location: String!
-  status: BookingStatus!
-  timeSlotId: String!
-  bookingDate: DateTimeISO!
-  radius_km: Float!
-  totalPrice: Float!
-  estimatedTime: Int!
-  paid: Boolean!
-  paymentType: PaymentType!
-  cancelledAt: DateTimeISO
-  startedAt: DateTimeISO
-  completedAt: DateTimeISO
-  rating: Float
-  review: String
-  createdAt: DateTimeISO!
-  updatedAt: DateTimeISO!
-}
-
-enum BookingStatus {
-  PENDING
-  ACCEPTED
-  STARTED
-  REJECTED
-  COMPLETED
-  CANCELLED
-}
-
-enum PaymentType {
-  COD
-  ONLINE
+  orderId: String
 }
 
 input PlaceBookingInput {
   serviceIds: [String!]!
   categoryId: String!
   location: String!
-  timeSlot: DateTimeISO!
-  totalPrice: Float!
+  subTotalPrice: Float!
+  gstTax: Float! = 0
+  platformFee: Float! = 0
+  discount: Float! = 0
   paymentType: PaymentType!
   estimatedTime: Int!
   transactionId: String
@@ -510,23 +532,17 @@ enum UserCancellationReason {
   OTHER
 }
 
-type SingleUserResponse {
-  success: Boolean!
-  message: String!
-  data: User
-  accessToken: AccessToken
-  refreshToken: RefreshToken
-}
-
 input RegisterUserInput {
   name: String!
   userEmail: String!
   phoneNumber: String!
+  deviceToken: String!
   profileImage: Upload
 }
 
 input LoginUserInput {
   phoneNumber: String!
+  deviceToken: String!
 }
 
 type TokenResponse {
@@ -539,7 +555,7 @@ type TokenResponse {
 type LocationResponse {
   success: Boolean!
   message: String!
-  data: String
+  data: UserLocation
 }
 
 input LocationInput {
@@ -553,6 +569,17 @@ input AddAddressInput {
   latitude: Float!
   longitude: Float!
   phoneNumber: String!
+}
+
+type SendUpdateOtpResponse {
+  success: Boolean!
+  message: String!
+}
+
+input UpdatedUserInput {
+  name: String
+  userEmail: String
+  phoneNumber: String
 }
 
 type MultipleCartResponse {

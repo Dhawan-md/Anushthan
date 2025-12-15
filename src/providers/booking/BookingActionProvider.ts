@@ -105,10 +105,26 @@ export class BookingActionProvider {
   }
 
   async placeBooking(params: PlaceBookingDto): Promise<SingleBookingResponse> {
-    const { serviceIds, categoryId, userId, totalPrice, paymentType } = params;
+    const {
+      serviceIds,
+      categoryId,
+      userId,
+      subTotalPrice,
+      gstTax,
+      discount,
+      platformFee,
+      paymentType,
+      location,
+    } = params;
+    console.log(location);
+
+    if (!location) throw new CustomError("Location was not selected.");
+
     logger.info(
       `[bookingActionProvider.ts] 📥 Placing a new booking for userId: ${userId}`
     );
+
+    const totalPrice = subTotalPrice + gstTax + platformFee - discount;
 
     await this.bookingInfoProvider.isPendingAmount(userId);
     await this.serviceInfoProvider.doServicesBelongToCategory(
@@ -128,11 +144,14 @@ export class BookingActionProvider {
       );
     }
 
+    let razorpayOrderId: any = null;
+
     const { booking, transaction } =
       await this.bookingActionRepository.manager.transaction(
         async (transactionalEntityManager) => {
           const booking = await transactionalEntityManager.save(Booking, {
             ...params,
+            totalPrice,
           });
 
           let transaction: Transaction | null = null;
@@ -163,6 +182,9 @@ export class BookingActionProvider {
         logger.info(
           `[bookingActionProvider.ts] 🧾 Queueing payment timeout job booking id: ${booking.id} and transaction id: ${transaction.id}`
         );
+
+        razorpayOrderId = order.id;
+        console.log(order);
 
         await paymentTimeoutQueue.add(
           "check-payment-timeout",
@@ -235,7 +257,12 @@ export class BookingActionProvider {
       `[bookingActionProvider.ts] ✅ Booking placed with ID: ${booking.id}`
     );
 
-    return new SingleBookingResponse(true, BOOKING_PLACED, booking);
+    return new SingleBookingResponse(
+      true,
+      BOOKING_PLACED,
+      booking,
+      razorpayOrderId
+    );
   }
 
   async acceptBooking(

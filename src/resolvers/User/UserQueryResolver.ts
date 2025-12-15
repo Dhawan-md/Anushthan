@@ -16,14 +16,28 @@ import { LocationSuggestion } from "../../types/interfaces";
 import { LocationSuggestionResponse } from "../../types/responses/LocationResponse";
 import { MultipleUserLocationResponse } from "../../types/responses/UserLocationResponse";
 import { verifyAccessToken } from "../../helpers/verifyJwtToken";
+import { SingleUserResponse } from "../../types/responses/UserResponse";
+import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
 
 @Service()
 @Resolver()
 export class UserQueryResolver {
   constructor(
     @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    private userLocationProvider: UserLocationProvider,
+    @Inject(() => UserInfoProvider)
+    private userInfoProvider: UserInfoProvider
   ) {}
+
+  @Query(() => SingleUserResponse)
+  async fetchUserDetails(@Ctx() ctx: Context): Promise<SingleUserResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError(UNAUTHORIZED);
+
+    return this.userInfoProvider.fetchUserDetails(userId);
+  }
 
   @Query(() => NearByPanditResponse)
   async findNearbyPandits(

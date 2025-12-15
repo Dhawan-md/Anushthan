@@ -35,11 +35,16 @@ export class Service {
   @Column({ type: "int", default: 30 })
   duration!: number;
 
-  @Field(() => String)
-  @Column({ type: "text", name: "image_path", nullable: true })
-  imagePath!: string;
+  @Field({ nullable: true })
+  @Column({ type: "text", nullable: true })
+  imageThumbUrl?: string;
 
   @Field({ nullable: true })
+  @Column({ type: "text", nullable: true })
+  imageSmallUrl?: string;
+
+  @Field({ nullable: true })
+  @Column({ type: "text", nullable: true })
   imageUrl?: string;
 
   @Field(() => Category)

@@ -39,9 +39,10 @@ import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
-import { UserMutationResolver } from "./resolvers/User/UserMutationResolver";
-import { UserQueryResolver } from "./resolvers/User/UserQueryResolver";
+import { UserMutationResolver } from "./resolvers/user/UserMutationResolver";
+import { UserQueryResolver } from "./resolvers/user/UserQueryResolver";
 import { CartMutationResolver } from "./resolvers/cart/CartMutationResolver";
+import { BookingQueryResolver } from "./resolvers/booking/BookingQueryResolver";
 
 const createApp = async () => {
   const app: Application = express();
@@ -56,6 +57,7 @@ const createApp = async () => {
       PanditMutationResolver,
       AminQueryResolver,
       BookingMutationResolver,
+      BookingQueryResolver,
       ServiceQueryResolver,
       CategoryQueryResolver,
       UserQueryResolver,

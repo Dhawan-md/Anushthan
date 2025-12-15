@@ -13,11 +13,17 @@ export class PlaceBookingInput {
   @Field()
   location: string;
 
-  @Field()
-  timeSlot: Date;
-
   @Field(() => Float)
-  totalPrice: number;
+  subTotalPrice: number;
+
+  @Field(() => Float, { defaultValue: 0 })
+  gstTax: number;
+
+  @Field(() => Float, { defaultValue: 0 })
+  platformFee?: number;
+
+  @Field(() => Float, { defaultValue: 0 })
+  discount: number;
 
   @Field(() => PaymentType)
   paymentType: PaymentType;

@@ -5,7 +5,6 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { UpdatePanditProvider } from "./UpdatePanditProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 
-
 import { sendEmail } from "../../service/email/sendEmail";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
@@ -30,7 +29,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
-import { generateVerifivationToken } from "../../helpers/generateJwtToken";
+import { generateVerificationToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditPasswordProvider {
@@ -85,7 +84,9 @@ export class PanditPasswordProvider {
       data: { phoneNumber },
     });
 
-    const verificationToken = generateVerifivationToken({ panditId: panditData.id });
+    const verificationToken = generateVerificationToken({
+      panditId: panditData.id,
+    });
 
     return new VerifyResetResponse(
       isValidOTp.success,

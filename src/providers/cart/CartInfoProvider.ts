@@ -4,9 +4,6 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 import { Cart } from "../../entities/Cart";
 import { UserInfoProvider } from "../user/UserInfoProvider";
 import { MultipleCartResponse } from "../../types/responses/CartReponse";
-import { logger } from "../../utils/logger";
-import { generateSignedUrl } from "../../helpers/generateSignedUrl";
-import { S3BucketType } from "../../utils/enums";
 
 @Service()
 export class CartInfoProvider {
@@ -44,34 +41,6 @@ export class CartInfoProvider {
 
       await this.cartRepository.save(cart);
     }
-
-    // 🔹 Only if there are services, generate signed URLs
-    if (cart.services && cart.services.length > 0) {
-      const servicesWithUrls = await Promise.all(
-        cart.services.map(async (service) => {
-          try {
-            const signedUrl = await generateSignedUrl(
-              service.imagePath,
-              S3BucketType.IMAGE
-            );
-            return {
-              ...service,
-              imageUrl: signedUrl, // ⬅️ add it here properly
-            };
-          } catch (err) {
-            logger.warn(
-              `⚠️ Failed to generate signed URL for ${service.id}`,
-              err
-            );
-            return service;
-          }
-        })
-      );
-
-      // 🔹 Attach back to the cart
-      (cart as any).services = servicesWithUrls;
-    }
-
     // 🔹 Return consistent response
     return new MultipleCartResponse(true, "Cart retrieved successfully", cart);
   }

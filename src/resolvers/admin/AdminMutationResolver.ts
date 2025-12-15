@@ -44,7 +44,7 @@ export class AdminMutationResolver {
   ) {}
 
   @Mutation(() => SingleAdminResponse)
-  @Authorized(AdminRole.SUPERADMIN)
+  // @Authorized(AdminRole.SUPERADMIN)
   async registerAdmin(@Arg("data") data: RegisterAdminInput) {
     const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
 

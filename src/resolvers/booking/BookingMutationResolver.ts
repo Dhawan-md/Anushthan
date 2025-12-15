@@ -37,6 +37,7 @@ export class BookingMutationResolver {
     @Ctx() ctx: Context
   ): Promise<SingleBookingResponse> {
     const userId = ctx.user?.id;
+    console.log("here");
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
