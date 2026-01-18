@@ -14,6 +14,7 @@ import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
 import { PanditStatus } from "../utils/enums";
 import { Category } from "./Category";
+import { PanditWallet } from "./PanditWallet";
 
 @ObjectType()
 @Entity()
@@ -64,6 +65,10 @@ export class Pandit {
   @Field()
   @Column({ type: "text" })
   address!: string;
+
+  @Field(() => PanditWallet, { nullable: true })
+  @OneToOne(() => PanditWallet, (wallet) => wallet.pandit)
+  wallet?: PanditWallet;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

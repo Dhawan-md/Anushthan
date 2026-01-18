@@ -43,6 +43,7 @@ import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
 import {
   ActiveStatus,
   BookingStatus,
+  PanditLedgerType,
   PaymentType,
   RefundReason,
   TransactionStatus,
@@ -67,6 +68,7 @@ import {
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
 import { getHoursDiffFromStartTime } from "../../utils/getHoursDiffFromStartTime";
+import { PanditFinanceProvider } from "../pandit/PanditFinanceProvider";
 
 @Service()
 export class BookingActionProvider {
@@ -98,7 +100,9 @@ export class BookingActionProvider {
     private panditInfoProvider: PanditInfoProvider,
     @Inject(() => UserLocationProvider)
     private userLocationProvider: UserLocationProvider,
-    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider
+    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider,
+    @Inject(() => PanditFinanceProvider)
+    private panditFinanceProvider: PanditFinanceProvider
   ) {
     this.bookingActionRepository =
       this.repositoryFactory.getRepository(Booking);
@@ -565,7 +569,7 @@ export class BookingActionProvider {
             transaction = await this.transactionInfoProvider.getTransaction({
               bookingId,
             });
-
+            const refundReferenceKey = `refund:cancellation:${bookingId}`;
             if (transaction && transaction.paymentReferenceId) {
               refund = await this.refundActionProvider.createRefund({
                 userId,
@@ -576,6 +580,7 @@ export class BookingActionProvider {
                 refundReason: RefundReason.CANCELLATION,
                 transactionId: transaction.id,
                 paymentReferenceId: transaction.paymentReferenceId,
+                referenceKey: refundReferenceKey,
                 attemptNumber: 1,
                 manager: transactionalEntityManager,
               });
@@ -595,17 +600,21 @@ export class BookingActionProvider {
         `[bookingActionProvider.ts] 🧾 Queuing refund attempt #1 for booking ${booking.id}, refundId: ${refund.id}`
       );
 
-      await retryRefundQueue.add("retry-refund", {
-        transactionId: transaction.id,
-        paymentReferenceId: transaction.paymentReferenceId,
-        refundAmount: refund.refundAmount,
-        refundReason: RefundReason.CANCELLATION,
-        bookingId,
-        refundId: refund.id,
-        userId,
-        attemptNumber: 1,
-        originalAmount: refund.originalAmount,
-      });
+      await retryRefundQueue.add(
+        "retry-refund",
+        {
+          transactionId: transaction.id,
+          paymentReferenceId: transaction.paymentReferenceId,
+          refundAmount: refund.refundAmount,
+          refundReason: RefundReason.CANCELLATION,
+          bookingId,
+          refundId: refund.id,
+          userId,
+          attemptNumber: 1,
+          originalAmount: refund.originalAmount,
+        },
+        { jobId: refund.referenceKey }
+      );
     }
 
     return new SingleBookingResponse(true, BOOKING_CANCELLED_USER);
@@ -634,13 +643,7 @@ export class BookingActionProvider {
     const timeSlot = await this.timeSlotProvider.getTimeSlot(
       booking.timeSlotId
     );
-
-    if (!timeSlot.data) {
-      logger.error(
-        `[bookingActionProvider.ts]❌ Booking ${bookingId} cancelling action failed due to time slot fetch faliure.`
-      );
-      throw new CustomError(TIME_SLOT_NOT_FOUND);
-    }
+    if (!timeSlot.data) throw new CustomError(TIME_SLOT_NOT_FOUND);
 
     const diffHours = getHoursDiffFromStartTime(
       booking.bookingDate,
@@ -655,43 +658,96 @@ export class BookingActionProvider {
       );
     }
 
-    return await this.bookingActionRepository.manager.transaction(
-      async (transactionalEntityManager) => {
-        await this.performCancellation({
-          userId: booking.userId,
-          panditId,
+    const { transaction, refund } =
+      await this.bookingActionRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          // 1) cancel booking + create CancelledBooking row
+          const fine = isLateCancellation ? PANDIT_CANCELLATION_FINE : 0;
+
+          await this.performCancellation({
+            userId: booking.userId,
+            panditId,
+            bookingId,
+            cancelledBy: UserRole.PANDIT,
+            amount: isLateCancellation ? PANDIT_CANCELLATION_FINE : 0,
+            cancelReason,
+            customReason,
+            transactionalEntityManager,
+          });
+
+          if (fine > 0) {
+            await this.panditFinanceProvider.applyLedgerEntry({
+              panditId,
+              bookingId,
+              type: PanditLedgerType.PENALTY,
+              amount: -fine, // ✅ negative
+              note: `Late cancellation penalty for booking ${bookingId}`,
+              referenceKey: `penalty:late_cancel:${bookingId}`, // ✅ simple idempotency
+              manager: transactionalEntityManager,
+            });
+          }
+
+          // 2) refund user if booking was paid online
+          let transaction: Transaction | null = null;
+          let refund: Refund | null = null;
+
+          const shouldRefundUser =
+            booking.paid && booking.paymentType === PaymentType.ONLINE;
+
+          if (shouldRefundUser) {
+            transaction = await this.transactionInfoProvider.getTransaction({
+              bookingId,
+            });
+
+            // Full refund (pandit cancelled)
+            const refundAmount = booking.totalPrice;
+
+            if (
+              transaction &&
+              transaction.paymentReferenceId &&
+              refundAmount > 0
+            ) {
+              const refundReferenceKey = `refund:cancellation:${bookingId}`;
+              refund = await this.refundActionProvider.createRefund({
+                userId: booking.userId, // money goes to user
+                userRole: UserRole.USER, // recipient role
+                bookingId,
+                originalAmount: booking.totalPrice,
+                refundAmount,
+                refundReason: RefundReason.CANCELLATION,
+                transactionId: transaction.id,
+                paymentReferenceId: transaction.paymentReferenceId,
+                referenceKey: refundReferenceKey,
+                attemptNumber: 1,
+                manager: transactionalEntityManager,
+              });
+            }
+          }
+
+          return { transaction, refund };
+        }
+      );
+
+    // 3) queue the actual Razorpay refund attempt after DB commit
+    if (booking.paid && transaction?.paymentReferenceId && refund) {
+      await retryRefundQueue.add(
+        "retry-refund",
+        {
+          transactionId: transaction.id,
+          paymentReferenceId: transaction.paymentReferenceId,
+          refundAmount: refund.refundAmount,
+          refundReason: RefundReason.CANCELLATION,
           bookingId,
-          cancelledBy: UserRole.PANDIT,
-          amount: isLateCancellation ? PANDIT_CANCELLATION_FINE : 0,
-          cancelReason,
-          customReason,
-          transactionalEntityManager,
-        });
+          refundId: refund.id,
+          userId: booking.userId,
+          attemptNumber: 1,
+          originalAmount: refund.originalAmount,
+        },
+        { jobId: refund.referenceKey }
+      );
+    }
 
-        // TODO: Implement refund logic if booking.paid === true
-        // if (booking.paid) {
-        //   await refundUser(booking.userId, booking.totalPrice);
-        // }
-
-        // TODO: Apply penalty logic here (e.g., increment provider penalty count, reduce rating)
-        // await applyProviderPenalty(panditId, PROVIDER_PENALTY_AMOUNT);
-
-        // TODO: Notify user and provider about cancellation
-        // notifyUser(
-        //   booking.userId,
-        //   `Your booking ${booking.id} was cancelled by the provider.`
-        // );
-        // notifyProvider(
-        //   panditId,
-        //   `You have cancelled booking ${booking.id}. A penalty has been applied.`
-        // );
-
-        logger.info(
-          `[bookingActionProvider.ts] Booking ${bookingId} cancelled by pandit ${panditId}, penalty: ₹${100}`
-        );
-        return new SingleBookingResponse(true, BOOKING_CANCELLED_PANDIT);
-      }
-    );
+    return new SingleBookingResponse(true, BOOKING_CANCELLED_PANDIT);
   }
 
   private async performCancellation({

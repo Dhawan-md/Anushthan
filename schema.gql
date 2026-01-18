@@ -40,6 +40,7 @@ type Pandit {
   status: PanditStatus!
   ratings: Float!
   address: String!
+  wallet: PanditWallet
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -144,6 +145,19 @@ enum PanditStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+type PanditWallet {
+  id: String!
+  panditId: String!
+  totalEarnings: Float!
+  totalPenalties: Float!
+  netPending: Float!
+  pandit: Pandit!
+  createdAt: DateTimeISO!
+  updatedAt: DateTimeISO!
+  pendingToPandit: Float!
+  pendingFromPandit: Float!
 }
 
 input GetAllPanditsInput {
