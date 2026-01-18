@@ -88,16 +88,16 @@ export class UserAuthProvider {
   }
 
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
-    const { phoneNumber, deviceToken } = params;
+    const {
+      phoneNumber,
+      // deviceToken
+    } = params;
 
     logger.info(`🔄Logging in user: ${phoneNumber}.`);
 
-    const otp = await this.otpProvider.generateAndSaveNewOtp(
-      phoneNumber,
-      OtpType.USER
-    );
+    await this.otpProvider.generateAndSaveNewOtp(phoneNumber, OtpType.USER);
 
-    await sendOtpPush(deviceToken, otp.otpCode);
+    // await sendOtpPush(deviceToken, otp.otpCode);
 
     logger.info(
       `✅ User with phone number ${phoneNumber} logged in requested.`

@@ -17,6 +17,7 @@ import {
   OLD_PASSWORD_ERROR,
   OTP_SENT,
   OTP_VERIFICATION_REQUIRED,
+  PANDIT_NOT_APPROVED,
   RESET_PASSWORD_SUCCESS,
 } from "../../utils/messages";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
@@ -119,6 +120,10 @@ export class PanditPasswordProvider {
     const panditData = await this.panditInfoProvider.getPandit({
       data: { id: panditId },
     });
+
+    if (!panditData.password) {
+      throw new CustomError(PANDIT_NOT_APPROVED);
+    }
 
     const isMatching = await isSamePassword({
       inputPassword: newPassword,

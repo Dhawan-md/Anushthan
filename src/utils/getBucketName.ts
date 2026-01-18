@@ -8,6 +8,6 @@ export const getBucketName = (type: S3BucketType): string => {
   }
 
   if (type === S3BucketType.IMAGE) return process.env["AWS_BUCKET_NAME"];
-  if (type === S3BucketType.DOCUMENT) return process.env["AWS_BUCKET_NAME"];
+  if (type === S3BucketType.PANDIT_DOCUMENTS) return process.env["AWS_BUCKET_NAME"];
   throw new CustomError(INVALID_BUCKET);
 };

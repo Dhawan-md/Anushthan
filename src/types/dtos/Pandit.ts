@@ -2,10 +2,11 @@ import { FileUpload } from "graphql-upload-minimal";
 
 export class RegisterPanditDto {
   userId: string;
-  password: string;
-  documents: FileUpload[];
+  // password: string;
+  documents: Promise<FileUpload>[];
   categoryIds: string[];
   experience: number;
+  address: string;
 }
 
 export class LoginPanditDto {
@@ -39,4 +40,9 @@ export class NearByPanditFiltersDto {
   bookingDate: Date;
   radiusKm: number = 10;
   categoryId?: string;
+}
+
+export class SetPanditPasswordDto {
+  panditId: string;
+  password: string;
 }

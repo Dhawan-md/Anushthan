@@ -19,7 +19,9 @@ export class SingleTransactionResponse extends BaseResponse<Transaction> {
 }
 
 @ObjectType()
-export class MultipleTransactionResponse extends TransactionResponse<Transaction[]> {
+export class MultipleTransactionResponse extends TransactionResponse<
+  Transaction[]
+> {
   @Field(() => [Transaction], { nullable: true })
   declare data?: Transaction[] | null;
 

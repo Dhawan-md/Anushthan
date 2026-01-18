@@ -11,6 +11,6 @@ export class VerifyInputs {
   @Length(4)
   otpCode: string;
 
-  @Field()
-  deviceToken: string;
+  // @Field()
+  // deviceToken: string;
 }

@@ -22,7 +22,7 @@ import { generateRedisOtpKey } from "../../utils/generateRedisOtpKey";
 import { generateUserSecret } from "../../helpers/generateUserSecret";
 import { generateOtp } from "../../helpers/generateOtp";
 import redis from "../../config/redis";
-import { sendOtpSMS } from "../../service/sms/sendOtpSms";
+// import { sendOtpSMS } from "../../service/sms/sendOtpSms";
 
 @Service()
 export class UpdateUserProvider {
@@ -118,8 +118,12 @@ export class UpdateUserProvider {
       })
     );
 
+    logger.info(
+      `🔐 OTP generated and stored in Redis for user ${userId}. Otp is ${otpDetails.otpCode}`
+    );
+
     // Send SMS
-    await sendOtpSMS(user.phoneNumber, otpDetails.otpCode);
+    // await sendOtpSMS(user.phoneNumber, otpDetails.otpCode);
 
     logger.info(
       `📩 OTP sent to ${user.phoneNumber} for updating user ${userId}`

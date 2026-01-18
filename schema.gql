@@ -14,7 +14,7 @@ type Query {
   findNearbyPandits(filters: NearByPanditInput): NearByPanditResponse!
   searchLocationSuggestions(query: String!): [LocationSuggestionResponse!]!
   getAllAddressesForUser: MultipleUserLocationResponse!
-  verifyAccessToken: Boolean!
+  verifyAccessToken: VerifyAccessTokenResponse!
   myBookings(data: PaginationInput): MultipleBookingResponse!
 }
 
@@ -33,11 +33,13 @@ type Pandit {
   user: User!
   categories: [Category!]!
   experience: Float!
-  password: String!
+  password: String
+  onboardingStatus: Boolean!
   isAvailable: Boolean!
-  documents: String
+  documents: [String!]
   status: PanditStatus!
   ratings: Float!
+  address: String!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
 }
@@ -50,7 +52,7 @@ type User {
   refreshToken: String
   userRole: String!
   profileImage: String
-  pandit: Pandit!
+  pandit: Pandit
   otp: Otp!
   cart: Cart!
   addresses: [UserLocation!]
@@ -269,6 +271,12 @@ type MultipleUserLocationResponse {
   total: Float
 }
 
+type VerifyAccessTokenResponse {
+  valid: Boolean!
+  role: String!
+  id: String!
+}
+
 type MultipleBookingResponse {
   success: Boolean!
   message: String!
@@ -329,9 +337,13 @@ type Mutation {
   addCategory(data: AddCategoryInput!): SingleCategoryResponse!
   setPanditApprovalStatus(data: SetPanditApprovalStatusInput!): SinglePanditResponse!
   createTimeSlot(data: CreateTimeSlotInput!): SingleTimeSlotResponse!
+  registerPandit(data: RegisterPanditInput!): SinglePanditResponse!
+  loginPandit(data: LoginPanditInput!): SinglePanditResponse!
+  verifyPandit(data: VerifyInputs!): SinglePanditResponse!
   forgetPassword(data: EmailInput!): SinglePanditResponse!
   verifyResetPassword(data: VerifyInputs!): VerifyResetResponse!
   resetPassword(data: ResetPasswordInput!): SinglePanditResponse!
+  setPanditPassword(data: SetPasswordInput!): SinglePanditResponse!
   placeBooking(data: PlaceBookingInput!): SingleBookingResponse!
   acceptBooking(bookingId: String!): SingleBookingResponse!
   initiateStartBooking(bookingId: String!): SingleBookingResponse!
@@ -456,6 +468,23 @@ input CreateTimeSlotInput {
 """Custom scalar for time in HH:mm:ss format"""
 scalar Time
 
+input RegisterPanditInput {
+  documents: [Upload!]!
+  categoryIds: [String!]!
+  experience: Int!
+  address: String!
+}
+
+input LoginPanditInput {
+  phoneNumber: String!
+  password: String!
+}
+
+input VerifyInputs {
+  phoneNumber: String!
+  otpCode: String!
+}
+
 input EmailInput {
   userEmail: String!
 }
@@ -466,15 +495,14 @@ type VerifyResetResponse {
   data: AccessToken
 }
 
-input VerifyInputs {
-  phoneNumber: String!
-  otpCode: String!
-  deviceToken: String!
-}
-
 input ResetPasswordInput {
   newPassword: String!
   otpToken: String!
+}
+
+input SetPasswordInput {
+  panditId: String!
+  password: String!
 }
 
 type SingleBookingResponse {
@@ -542,7 +570,6 @@ input RegisterUserInput {
 
 input LoginUserInput {
   phoneNumber: String!
-  deviceToken: String!
 }
 
 type TokenResponse {

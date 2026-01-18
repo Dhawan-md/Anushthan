@@ -14,7 +14,10 @@ import { AddServiceDto } from "../../types/dtos/Admin";
 
 import { logger } from "../../utils/logger";
 import { SERVICE_ADDED_SUCCESS } from "../../utils/messages";
-import { uploadBufferToS3, uploadFiles } from "../../helpers/uploadS3Files";
+import {
+  generateCleanFileName,
+  uploadBufferToS3,
+} from "../../helpers/uploadS3Files";
 import { S3BucketType } from "../../utils/enums";
 import { getCloudfrontUrl } from "../../helpers/getCloudFrontUrl";
 import { streamToBuffer } from "../../helpers/streamToBuffer";
@@ -46,7 +49,7 @@ export class ServiceActionProvider {
       await this.categoryInfoProvider.getCategoryDetails(categoryId);
 
     // 1️⃣ Generate final S3 file names (but do NOT upload original)
-    const [{ cleanName }] = await uploadFiles(image);
+    const [{ cleanName }] = await generateCleanFileName(image);
 
     // base folder
     const baseKey = `services/${cleanName.replace(/\.[^.]+$/, "")}`;

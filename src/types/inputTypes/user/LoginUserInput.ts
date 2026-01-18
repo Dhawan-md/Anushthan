@@ -7,6 +7,6 @@ export class LoginUserInput {
   @IsPhoneNumber("IN")
   phoneNumber: string;
 
-  @Field()
-  deviceToken: string;
+  // @Field()
+  // deviceToken: string;
 }

@@ -84,7 +84,7 @@ export enum EmailTemplate {
 
 export enum S3BucketType {
   IMAGE = "image",
-  DOCUMENT = "document",
+  PANDIT_DOCUMENTS = "document",
 }
 
 export enum AdminRole {

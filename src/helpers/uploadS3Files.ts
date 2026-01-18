@@ -8,7 +8,7 @@ import { getInitializedS3Client } from "../config/aws";
 import { getBucketName } from "../utils/getBucketName";
 import { S3BucketType } from "../utils/enums";
 
-export const uploadFiles = async (
+export const generateCleanFileName = async (
   documents: FileUpload | FileUpload[]
 ): Promise<{ cleanName: string }[]> => {
   const files = Array.isArray(documents) ? documents : [documents];
@@ -54,4 +54,35 @@ export const uploadBufferToS3 = async (
   }
 
   return key; // we will generate CloudFront URL later
+};
+
+export const uploadFiles = async (
+  documents: Promise<FileUpload> | Promise<FileUpload>[],
+  bucketType: S3BucketType,
+  baseFolder = "pandits/documents"
+): Promise<{ filePath: string }[]> => {
+  const files = Array.isArray(documents) ? documents : [documents];
+
+  return Promise.all(
+    files.map(async (filePromise) => {
+      const file = await filePromise;
+      if (!file.filename) throw new CustomError(FILENAME_MISSING);
+
+      const cleanName = `${uuidv4()}-${file.filename.replace(/\s+/g, "")}`;
+      const key = `${baseFolder}/${cleanName}`;
+
+      const stream = file.createReadStream();
+      const chunks: Buffer[] = [];
+
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+
+      const buffer = Buffer.concat(chunks);
+
+      await uploadBufferToS3(buffer, key, file.mimetype, bucketType);
+
+      return { filePath: key };
+    })
+  );
 };

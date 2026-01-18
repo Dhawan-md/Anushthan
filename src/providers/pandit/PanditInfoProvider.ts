@@ -146,7 +146,7 @@ export class PanditInfoProvider {
 
     let signedUrls = await Promise.all(
       parsedFilePathArray.map((filePath: string) => {
-        return generateSignedUrl(filePath, S3BucketType.DOCUMENT);
+        return generateSignedUrl(filePath, S3BucketType.PANDIT_DOCUMENTS);
       })
     );
 

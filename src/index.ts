@@ -47,7 +47,7 @@ import { BookingQueryResolver } from "./resolvers/booking/BookingQueryResolver";
 const createApp = async () => {
   const app: Application = express();
   app.use(cors());
-  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
+  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 4 }));
 
   const schema = await buildSchema({
     resolvers: [

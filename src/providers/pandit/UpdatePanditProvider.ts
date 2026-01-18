@@ -58,13 +58,13 @@ export class UpdatePanditProvider {
     return new SinglePanditResponse(true, PANDIT_UPDATED, updatedPandit);
   }
 
-  async deleteDocument(filePathArray: string): Promise<void> {
+  async deleteDocument(filePathArray: string[]): Promise<void> {
     logger.info(`🗑️ Deleting pandit documents from S3.`);
-    let parsedFilePathArray = JSON.parse(filePathArray);
-    const bucketName = getBucketName(S3BucketType.DOCUMENT);
+    // let parsedFilePathArray = JSON.parse(filePathArray);
+    const bucketName = getBucketName(S3BucketType.PANDIT_DOCUMENTS);
 
     await Promise.all(
-      parsedFilePathArray.map((filePath: string) => {
+      filePathArray.map((filePath: string) => {
         return deleteS3File(bucketName, filePath);
       })
     );

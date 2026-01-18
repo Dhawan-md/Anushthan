@@ -56,7 +56,7 @@ export class User {
   @Column({ name: "profile_image", nullable: true })
   profileImage?: string;
 
-  @Field()
+  @Field(() => Pandit, { nullable: true })
   @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
   pandit?: Pandit;
 

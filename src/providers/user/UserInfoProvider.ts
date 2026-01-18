@@ -95,7 +95,7 @@ export class UserInfoProvider {
   async fetchUserDetails(userId: string): Promise<SingleUserResponse> {
     const userDetails = await this.getUser({
       id: userId,
-      relations: ["selectedAddress"],
+      relations: ["selectedAddress", "pandit"],
     });
 
     return new SingleUserResponse(true, "User details fetched", userDetails);
