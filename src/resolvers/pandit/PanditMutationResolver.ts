@@ -1,5 +1,5 @@
 import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
-import { FileUpload } from "graphql-upload-minimal";
+// import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 
 import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
@@ -9,7 +9,7 @@ import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
 
 import { Context } from "../../types/context";
-import { promiseTimeout } from "../../utils/promiseTimeout";
+// import { promiseTimeout } from "../../utils/promiseTimeout";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
 import { UserRole } from "../../utils/enums";
@@ -22,10 +22,12 @@ import {
   ForgetPasswordDto,
   LoginPanditDto,
   ResetPasswordDto,
+  SetPanditPasswordDto,
   VerifyPanditDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
 import { plainToInstance } from "class-transformer";
+import { SetPasswordInput } from "../../types/inputTypes/pandit/SetPasswordInput";
 
 @Service()
 @Resolver()
@@ -34,7 +36,7 @@ export class PanditMutationResolver {
     @Inject(() => PanditAuthProvider)
     private panditAuthProvider: PanditAuthProvider,
     @Inject(() => PanditPasswordProvider)
-    private panditPaswordProvider: PanditPasswordProvider,
+    private panditPaswordProvider: PanditPasswordProvider
   ) {}
 
   @Mutation(() => SinglePanditResponse)
@@ -47,23 +49,26 @@ export class PanditMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    const resolvedDocument: FileUpload[] = [];
-    for (const docPromise of data.documents) {
-      const doc = await promiseTimeout(docPromise, 15000);
-      resolvedDocument.push(doc);
-    }
+    // const resolvedDocument: FileUpload[] = [];
+    // for (const docPromise of data.documents) {
+    //   const doc = await promiseTimeout(docPromise, 15000);
+    //   resolvedDocument.push(doc);
+    // }
 
     return this.panditAuthProvider.registerPandit({
       userId,
-      password: data.password,
-      documents: resolvedDocument,
+      // password: data.password,
+      documents: data.documents,
       categoryIds: data.categoryIds,
       experience: data.experience,
+      address: data.address,
     });
   }
 
   @Mutation(() => SinglePanditResponse)
-  async loginPandit(@Arg("data") data: LoginPanditInput) {
+  async loginPandit(
+    @Arg("data") data: LoginPanditInput
+  ): Promise<SinglePanditResponse> {
     const dto: LoginPanditDto = plainToInstance(LoginPanditDto, data);
 
     return this.panditAuthProvider.loginPandit(dto);
@@ -98,5 +103,18 @@ export class PanditMutationResolver {
     const dto: ResetPasswordDto = plainToInstance(ResetPasswordDto, data);
 
     return this.panditPaswordProvider.resetPassword(dto);
+  }
+
+  @Authorized(UserRole.USER)
+  @Mutation(() => SinglePanditResponse)
+  async setPanditPassword(
+    @Arg("data") data: SetPasswordInput
+  ): Promise<SinglePanditResponse> {
+    const dto: SetPanditPasswordDto = plainToInstance(
+      SetPanditPasswordDto,
+      data
+    );
+
+    return this.panditAuthProvider.setPanditPassword(dto);
   }
 }

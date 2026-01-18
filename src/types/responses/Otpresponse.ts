@@ -12,3 +12,12 @@ export class OtpResponse extends BaseResponse<OtpToken> {
     super(success, message, data);
   }
 }
+
+@ObjectType()
+export class SendUpdateOtpResponse {
+  @Field()
+  success: boolean;
+
+  @Field()
+  message: string;
+}

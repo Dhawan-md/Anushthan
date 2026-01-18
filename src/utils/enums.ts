@@ -84,7 +84,7 @@ export enum EmailTemplate {
 
 export enum S3BucketType {
   IMAGE = "image",
-  DOCUMENT = "document",
+  PANDIT_DOCUMENTS = "document",
 }
 
 export enum AdminRole {
@@ -155,3 +155,17 @@ export enum PaymentType {
   ONLINE = "ONLINE",
 }
 registerEnumType(PaymentType, { name: "PaymentType" });
+
+export enum PanditLedgerType {
+  EARNING = "EARNING", // + amount
+  PENALTY = "PENALTY", // - amount
+  PAYOUT = "PAYOUT", // - amount (money you paid to pandit)
+  ADJUSTMENT = "ADJUSTMENT", // +/- amount
+}
+registerEnumType(PanditLedgerType, { name: "PanditLedgerType" });
+
+export enum PanditLedgerStatus {
+  POSTED = "POSTED", // applied to wallet
+  VOID = "VOID", // reversed/invalids
+}
+registerEnumType(PanditLedgerStatus, { name: "PanditLedgerStatus" });

@@ -48,7 +48,7 @@ export const generateRefreshToken = <T extends Object>(data: T) =>
     expiresIn: "7d",
   });
 
-export const generateVerifivationToken = <T extends Object>(data: T) =>
+export const generateVerificationToken = <T extends Object>(data: T) =>
   generateJwtToken({
     secret: process.env.ACCESS_TOKEN_SECRET!,
     data,

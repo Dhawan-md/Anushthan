@@ -13,7 +13,10 @@ export class PlaceBookingDto {
   location: string;
   timeSlotId: string;
   bookingDate: Date;
-  totalPrice: number;
+  subTotalPrice: number;
+  gstTax: number;
+  platformFee: number;
+  discount: number;
   estimatedTime: number;
   paid: boolean;
   transactionId?: string;

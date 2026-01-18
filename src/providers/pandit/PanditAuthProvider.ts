@@ -18,16 +18,21 @@ import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import {
   LoginPanditDto,
   RegisterPanditDto,
+  SetPanditPasswordDto,
   VerifyPanditDto,
 } from "../../types/dtos/Pandit";
 
 import { validatePassword } from "../../utils/validatePassword";
-import { hashPassword } from "../../utils/hashPassword";
 import { CustomError } from "../../utils/customError";
-import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 
-import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
+import {
+  EmailType,
+  OtpType,
+  PanditStatus,
+  S3BucketType,
+  UserRole,
+} from "../../utils/enums";
 import {
   CATEGORY_NOT_FOUND,
   FILE_UPLOAD_FAIL,
@@ -35,14 +40,18 @@ import {
   LOGIN_SUCCESSFUL,
   PANDIT_ALREADY_EXISTS,
   PANDIT_LOGIN_REQUESTED,
+  PANDIT_NOT_APPROVED,
   PANDIT_REGISTERED,
+  PASSWORD_NOT_SET,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
-import { sendOtpSMS } from "../../service/sms/sendOtpSms";
+// import { sendOtpSMS } from "../../service/sms/sendOtpSms";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../helpers/generateJwtToken";
+import { Category } from "../../entities/Category";
+import { hashPassword } from "../../utils/hashPassword";
 
 @Service()
 export class PanditAuthProvider {
@@ -68,9 +77,18 @@ export class PanditAuthProvider {
     logger.info(
       `🔄Processing register Pandit request for user with userId : ${params.userId}`
     );
-    const { userId, password, documents, categoryIds, experience } = params;
+    const {
+      userId,
+      //  password,
+      documents,
+      categoryIds,
+      experience,
+      address,
+    } = params;
 
-    validatePassword(password);
+    console.log(params);
+
+    // validatePassword(password);
     const isExisting = await this.panditInfoProvider.checkPanditExists({
       userId,
     });
@@ -85,26 +103,34 @@ export class PanditAuthProvider {
     const categories =
       await this.categoryInfoProvider.getCategories(categoryIds);
 
-    const hashedPassword = await hashPassword(password);
-
-    let uploadedDocuments: { filePath: string }[] | { filePath: string } =
-      await uploadFiles(documents, S3BucketType.DOCUMENT);
-
-    if (!uploadedDocuments) {
-      throw new CustomError(FILE_UPLOAD_FAIL);
-    }
-
     if (!categories.data || categories.data.length === 0) {
       throw new CustomError(CATEGORY_NOT_FOUND);
     }
 
-    const newPandit = await this.panditAuthRepository.save({
+    const validCategories: Category[] = categories.data;
+
+    // const hashedPassword = await hashPassword(password);
+
+    const uploadedDocuments = await uploadFiles(
+      documents,
+      S3BucketType.PANDIT_DOCUMENTS,
+      `pandits/documents/${userId}`
+    );
+
+    if (!uploadedDocuments || uploadedDocuments.length === 0) {
+      throw new CustomError(FILE_UPLOAD_FAIL);
+    }
+
+    const pandit = this.panditAuthRepository.create({
       user,
-      categories: categories.data,
-      experience: experience,
-      password: hashedPassword,
-      documents: JSON.stringify(uploadedDocuments.map((file) => file.filePath)),
+      categories: validCategories,
+      experience,
+      // password: hashedPassword,
+      documents: uploadedDocuments.map((f) => f.filePath),
+      address,
     });
+
+    const newPandit = await this.panditAuthRepository.save(pandit);
 
     await sendEmail(
       user.userEmail,
@@ -122,12 +148,18 @@ export class PanditAuthProvider {
     const { phoneNumber, password } = params;
     logger.info(`🔄Logging in pandit with number: ${phoneNumber}.`);
 
-    validateEmail(phoneNumber);
     validatePassword(password);
 
     const panditData = await this.panditInfoProvider.getPandit({
       data: { phoneNumber },
     });
+
+    if (!panditData.password) {
+      if (panditData.status !== PanditStatus.APPROVED) {
+        throw new CustomError(PANDIT_NOT_APPROVED);
+      }
+      throw new CustomError(PASSWORD_NOT_SET);
+    }
 
     const isMatching = await isSamePassword({
       inputPassword: password,
@@ -138,12 +170,9 @@ export class PanditAuthProvider {
       throw new CustomError(INVALID_PASSWORD);
     }
 
-    const otp = await this.otpProvider.generateAndSaveNewOtp(
-      phoneNumber,
-      OtpType.PANDIT
-    );
+    await this.otpProvider.generateAndSaveNewOtp(phoneNumber, OtpType.PANDIT);
 
-    await sendOtpSMS(phoneNumber, otp.otpCode);
+    // await sendOtpSMS(phoneNumber, otp.otpCode);
 
     logger.info(
       `✅ Pandit with phone number ${phoneNumber} logged in requested.`
@@ -185,5 +214,47 @@ export class PanditAuthProvider {
       accessToken,
       refreshToken
     );
+  }
+
+  async setPanditPassword(
+    params: SetPanditPasswordDto
+  ): Promise<SinglePanditResponse> {
+    const { panditId, password } = params;
+
+    logger.info(`🔄 Setting password for pandit: ${panditId}`);
+
+    // 1️⃣ Validate password (same rules frontend follows)
+    validatePassword(password);
+
+    // 2️⃣ Get pandit
+    const pandit = await this.panditAuthRepository.findOne({
+      where: { id: panditId },
+      relations: ["user"],
+    });
+
+    if (!pandit) {
+      throw new CustomError("Pandit not found");
+    }
+
+    // 3️⃣ Ensure pandit is approved
+    if (pandit.status !== PanditStatus.APPROVED) {
+      throw new CustomError(PANDIT_NOT_APPROVED);
+    }
+
+    // 4️⃣ Prevent resetting password again
+    if (pandit.password) {
+      throw new CustomError("Password already set");
+    }
+
+    // 5️⃣ Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // 6️⃣ Save password
+    pandit.password = hashedPassword;
+    await this.panditAuthRepository.save(pandit);
+
+    logger.info(`✅ Password set successfully for pandit: ${panditId}`);
+
+    return new SinglePanditResponse(true, "Password set successfully", pandit);
   }
 }

@@ -57,7 +57,7 @@ export class Booking {
   timeSlotId!: string;
 
   @Field()
-  @Column({ name: "booking_date", type: "date" })
+  @Column({ name: "booking_date", type: "timestamp" })
   bookingDate!: Date;
 
   @Field(() => Float, { defaultValue: 10, name: "radius_km" })
@@ -66,6 +66,22 @@ export class Booking {
   @Field(() => Float)
   @Column("float", { name: "total_price" })
   totalPrice!: number;
+
+  @Field(() => Float)
+  @Column("float", { name: "subTotal_price" })
+  subTotalPrice!: number;
+
+  @Field(() => Float)
+  @Column("float", { name: "gst_tax", default: 0 })
+  gstTax: number;
+
+  @Field(() => Float)
+  @Column("float", { name: "platform_fee", default: 0 })
+  platformFee?: number;
+
+  @Field(() => Float)
+  @Column("float", { name: "discount", default: 0 })
+  discount?: number;
 
   @Field(() => Int)
   @Column({ name: "estimated_time" })

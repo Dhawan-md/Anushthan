@@ -19,6 +19,8 @@ import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
 import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { Cart } from "../entities/Cart";
+import { PanditLedger } from "../entities/PanditLedger";
+import { PanditWallet } from "../entities/PanditWallet";
 
 dotenv.config();
 
@@ -43,6 +45,8 @@ export const AppDataSource = new DataSource({
     UserLocation,
     TimeSlot,
     Cart,
+    PanditLedger,
+    PanditWallet,
   ],
   synchronize: process.env["NODE_ENV"] !== "production",
 });

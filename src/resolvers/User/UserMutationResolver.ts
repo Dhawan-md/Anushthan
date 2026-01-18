@@ -6,7 +6,10 @@ import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
 import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
 
 import { SingleUserResponse } from "../../types/responses/UserResponse";
-import { LocationResponse } from "../../types/responses/LocationResponse";
+import {
+  LocationCordinateResponse,
+  LocationResponse,
+} from "../../types/responses/LocationResponse";
 
 import { promiseTimeout } from "../../utils/promiseTimeout";
 import { RegisterUserInput } from "../../types/inputTypes/user/RegisterUserInput";
@@ -23,6 +26,9 @@ import { CustomError } from "../../utils/customError";
 import { AddAddressInput } from "../../types/inputTypes/user/AddAddressInput";
 import { UserRole } from "../../utils/enums";
 import { TokenResponse } from "../../types/responses/TokenResponse";
+import { SendUpdateOtpResponse } from "../../types/responses/OtpResponse";
+import { UpdatedUserInput } from "../../types/inputTypes/user/UpdateUserInput";
+import { UpdateUserProvider } from "../../providers/user/UpdateUserProvider";
 
 @Service()
 @Resolver()
@@ -31,7 +37,10 @@ export class UserMutationResolver {
     @Inject(() => UserAuthProvider)
     private userAuthProvider: UserAuthProvider,
     @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    private userLocationProvider: UserLocationProvider,
+
+    @Inject(() => UpdateUserProvider)
+    private updateUserProvider: UpdateUserProvider
   ) {}
 
   @Mutation(() => SingleUserResponse)
@@ -79,13 +88,11 @@ export class UserMutationResolver {
     return this.userAuthProvider.refreshAccessToken(refreshToken);
   }
 
-  
-
   @Mutation(() => LocationResponse)
   async getLocation(
     @Arg("data") data: LocationInput,
     @Ctx() ctx: Context
-  ): Promise<LocationResponse> {
+  ): Promise<LocationCordinateResponse> {
     const userId = ctx.user?.id;
     const userRole = ctx.user?.userRole;
 
@@ -122,6 +129,75 @@ export class UserMutationResolver {
       id: userId,
       userRole,
       phoneNumber,
+    });
+  }
+
+  @Mutation(() => LocationResponse)
+  @Authorized([UserRole.USER, UserRole.PANDIT])
+  async setSelectedAddress(
+    @Arg("addressId") addressId: string,
+    @Ctx() ctx: Context
+  ): Promise<LocationResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError("Unauthenticated");
+
+    return this.userLocationProvider.setSelectedAddress({
+      addressId,
+      userId,
+      userRole,
+    });
+  }
+
+  @Mutation(() => LocationResponse)
+  @Authorized([UserRole.USER, UserRole.PANDIT])
+  async deleteAddress(
+    @Arg("addressId") addressId: string,
+    @Ctx() ctx: Context
+  ): Promise<LocationResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError("Unauthenticated");
+
+    return this.userLocationProvider.deleteAddress({
+      addressId,
+      userId,
+      userRole,
+    });
+  }
+
+  @Mutation(() => SendUpdateOtpResponse)
+  @Authorized(UserRole.USER)
+  async sendUserUpdateOtp(
+    @Arg("updatedFields") updatedFields: UpdatedUserInput,
+    @Ctx() ctx: Context
+  ): Promise<SendUpdateOtpResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError("Unauthenticated");
+
+    return this.updateUserProvider.sendUserUpdateOtp({
+      userId,
+      updatedFields,
+    });
+  }
+
+  @Mutation(() => SingleUserResponse)
+  @Authorized(UserRole.USER)
+  async verifyUserUpdateOtp(
+    @Arg("otp") otp: string,
+    @Ctx() ctx: Context
+  ): Promise<SingleUserResponse> {
+    const userId = ctx.user?.id;
+
+    if (!userId) throw new CustomError("Unauthenticated");
+
+    return this.updateUserProvider.verifyUserUpdateOtp({
+      userId,
+      otp,
     });
   }
 }

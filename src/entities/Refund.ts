@@ -64,6 +64,10 @@ export class Refund {
   @Column({ nullable: true, name: "refund_reference_id" })
   refundReferenceId?: string;
 
+  @Index("uq_refund_reference_key", ["referenceKey"], { unique: true })
+  @Column({ name: "reference_key", type: "text", unique: true })
+  referenceKey!: string;
+
   @Column({ name: "refunded_at", nullable: true })
   refundedAt?: Date;
 

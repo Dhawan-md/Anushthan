@@ -16,14 +16,29 @@ import { LocationSuggestion } from "../../types/interfaces";
 import { LocationSuggestionResponse } from "../../types/responses/LocationResponse";
 import { MultipleUserLocationResponse } from "../../types/responses/UserLocationResponse";
 import { verifyAccessToken } from "../../helpers/verifyJwtToken";
+import { SingleUserResponse } from "../../types/responses/UserResponse";
+import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
+import { VerifyAccessTokenResponse } from "../../types/responses/VerifyAccessTokenResponse";
 
 @Service()
 @Resolver()
 export class UserQueryResolver {
   constructor(
     @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    private userLocationProvider: UserLocationProvider,
+    @Inject(() => UserInfoProvider)
+    private userInfoProvider: UserInfoProvider
   ) {}
+
+  @Query(() => SingleUserResponse)
+  async fetchUserDetails(@Ctx() ctx: Context): Promise<SingleUserResponse> {
+    const userId = ctx.user?.id;
+    const userRole = ctx.user?.userRole;
+
+    if (!userId || !userRole) throw new CustomError(UNAUTHORIZED);
+
+    return this.userInfoProvider.fetchUserDetails(userId);
+  }
 
   @Query(() => NearByPanditResponse)
   async findNearbyPandits(
@@ -66,16 +81,35 @@ export class UserQueryResolver {
     return suggestions;
   }
 
-  @Query(() => Boolean)
-  async verifyAccessToken(@Ctx() ctx: Context): Promise<boolean> {
-    const token = ctx.req.headers["authorization"]?.split(" ")[1];
-    if (!token) return false;
+  @Query(() => VerifyAccessTokenResponse)
+  async verifyAccessToken(
+    @Ctx() ctx: Context
+  ): Promise<VerifyAccessTokenResponse> {
+    const authHeader = ctx.req.headers["authorization"];
+    const token = authHeader?.split(" ")[1];
+
+    if (!token) {
+      return {
+        valid: false,
+        role: "",
+        id: "",
+      };
+    }
 
     try {
-      verifyAccessToken(token);
-      return true;
+      const payload = verifyAccessToken(token);
+
+      return {
+        valid: true,
+        role: payload.userRole, // USER | PANDIT
+        id: payload.id,
+      };
     } catch (err) {
-      return false; // invalid or expired
+      return {
+        valid: false,
+        role: "",
+        id: "",
+      };
     }
   }
 }

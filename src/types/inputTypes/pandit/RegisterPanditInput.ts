@@ -4,8 +4,8 @@ import { GraphQLUpload, FileUpload } from "graphql-upload-minimal";
 
 @InputType()
 export class RegisterPanditInput {
-  @Field()
-  password: string;
+  // @Field()
+  // password: string;
 
   @Field(() => [GraphQLUpload])
   documents: Promise<FileUpload>[];
@@ -15,5 +15,7 @@ export class RegisterPanditInput {
 
   @Field(() => Int)
   experience: number;
-}
 
+  @Field(() => String)
+  address: string;
+}

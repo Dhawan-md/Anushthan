@@ -13,8 +13,11 @@ export class RegisterUserInput {
   userEmail: string;
 
   @Field()
-  @IsPhoneNumber('IN')
+  @IsPhoneNumber("IN")
   phoneNumber: string;
+
+  @Field()
+  deviceToken: string;
 
   @Field(() => GraphQLUpload, { nullable: true })
   profileImage?: Promise<FileUpload>;

@@ -9,7 +9,10 @@ import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
 import { getAddressFromCoordinates } from "../../helpers/getAddressFromCoordinates";
 
-import { LocationResponse } from "../../types/responses/LocationResponse";
+import {
+  LocationCordinateResponse,
+  LocationResponse,
+} from "../../types/responses/LocationResponse";
 import {
   NearByPanditResponse,
   PanditWithDistance,
@@ -17,7 +20,7 @@ import {
 
 import { CustomError } from "../../utils/customError";
 import { logger } from "../../utils/logger";
-import { NO_USER_FOUND } from "../../utils/messages";
+import { LOCATION_NOT_FOUND } from "../../utils/messages";
 import { UserRole } from "../../utils/enums";
 import { NearByPanditFiltersDto } from "../../types/dtos/Pandit";
 import { UserInfoProvider } from "./UserInfoProvider";
@@ -47,7 +50,7 @@ export class UserLocationProvider {
     longitude: number;
     id: string;
     userRole: UserRole;
-  }): Promise<LocationResponse> {
+  }): Promise<LocationCordinateResponse> {
     const { latitude, longitude, id, userRole } = params;
 
     const userId = await this.resolveUserId(id, userRole);
@@ -57,7 +60,11 @@ export class UserLocationProvider {
 
     logger.info(`[UserLocationProvider] fetched location for user ${userId}`);
 
-    return new LocationResponse(true, "Location found successfully", address);
+    return new LocationCordinateResponse(
+      true,
+      "Location found successfully",
+      address
+    );
   }
 
   async getResolvedLocationDetails(
@@ -73,7 +80,7 @@ export class UserLocationProvider {
 
     if (!userLocationDetails) {
       logger.warn(`❌ No location details found for userId: ${userId}`);
-      throw new CustomError(NO_USER_FOUND);
+      throw new CustomError(LOCATION_NOT_FOUND);
     }
 
     return userLocationDetails;
@@ -89,7 +96,7 @@ export class UserLocationProvider {
       bookingDate,
       categoryId,
     } = params;
-    
+
     const userLocation = await this.getResolvedLocationDetails(userId);
 
     if (!userLocation) throw new CustomError("User location not found");
@@ -159,84 +166,75 @@ export class UserLocationProvider {
 
     const userId = await this.resolveUserId(id, userRole);
 
-    return this.userLocationRepository.manager.transaction(
-      async (transactionalEntityManager) => {
-        const user = await this.userInfoProvider.getUser({
-          id: userId,
-          relations: ["selectedAddress"], // needed to update relation
-        });
+    const user = await this.userInfoProvider.getUser({
+      id: userId,
+      relations: ["selectedAddress"], // needed to update relation
+    });
 
-        if (!user) throw new CustomError("User not found");
-        // Fetch user
-        const existingLabel = await transactionalEntityManager.findOne(
-          UserLocation,
-          {
-            where: {
-              user: { id: userId },
-              label,
-            },
-          }
-        );
+    if (!user) throw new CustomError("User not found");
+    // Fetch user
+    const existingLabel = await this.userLocationRepository.findOne({
+      where: {
+        user: { id: userId },
+        label,
+      },
+    });
 
-        if (existingLabel) {
-          return new LocationResponse(
-            false,
-            `Address with label "${label}" already exists.`,
-            existingLabel.addressDetails
-          );
-        }
+    if (existingLabel) {
+      return new LocationResponse(
+        false,
+        `Address with label "${label}" already exists.`,
+        existingLabel
+      );
+    }
 
-        const existingAddress = await transactionalEntityManager
-          .createQueryBuilder(UserLocation, "location")
-          .innerJoin("location.user", "user")
-          .where("user.id = :userId", { userId })
-          .andWhere("location.latitude = :lat", { lat: latitude })
-          .andWhere("location.longitude = :lng", { lng: longitude })
-          .getOne();
+    const existingAddress = await this.userLocationRepository
+      .createQueryBuilder("location")
+      .innerJoin("location.user", "user")
+      .where("user.id = :userId", { userId })
+      .andWhere("location.latitude = :lat", { lat: latitude })
+      .andWhere("location.longitude = :lng", { lng: longitude })
+      .getOne();
 
-        console.log(existingAddress);
+    console.log(existingAddress);
 
-        if (existingAddress) {
-          // Option 1: Return existing one instead of creating
-          user.selectedAddress = existingAddress;
-          await this.updateUserProvider.updateUser({
-            userId,
-            updatedUserData: { selectedAddress: existingAddress },
-            manager: transactionalEntityManager,
-          });
+    if (existingAddress) {
+      // Option 1: Return existing one instead of creating
+      user.selectedAddress = existingAddress;
+      await this.updateUserProvider.updateUser({
+        userId,
+        updatedUserData: { selectedAddress: existingAddress },
+      });
 
-          return new LocationResponse(
-            false,
-            "Duplicate avoided. Existing address selected",
-            existingAddress.addressDetails
-          );
-        }
+      return new LocationResponse(
+        false,
+        "Duplicate avoided. Existing address selected",
+        existingAddress
+      );
+    }
 
-        // Create new address
+    // Create new address
 
-        const newAddress = await transactionalEntityManager.save(UserLocation, {
-          user: { id: userId }, // proper entity reference
-          latitude,
-          longitude,
-          label,
-          addressDetails,
-          phoneNumber,
-        });
+    const newAddress = await this.userLocationRepository.save({
+      user: { id: userId }, // proper entity reference
+      latitude,
+      longitude,
+      label,
+      addressDetails,
+      phoneNumber,
+    });
 
-        // ✅ Update user's selectedAddress to this new one
-        user.selectedAddress = newAddress;
-        await this.updateUserProvider.updateUser({
-          userId: id,
-          updatedUserData: { selectedAddress: newAddress },
-          manager: transactionalEntityManager,
-        });
+    // ✅ Update user's selectedAddress to this new one
+    user.selectedAddress = newAddress;
+    await this.updateUserProvider.updateUser({
+      userId: id,
+      updatedUserData: { selectedAddress: newAddress },
+    });
 
-        return new LocationResponse(
-          true,
-          "Address added & selected successfully",
-          newAddress.addressDetails
-        );
-      }
+    return new LocationResponse(
+      true,
+      "Address added & selected successfully",
+      newAddress
     );
   }
 
@@ -272,5 +270,169 @@ export class UserLocationProvider {
     const suggestions = await getLocationSuggestions(query);
 
     return suggestions;
+  }
+
+  async setSelectedAddress(params: {
+    userId: string;
+    userRole: UserRole;
+    addressId: string;
+  }): Promise<LocationResponse> {
+    const { userId, userRole, addressId } = params;
+
+    logger.info(
+      `[UserLocationProvider] 🔄 Request to change selected address for userId=${userId}, role=${userRole}, addressId=${addressId}`
+    );
+
+    // 1️⃣ Resolve correct user ID (works for both USER & PANDIT)
+    const resolvedUserId = await this.resolveUserId(userId, userRole);
+    logger.info(
+      `[UserLocationProvider.ts] 👤 Resolved userId=${resolvedUserId} for role=${userRole}`
+    );
+
+    // 2️⃣ Get user with selectedAddress relation
+    const user = await this.userInfoProvider.getUser({
+      id: resolvedUserId,
+      relations: ["selectedAddress"],
+    });
+
+    if (!user) {
+      logger.error(
+        `[UserLocationProvider.ts] ❌ User not found for resolvedUserId=${resolvedUserId}`
+      );
+      throw new CustomError("User not found");
+    }
+
+    logger.info(
+      `[UserLocationProvider.ts] 👀 User exists. Current selectedAddressId=${
+        user.selectedAddress?.id ?? "none"
+      }`
+    );
+
+    // 3️⃣ Check if address exists
+    const address = await this.userLocationRepository.findOne({
+      where: { id: addressId, user: { id: resolvedUserId } },
+    });
+
+    if (!address) {
+      logger.warn(
+        `[UserLocationProvider.ts] ⚠️ Address not found or doesn't belong to user. addressId=${addressId}, userId=${resolvedUserId}`
+      );
+      throw new CustomError("Address not found for this user");
+    }
+
+    logger.info(
+      `[UserLocationProvider.ts] 📍 Address found. Updating selectedAddress to id=${addressId}`
+    );
+
+    // 4️⃣ Update user.selectedAddress
+    user.selectedAddress = address;
+
+    await this.updateUserProvider.updateUser({
+      userId: resolvedUserId,
+      updatedUserData: { selectedAddress: address },
+    });
+
+    logger.info(
+      `[UserLocationProvider.ts] ✅ Selected address successfully updated for userId=${resolvedUserId} → newAddressId=${addressId}`
+    );
+
+    return new LocationResponse(
+      true,
+      "Selected address updated successfully",
+      address
+    );
+  }
+
+  async updateAddress(params: {
+    addressId: string;
+    userId: string;
+    userRole: UserRole;
+    updatedLocationData: Partial<UserLocation>;
+  }) {
+    const { addressId, userId, userRole, updatedLocationData } = params;
+
+    logger.info(
+      `[UserLocationProvider] 🛠 Updating address ${addressId} for user ${userId}`
+    );
+
+    if (Object.keys(updatedLocationData).length === 0) {
+      logger.warn(
+        `[UserLocationProvider] ⚠️ No fields provided to update for address ${addressId}`
+      );
+      throw new CustomError("No data provided to update address");
+    }
+
+    const resolvedUserId = await this.resolveUserId(userId, userRole);
+
+    // 🔍 Get existing address
+    const location = await this.userLocationRepository.findOne({
+      where: { id: addressId, user: { id: resolvedUserId }, isDeleted: false },
+    });
+
+    if (!location) {
+      logger.error(
+        `[UserLocationProvider] ❌ Address not found or deleted: ${addressId}`
+      );
+      throw new CustomError("Address not found");
+    }
+
+    // 👈 Merge updates
+    Object.assign(location, updatedLocationData);
+
+    // 💾 Save updates
+    const updatedLocation = await this.userLocationRepository.save(location);
+
+    logger.info(
+      `[UserLocationProvider] ✨ Updated fields for address ${addressId}: ${Object.keys(
+        updatedLocationData
+      ).join(", ")}`
+    );
+
+    return updatedLocation;
+  }
+
+  async deleteAddress(data: {
+    userId: string;
+    userRole: UserRole;
+    addressId: string;
+  }): Promise<LocationResponse> {
+    const { userId, userRole, addressId } = data;
+
+    const resolvedUserId = await this.resolveUserId(userId, userRole);
+
+    const address = await this.userLocationRepository.findOne({
+      where: { id: addressId, user: { id: resolvedUserId }, isDeleted: false },
+    });
+
+    if (!address) {
+      throw new CustomError("Address not found or already deleted");
+    }
+
+    // Prevent deleting selected address
+    const user = await this.userInfoProvider.getUser({
+      id: resolvedUserId,
+      relations: ["selectedAddress"],
+    });
+
+    if (user.selectedAddress?.id === addressId) {
+      throw new CustomError("You cannot delete your selected address");
+    }
+
+    // mark deleted
+    const deletedAddress = await this.updateAddress({
+      addressId,
+      userId,
+      userRole,
+      updatedLocationData: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
+
+    return new LocationResponse(
+      true,
+      "Address deleted successfully",
+      deletedAddress
+    );
   }
 }

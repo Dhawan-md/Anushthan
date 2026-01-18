@@ -14,6 +14,8 @@ export async function getLocationSuggestions(
 
   if (!query) return [];
 
+  console.log(query);
+
   // Step 1: Fetch autocomplete predictions
   const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
     query
@@ -21,6 +23,7 @@ export async function getLocationSuggestions(
 
   const autocompleteResponse = await fetch(autocompleteUrl);
   const autocompleteData = await autocompleteResponse.json();
+  console.log(autocompleteData);
 
   if (!autocompleteData.predictions) return [];
 

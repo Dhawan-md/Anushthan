@@ -14,6 +14,7 @@ import { User } from "./User";
 import { Field, ObjectType } from "type-graphql";
 import { PanditStatus } from "../utils/enums";
 import { Category } from "./Category";
+import { PanditWallet } from "./PanditWallet";
 
 @ObjectType()
 @Entity()
@@ -36,17 +37,22 @@ export class Pandit {
   @Column({ type: "int", default: 0 })
   experience!: number;
 
-  @Field()
-  @Column()
-  password!: string;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  password?: string;
+
+  @Field(() => Boolean)
+  get onboardingStatus(): boolean {
+    return !!this.password;
+  }
 
   @Field()
   @Column({ default: false, name: "is_available" })
   isAvailable!: boolean;
 
-  @Field(() => String, { nullable: true })
-  @Column({ type: "text", name: "documents", nullable: true })
-  documents: string | null;
+  @Field(() => [String], { nullable: true })
+  @Column({ type: "jsonb", nullable: true })
+  documents!: string[] | null;
 
   @Field(() => PanditStatus)
   @Column({ type: "enum", default: PanditStatus.PENDING, enum: PanditStatus })
@@ -55,6 +61,14 @@ export class Pandit {
   @Field()
   @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
   ratings!: number;
+
+  @Field()
+  @Column({ type: "text" })
+  address!: string;
+
+  @Field(() => PanditWallet, { nullable: true })
+  @OneToOne(() => PanditWallet, (wallet) => wallet.pandit)
+  wallet?: PanditWallet;
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

@@ -1,7 +1,6 @@
 import { Inject, Service } from "typedi";
 import { Repository } from "typeorm";
 
-
 import { BookingInfoProvider } from "../booking/BookingInfoProvider";
 
 import { Pandit } from "../../entities/Pandit";
@@ -147,7 +146,7 @@ export class PanditInfoProvider {
 
     let signedUrls = await Promise.all(
       parsedFilePathArray.map((filePath: string) => {
-        return generateSignedUrl(filePath, S3BucketType.DOCUMENT);
+        return generateSignedUrl(filePath, S3BucketType.PANDIT_DOCUMENTS);
       })
     );
 
@@ -191,7 +190,7 @@ export class PanditInfoProvider {
     const query = this.panditInfoRepository
       .createQueryBuilder("pandit")
       .innerJoinAndSelect("pandit.user", "user")
-      .innerJoinAndSelect("user.userLocation", "location")
+      .innerJoinAndSelect("user.selectedAddress", "location")
       .where("pandit.isAvailable = :isAvailable", { isAvailable: true })
       .andWhere("pandit.status = :status", { status: "approved" })
       .addSelect(

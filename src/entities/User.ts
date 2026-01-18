@@ -56,7 +56,7 @@ export class User {
   @Column({ name: "profile_image", nullable: true })
   profileImage?: string;
 
-  @Field()
+  @Field(() => Pandit, { nullable: true })
   @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
   pandit?: Pandit;
 
@@ -80,6 +80,14 @@ export class User {
   @OneToOne(() => UserLocation, { nullable: true })
   @JoinColumn({ name: "selected_address_id" })
   selectedAddress?: UserLocation;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  deviceToken?: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  deviceType?: string; // 'android' | 'ios'
 
   @Field()
   @CreateDateColumn({ name: "created_at" })

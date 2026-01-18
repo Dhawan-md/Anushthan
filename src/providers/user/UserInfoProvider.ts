@@ -5,7 +5,10 @@ import { User } from "../../entities/User";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { MultipleUserResponse } from "../../types/responses/UserResponse";
+import {
+  MultipleUserResponse,
+  SingleUserResponse,
+} from "../../types/responses/UserResponse";
 
 import { logger } from "../../utils/logger";
 import {
@@ -56,19 +59,25 @@ export class UserInfoProvider {
       .getExists();
 
     if (isExisting) {
-      logger.warn(`⚠️ User with phone number: "${phoneNumber}" already exists.`);
+      logger.warn(
+        `⚠️ User with phone number: "${phoneNumber}" already exists.`
+      );
       throw new CustomError(USER_ALREADY_EXISTS);
     }
   }
 
-  async getUser(params: { phoneNumber?: string; id?: string, relations?: string[]}): Promise<User> {
+  async getUser(params: {
+    phoneNumber?: string;
+    id?: string;
+    relations?: string[];
+  }): Promise<User> {
     logger.info(
       `🔍 Searching for user with params: ${params.id || params.phoneNumber}`
     );
 
     const userData = await this.userInfoRepository.findOne({
       where: [{ id: params.id }, { phoneNumber: params.phoneNumber }],
-      relations: params.relations || []
+      relations: params.relations || [],
     });
 
     if (!userData) {
@@ -81,5 +90,14 @@ export class UserInfoProvider {
     }
 
     return userData;
+  }
+
+  async fetchUserDetails(userId: string): Promise<SingleUserResponse> {
+    const userDetails = await this.getUser({
+      id: userId,
+      relations: ["selectedAddress", "pandit"],
+    });
+
+    return new SingleUserResponse(true, "User details fetched", userDetails);
   }
 }

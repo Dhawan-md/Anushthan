@@ -118,6 +118,10 @@ export const PANDIT_ONLY = "Only Pandit can perform this action.";
 export const ACTIVE_BOOKING_FOUND =
   "You already have an active booking in this slot.";
 export const NO_PANDITS_NEARBY = "No pandits found nearby.";
+export const PANDIT_NOT_APPROVED =
+  "Pandit is not approved yet. Please wait for the approval.";
+export const PASSWORD_NOT_SET =
+  "Pandit is approved but password not set. Please set password.";
 
 // Category messages
 export const CATEGORY_ADDED_SUCCESS = "New category added successfully.";

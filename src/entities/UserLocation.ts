@@ -49,10 +49,18 @@ export class UserLocation {
   user!: User;
 
   @Field()
-  @CreateDateColumn()
+  @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 
   @Field()
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @Field()
+  @Column({ default: false, name: "is_deleted" })
+  isDeleted!: boolean;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true, name: "deleted_at" })
+  deletedAt?: Date;
 }

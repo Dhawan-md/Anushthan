@@ -5,7 +5,6 @@ import { OtpProvider } from "../otp/OtpProvider";
 import { UpdatePanditProvider } from "./UpdatePanditProvider";
 import { PanditInfoProvider } from "./PanditInfoProvider";
 
-
 import { sendEmail } from "../../service/email/sendEmail";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
@@ -18,6 +17,7 @@ import {
   OLD_PASSWORD_ERROR,
   OTP_SENT,
   OTP_VERIFICATION_REQUIRED,
+  PANDIT_NOT_APPROVED,
   RESET_PASSWORD_SUCCESS,
 } from "../../utils/messages";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
@@ -30,7 +30,7 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
-import { generateVerifivationToken } from "../../helpers/generateJwtToken";
+import { generateVerificationToken } from "../../helpers/generateJwtToken";
 
 @Service()
 export class PanditPasswordProvider {
@@ -85,7 +85,9 @@ export class PanditPasswordProvider {
       data: { phoneNumber },
     });
 
-    const verificationToken = generateVerifivationToken({ panditId: panditData.id });
+    const verificationToken = generateVerificationToken({
+      panditId: panditData.id,
+    });
 
     return new VerifyResetResponse(
       isValidOTp.success,
@@ -118,6 +120,10 @@ export class PanditPasswordProvider {
     const panditData = await this.panditInfoProvider.getPandit({
       data: { id: panditId },
     });
+
+    if (!panditData.password) {
+      throw new CustomError(PANDIT_NOT_APPROVED);
+    }
 
     const isMatching = await isSamePassword({
       inputPassword: newPassword,

@@ -8,8 +8,6 @@ import { User } from "../../entities/User";
 
 import { RepositoryFactory } from "../../factories/RepositoryFactory";
 
-import { uploadFiles } from "../../helpers/uploadS3Files";
-
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 
 import { logger } from "../../utils/logger";
@@ -21,14 +19,13 @@ import {
   PHONE_NUMBER_REQUIRED,
   USER_REGISTERED,
 } from "../../utils/messages";
-import { OtpType, S3BucketType, UserRole } from "../../utils/enums";
+import { OtpType, UserRole } from "../../utils/enums";
 import { validateEmail } from "../../utils/validateEmail";
 import {
   LoginUserDto,
   RegisterUserDto,
   VerifyUserDto,
 } from "../../types/dtos/User";
-import { sendOtpSMS } from "../../service/sms/sendOtpSms";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -36,6 +33,7 @@ import {
 import { UpdateUserProvider } from "./UpdateUserProvider";
 import { verifyRefreshToken } from "../../helpers/verifyJwtToken";
 import { TokenResponse } from "../../types/responses/TokenResponse";
+import { sendOtpPush } from "../../service/fcm/sendPushOtp";
 
 @Service()
 export class UserAuthProvider {
@@ -52,7 +50,7 @@ export class UserAuthProvider {
   }
 
   async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
-    const { userEmail, name, phoneNumber, profileImage } = params;
+    const { userEmail, name, phoneNumber, deviceToken } = params;
     logger.info(`🔄Processing register user request for : ${userEmail}`);
     validateEmail(userEmail);
 
@@ -62,21 +60,13 @@ export class UserAuthProvider {
       throw new CustomError(PHONE_NUMBER_REQUIRED);
     }
 
-    let uploadedImages: { filePath: string }[] | { filePath: string } = [];
-
-    if (profileImage) {
-      uploadedImages = await uploadFiles(profileImage, S3BucketType.IMAGE);
-    }
-
     return await this.userAuthRepository.manager.transaction(
       async (transactionalEntityManager) => {
         const newUser = await transactionalEntityManager.save(User, {
           name: name,
           userEmail: userEmail.trim().toLowerCase(),
           phoneNumber: phoneNumber,
-          profileImage: JSON.stringify(
-            uploadedImages.map((images) => images.filePath)
-          ),
+          deviceToken,
         });
 
         const otpData = await this.otpProvider.saveOtp(
@@ -88,7 +78,8 @@ export class UserAuthProvider {
           throw new CustomError(OTP_GENERATION_FAILED);
         }
 
-        await sendOtpSMS(phoneNumber, otpData.data.otpCode);
+        // await sendOtpSMS(phoneNumber, otpData.data.otpCode);
+        await sendOtpPush(deviceToken, otpData.data.otpCode);
 
         logger.info(`✅ User ${newUser.id} registered successfully.`);
         return new SingleUserResponse(true, USER_REGISTERED, newUser);
@@ -97,16 +88,16 @@ export class UserAuthProvider {
   }
 
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
-    const { phoneNumber } = params;
+    const {
+      phoneNumber,
+      // deviceToken
+    } = params;
 
     logger.info(`🔄Logging in user: ${phoneNumber}.`);
 
-    const otp = await this.otpProvider.generateAndSaveNewOtp(
-      phoneNumber,
-      OtpType.USER
-    );
+    await this.otpProvider.generateAndSaveNewOtp(phoneNumber, OtpType.USER);
 
-    await sendOtpSMS(phoneNumber, otp.otpCode);
+    // await sendOtpPush(deviceToken, otp.otpCode);
 
     logger.info(
       `✅ User with phone number ${phoneNumber} logged in requested.`
@@ -116,7 +107,7 @@ export class UserAuthProvider {
   }
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
-    const { phoneNumber, otpCode } = params;
+    const { phoneNumber, otpCode, deviceToken } = params;
     logger.info(`🔄 Verification request received for: ${phoneNumber}`);
 
     const userData = await this.userInfoProvider.getUser({
@@ -134,10 +125,11 @@ export class UserAuthProvider {
       id: userData.id,
       userRole: UserRole.USER,
     });
+
     const refreshToken = generateRefreshToken({ id: userData.id });
 
     await this.updateUserProvider.updateUser({
-      updatedUserData: { refreshToken: refreshToken.token },
+      updatedUserData: { refreshToken: refreshToken.token, deviceToken },
       userId: userData.id,
     });
 
