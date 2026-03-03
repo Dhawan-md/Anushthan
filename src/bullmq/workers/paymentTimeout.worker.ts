@@ -1,9 +1,9 @@
 import Container from "typedi";
 import { Job } from "bullmq";
 
-import { UpdateBookingProvider } from "../../providers/booking/UpdateBookingProvider";
-import { UpdateTransactionProvider } from "../../providers/transaction/UpdateTransactionProvider";
-import { TransactionInfoProvider } from "../../providers/transaction/TransactionInfoProvider";
+import { UpdateBookingService } from "../../services/booking/UpdateBookingService";
+import { UpdateTransactionService } from "../../services/transaction/UpdateTransactionService";
+import { TransactionInfoService } from "../../services/transaction/TransactionInfoService";
 
 import { AppDataSource } from "../../config/database";
 import { createBullWorker } from "../../config/bullmq";
@@ -32,23 +32,23 @@ const startWorker = async () => {
             jobId: job.id,
           });
 
-          const transactionInfoProvider = Container.get(
-            TransactionInfoProvider
+          const transactionInfoService = Container.get(
+            TransactionInfoService
           );
-          const updateBookingProvider = Container.get(UpdateBookingProvider);
-          const updateTransactionProvider = Container.get(
-            UpdateTransactionProvider
+          const updateBookingService = Container.get(UpdateBookingService);
+          const updateTransactionService = Container.get(
+            UpdateTransactionService
           );
 
           await AppDataSource.manager.transaction(
             async (transactionalEntityManager) => {
-              const transaction = await transactionInfoProvider.getTransaction({
+              const transaction = await transactionInfoService.getTransaction({
                 transactionId,
               });
 
               switch (transaction.status) {
                 case TransactionStatus.PENDING: {
-                  await updateTransactionProvider.updateTransaction({
+                  await updateTransactionService.updateTransaction({
                     transactionId,
                     updatedTransactionData: {
                       status: TransactionStatus.FAILED,
@@ -56,7 +56,7 @@ const startWorker = async () => {
                     manager: transactionalEntityManager,
                   });
 
-                  await updateBookingProvider.updateBooking({
+                  await updateBookingService.updateBooking({
                     bookingId,
                     updatedBookingData: { status: BookingStatus.REJECTED },
                     manager: transactionalEntityManager,
@@ -72,7 +72,7 @@ const startWorker = async () => {
                 }
 
                 case TransactionStatus.FAILED: {
-                  await updateBookingProvider.updateBooking({
+                  await updateBookingService.updateBooking({
                     bookingId,
                     updatedBookingData: { status: BookingStatus.REJECTED },
                     manager: transactionalEntityManager,
@@ -85,7 +85,7 @@ const startWorker = async () => {
                 }
 
                 case TransactionStatus.SUCCESS: {
-                  await updateBookingProvider.updateBooking({
+                  await updateBookingService.updateBooking({
                     bookingId,
                     updatedBookingData: { paid: true },
                     manager: transactionalEntityManager,

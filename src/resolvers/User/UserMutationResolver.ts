@@ -2,8 +2,8 @@ import { plainToInstance } from "class-transformer";
 import { Resolver, Mutation, Arg, Ctx, Authorized } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { UserAuthProvider } from "../../providers/user/UserAuthProvider";
-import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
+import { UserAuthService } from "../../services/user/UserAuthService";
+import { UserLocationService } from "../../services/user/UserLocationService";
 
 import { SingleUserResponse } from "../../types/responses/UserResponse";
 import { LocationResponse } from "../../types/responses/LocationResponse";
@@ -28,10 +28,10 @@ import { TokenResponse } from "../../types/responses/TokenResponse";
 @Resolver()
 export class UserMutationResolver {
   constructor(
-    @Inject(() => UserAuthProvider)
-    private userAuthProvider: UserAuthProvider,
-    @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    @Inject(() => UserAuthService)
+    private userAuthService: UserAuthService,
+    @Inject(() => UserLocationService)
+    private userLocationService: UserLocationService
   ) {}
 
   @Mutation(() => SingleUserResponse)
@@ -49,7 +49,7 @@ export class UserMutationResolver {
       profileImage: resolvedImage,
     });
 
-    const user = await this.userAuthProvider.registerUser(dto);
+    const user = await this.userAuthService.registerUser(dto);
 
     return user;
   }
@@ -60,7 +60,7 @@ export class UserMutationResolver {
   ): Promise<SingleUserResponse> {
     const dto: LoginUserDto = plainToInstance(LoginUserDto, data);
 
-    return this.userAuthProvider.loginUser(dto);
+    return this.userAuthService.loginUser(dto);
   }
 
   @Mutation(() => SingleUserResponse)
@@ -69,14 +69,14 @@ export class UserMutationResolver {
   ): Promise<SingleUserResponse> {
     const dto = plainToInstance(VerifyUserDto, data);
 
-    return this.userAuthProvider.verifyUser(dto);
+    return this.userAuthService.verifyUser(dto);
   }
 
   @Mutation(() => TokenResponse)
   async refreshAccessToken(
     @Arg("refreshToken") refreshToken: string
   ): Promise<TokenResponse> {
-    return this.userAuthProvider.refreshAccessToken(refreshToken);
+    return this.userAuthService.refreshAccessToken(refreshToken);
   }
 
   
@@ -93,7 +93,7 @@ export class UserMutationResolver {
 
     const { latitude, longitude } = data;
 
-    return this.userLocationProvider.getLocationByCoordinates({
+    return this.userLocationService.getLocationByCoordinates({
       latitude,
       longitude,
       id: userId,
@@ -114,7 +114,7 @@ export class UserMutationResolver {
 
     const { latitude, longitude, label, addressDetails, phoneNumber } = data;
 
-    return this.userLocationProvider.addAddress({
+    return this.userLocationService.addAddress({
       latitude,
       longitude,
       label,

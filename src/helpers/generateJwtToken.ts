@@ -1,6 +1,7 @@
 import { decode, JwtPayload, sign } from "jsonwebtoken";
 import ms from "ms";
 
+import { env } from "../config/env";
 import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
 import { FAILED_TO_GENERATE_TOKEN } from "../utils/messages";
@@ -36,21 +37,21 @@ const generateJwtToken = <T extends Object>(params: {
 
 export const generateAccessToken = <T extends Object>(data: T) =>
   generateJwtToken({
-    secret: process.env.ACCESS_TOKEN_SECRET!,
+    secret: env.ACCESS_TOKEN_SECRET!,
     data,
     expiresIn: "24h",
   });
 
 export const generateRefreshToken = <T extends Object>(data: T) =>
   generateJwtToken({
-    secret: process.env.REFRESH_TOKEN_SECRET!,
+    secret: env.REFRESH_TOKEN_SECRET!,
     data,
     expiresIn: "7d",
   });
 
-export const generateVerifivationToken = <T extends Object>(data: T) =>
+export const generateVerificationToken = <T extends Object>(data: T) =>
   generateJwtToken({
-    secret: process.env.ACCESS_TOKEN_SECRET!,
+    secret: env.ACCESS_TOKEN_SECRET!,
     data,
     expiresIn: "15m",
   });

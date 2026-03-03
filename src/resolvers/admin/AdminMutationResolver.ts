@@ -2,11 +2,11 @@ import { Arg, Authorized, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
-import { AdminAuthProvider } from "../../providers/admin/AdminAuthProvider";
-import { ServiceActionProvider } from "../../providers/service/ServiceActionProvider";
-import { PanditActionProvider } from "../../providers/pandit/PanditActionProvider";
-import { CategoryActionProvdier } from "../../providers/category/CategoryActionProvider";
-import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
+import { AdminAuthService } from "../../services/admin/AdminAuthService";
+import { ServiceActionService } from "../../services/service/ServiceActionService";
+import { PanditActionService } from "../../services/pandit/PanditActionService";
+import { CategoryActionProvdier } from "../../services/category/CategoryActionService";
+import { TimeSlotService } from "../../services/admin/timeSlot/TimeSlotService";
 
 import { SingleAdminResponse } from "../../types/responses/AdminResponse";
 import { SingleServiceResponse } from "../../types/responses/ServiceResponse";
@@ -32,15 +32,15 @@ import { CreateTimeSlotInput } from "../../types/inputTypes/admin/timeSlot/Creat
 @Resolver()
 export class AdminMutationResolver {
   constructor(
-    @Inject(() => AdminAuthProvider)
-    private adminAuthProvider: AdminAuthProvider,
-    @Inject(() => ServiceActionProvider)
-    private serviceProvider: ServiceActionProvider,
-    @Inject(() => PanditActionProvider)
-    private panditActionProvider: PanditActionProvider,
+    @Inject(() => AdminAuthService)
+    private adminAuthService: AdminAuthService,
+    @Inject(() => ServiceActionService)
+    private serviceService: ServiceActionService,
+    @Inject(() => PanditActionService)
+    private panditActionService: PanditActionService,
     @Inject(() => CategoryActionProvdier)
-    private categoryActionProvider: CategoryActionProvdier,
-    @Inject(() => TimeSlotProvider) private timeSlotProvider: TimeSlotProvider
+    private categoryActionService: CategoryActionProvdier,
+    @Inject(() => TimeSlotService) private timeSlotService: TimeSlotService
   ) {}
 
   @Mutation(() => SingleAdminResponse)
@@ -48,14 +48,14 @@ export class AdminMutationResolver {
   async registerAdmin(@Arg("data") data: RegisterAdminInput) {
     const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
 
-    return this.adminAuthProvider.registerAdmin(dto);
+    return this.adminAuthService.registerAdmin(dto);
   }
 
   @Mutation(() => SingleAdminResponse)
   async loginAdmin(@Arg("data") data: LoginAdminInput) {
     const dto: RegisterAdminDto = plainToInstance(RegisterAdminDto, data);
 
-    return this.adminAuthProvider.loginAdmin(dto);
+    return this.adminAuthService.loginAdmin(dto);
   }
 
   @Mutation(() => SingleServiceResponse)
@@ -65,7 +65,7 @@ export class AdminMutationResolver {
   ): Promise<SingleServiceResponse> {
     const dto = plainToInstance(AddServiceDto, data);
 
-    return this.serviceProvider.addService(dto);
+    return this.serviceService.addService(dto);
   }
 
   @Mutation(() => SingleCategoryResponse)
@@ -73,7 +73,7 @@ export class AdminMutationResolver {
   async addCategory(
     @Arg("data") data: AddCategoryInput
   ): Promise<SingleCategoryResponse> {
-    return this.categoryActionProvider.addCategory(data.name);
+    return this.categoryActionService.addCategory(data.name);
   }
 
   @Mutation(() => SinglePanditResponse)
@@ -83,7 +83,7 @@ export class AdminMutationResolver {
   ): Promise<SinglePanditResponse> {
     const dto = plainToInstance(SetPanditApprovalStatusDto, data);
 
-    return this.panditActionProvider.setPanditApprovalStatus(dto);
+    return this.panditActionService.setPanditApprovalStatus(dto);
   }
 
   @Mutation(() => SingleTimeSlotResponse)
@@ -93,6 +93,6 @@ export class AdminMutationResolver {
   ): Promise<SingleTimeSlotResponse> {
     const dto = plainToInstance(CreateTimeSlotDto, data);
 
-    return this.timeSlotProvider.createTimeSlot(dto);
+    return this.timeSlotService.createTimeSlot(dto);
   }
 }

@@ -2,20 +2,20 @@
 // import { Inject, Service } from "typedi";
 
 // import { UserRole } from "../../utils/enums";
-// import { CartInfoProvider } from "../../providers/cart/CartInfoProvider";
+// import { CartInfoService } from "../../services/cart/CartInfoService";
 // import { MultipleCartResponse } from "../../types/responses/CartReponse";
 
 // @Service()
 // @Resolver()
 // export class CartQueryResolver {
 //   constructor(
-//     @Inject(() => CartInfoProvider)
-//     private cartInfoProvider: CartInfoProvider
+//     @Inject(() => CartInfoService)
+//     private cartInfoService: CartInfoService
 //   ) {}
 
 //   @Authorized(UserRole.USER)
 //   @Query(() => MultipleCartResponse)
 //   async getCart(@Arg("userId") userId: string) {
-//     return this.cartInfoProvider.getOrCreateCart(userId);
+//     return this.cartInfoService.getOrCreateCart(userId);
 //   }
 // }

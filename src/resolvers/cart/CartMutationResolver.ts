@@ -2,9 +2,9 @@ import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
 import { UserRole } from "../../utils/enums";
-import { CartInfoProvider } from "../../providers/cart/CartInfoProvider";
+import { CartInfoService } from "../../services/cart/CartInfoService";
 import { MultipleCartResponse } from "../../types/responses/CartReponse";
-import { CartActionProvider } from "../../providers/cart/CartActionProvider";
+import { CartActionService } from "../../services/cart/CartActionService";
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
 import { UNAUTHORIZED } from "../../utils/messages";
@@ -13,10 +13,10 @@ import { UNAUTHORIZED } from "../../utils/messages";
 @Resolver()
 export class CartMutationResolver {
   constructor(
-    @Inject(() => CartInfoProvider)
-    private cartInfoProvider: CartInfoProvider,
-    @Inject(() => CartActionProvider)
-    private cartActionProvider: CartActionProvider
+    @Inject(() => CartInfoService)
+    private cartInfoService: CartInfoService,
+    @Inject(() => CartActionService)
+    private cartActionService: CartActionService
   ) {}
 
   @Authorized(UserRole.USER)
@@ -26,7 +26,7 @@ export class CartMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    return this.cartInfoProvider.getOrCreateCart(userId);
+    return this.cartInfoService.getOrCreateCart(userId);
   }
 
   @Authorized(UserRole.USER)
@@ -36,7 +36,7 @@ export class CartMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    return this.cartActionProvider.clearCart(userId);
+    return this.cartActionService.clearCart(userId);
   }
 
   @Authorized(UserRole.USER)
@@ -50,7 +50,7 @@ export class CartMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    return this.cartActionProvider.addToCart(userId, serviceIds, categoryId);
+    return this.cartActionService.addToCart(userId, serviceIds, categoryId);
   }
 
   @Authorized(UserRole.USER)
@@ -63,7 +63,7 @@ export class CartMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    return this.cartActionProvider.removeFromCart(userId, serviceId);
+    return this.cartActionService.removeFromCart(userId, serviceId);
   }
 
   @Authorized(UserRole.USER)
@@ -77,6 +77,6 @@ export class CartMutationResolver {
 
     if (!userId) throw new CustomError(UNAUTHORIZED);
 
-    return this.cartActionProvider.syncCart({ userId, serviceIds, categoryId });
+    return this.cartActionService.syncCart({ userId, serviceIds, categoryId });
   } 
 }

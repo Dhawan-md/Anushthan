@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
 import { DataSource } from "typeorm";
+import { env } from "./env";
 
 import { User } from "../entities/User";
 import { Pandit } from "../entities/Pandit";
@@ -15,20 +15,16 @@ import { UserLocation } from "../entities/UserLocation";
 import { TimeSlot } from "../entities/TimeSlot";
 
 import { logger } from "../utils/logger";
-
 import { CustomError } from "../utils/customError";
-import { MISSING_ENV_VARIABLES } from "../utils/messages";
 import { Cart } from "../entities/Cart";
-
-dotenv.config();
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  host: process.env["DB_HOST"],
-  port: parseInt(process.env["DB_PORT"] ?? "5432", 10),
-  username: process.env["DB_USER"],
-  password: process.env["DB_PASSWORD"],
-  database: process.env["DB_NAME"],
+  host: env.DB_HOST,
+  port: parseInt(env.DB_PORT ?? "5432", 10),
+  username: env.DB_USER,
+  password: env.DB_PASSWORD,
+  database: env.DB_NAME,
   entities: [
     User,
     Pandit,
@@ -44,20 +40,10 @@ export const AppDataSource = new DataSource({
     TimeSlot,
     Cart,
   ],
-  synchronize: process.env["NODE_ENV"] !== "production",
+  synchronize: env.NODE_ENV !== "production",
 });
 
 export const intializeDatabase = async () => {
-  if (
-    !process.env["DB_HOST"] ||
-    !process.env["DB_USER"] ||
-    !process.env["DB_PASSWORD"] ||
-    !process.env["DB_NAME"] ||
-    !process.env["NODE_ENV"]
-  ) {
-    throw new CustomError(MISSING_ENV_VARIABLES);
-  }
-
   if (!AppDataSource.isInitialized) {
     try {
       await AppDataSource.initialize();

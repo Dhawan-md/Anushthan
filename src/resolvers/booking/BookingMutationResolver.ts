@@ -2,7 +2,7 @@ import { Inject, Service } from "typedi";
 import { Resolver, Mutation, Arg, Ctx, Authorized } from "type-graphql";
 import { plainToInstance } from "class-transformer";
 
-import { BookingActionProvider } from "../../providers/booking/BookingActionProvider";
+import { BookingActionService } from "../../services/booking/BookingActionService";
 
 import { PlaceBookingInput } from "../../types/inputTypes/booking/PlaceBookingInputType";
 import { Context } from "../../types/context";
@@ -26,8 +26,8 @@ import { UserRole } from "../../utils/enums";
 @Resolver()
 export class BookingMutationResolver {
   constructor(
-    @Inject(() => BookingActionProvider)
-    private bookingActionProvider: BookingActionProvider
+    @Inject(() => BookingActionService)
+    private bookingActionService: BookingActionService
   ) {}
 
   @Authorized(UserRole.USER)
@@ -46,7 +46,7 @@ export class BookingMutationResolver {
       userId,
     });
 
-    return this.bookingActionProvider.placeBooking(dto);
+    return this.bookingActionService.placeBooking(dto);
   }
 
   @Mutation(() => SingleBookingResponse)
@@ -65,7 +65,7 @@ export class BookingMutationResolver {
       panditId,
     });
 
-    return this.bookingActionProvider.acceptBooking(dto);
+    return this.bookingActionService.acceptBooking(dto);
   }
 
   @Mutation(() => SingleBookingResponse)
@@ -78,7 +78,7 @@ export class BookingMutationResolver {
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
 
-    return this.bookingActionProvider.initiateStartBooking(bookingId, panditId);
+    return this.bookingActionService.initiateStartBooking(bookingId, panditId);
   }
 
   @Mutation(() => SingleBookingResponse)
@@ -92,7 +92,7 @@ export class BookingMutationResolver {
 
     if (!panditId) throw new CustomError(UNAUTHORIZED);
 
-    return this.bookingActionProvider.finalizeStartBooking(
+    return this.bookingActionService.finalizeStartBooking(
       bookingId,
       panditId,
       otpCode
@@ -117,7 +117,7 @@ export class BookingMutationResolver {
       }
     );
 
-    return this.bookingActionProvider.cancelBookingByPandit(dto);
+    return this.bookingActionService.cancelBookingByPandit(dto);
   }
 
   @Mutation(() => SingleBookingResponse)
@@ -135,6 +135,6 @@ export class BookingMutationResolver {
       userId,
     });
 
-    return this.bookingActionProvider.cancelBookingByUser(dto);
+    return this.bookingActionService.cancelBookingByUser(dto);
   }
 }

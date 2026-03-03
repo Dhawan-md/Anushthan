@@ -1,8 +1,8 @@
 import { Container } from "typedi";
 import { Job } from "bullmq";
 
-import { RefundActionProvider } from "../../providers/refund/RefundActionProvider";
-import { RazorpayProvider } from "../../providers/razorpay/RazorpayProvider";
+import { RefundActionService } from "../../services/refund/RefundActionService";
+import { RazorpayService } from "../../infrastructure/razorpay/RazorpayService";
 
 import { createBullWorker } from "../../config/bullmq";
 import { AppDataSource } from "../../config/database";
@@ -31,8 +31,8 @@ const startWorker = async () => {
         originalAmount,
       } = job.data;
 
-      const refundActionProvider = Container.get(RefundActionProvider);
-      const razorpayProvider = Container.get(RazorpayProvider);
+      const refundActionService = Container.get(RefundActionService);
+      const razorpayService = Container.get(RazorpayService);
 
       try {
         let actualRefundId = refundId;
@@ -47,7 +47,7 @@ const startWorker = async () => {
             `[retryRefund-worker] 🆕 Creating new refund entry for retry attempt #${attemptNumber}`
           );
 
-          const newRefund = await refundActionProvider.createRefund({
+          const newRefund = await refundActionService.createRefund({
             userId,
             userRole: UserRole.USER,
             transactionId,
@@ -66,7 +66,7 @@ const startWorker = async () => {
           );
         }
 
-        const order = await razorpayProvider.refundPayment({
+        const order = await razorpayService.refundPayment({
           transactionId,
           paymentReferenceId,
           refundAmount,

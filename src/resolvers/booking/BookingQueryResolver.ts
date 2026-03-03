@@ -2,7 +2,7 @@ import { Inject, Service } from "typedi";
 import { Arg, Authorized, Ctx, Query, Resolver } from "type-graphql";
 import { plainToInstance } from "class-transformer";
 
-import { BookingInfoProvider } from "../../providers/booking/BookingInfoProvider";
+import { BookingInfoService } from "../../services/booking/BookingInfoService";
 
 import { Context } from "../../types/context";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
@@ -16,8 +16,8 @@ import { UNAUTHORIZED } from "../../utils/messages";
 @Resolver()
 export class BookingQueryResolver {
   constructor(
-    @Inject(() => BookingInfoProvider)
-    private bookingInfoProvider: BookingInfoProvider
+    @Inject(() => BookingInfoService)
+    private bookingInfoService: BookingInfoService
   ) {}
 
   @Authorized()
@@ -36,6 +36,6 @@ export class BookingQueryResolver {
       id: userId,
     });
 
-    return this.bookingInfoProvider.myBookings(dto);
+    return this.bookingInfoService.myBookings(dto);
   }
 }

@@ -1,7 +1,7 @@
 import { Arg, Mutation, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { OtpProvider } from "../../providers/otp/OtpProvider";
+import { OtpService } from "../../services/otp/OtpService";
 
 import { OtpResponse } from "../../types/responses/OtpResponse";
 
@@ -12,7 +12,7 @@ import { ResendOtpDto } from "../../types/dtos/Otp";
 @Service()
 @Resolver()
 export class OtpMutationResolver {
-  constructor(@Inject(() => OtpProvider) private otpProvider: OtpProvider) {}
+  constructor(@Inject(() => OtpService) private otpService: OtpService) {}
 
   @Mutation(() => OtpResponse)
   async resendOtp(
@@ -20,6 +20,6 @@ export class OtpMutationResolver {
   ): Promise<OtpResponse> {
     const dto = plainToInstance(ResendOtpDto, data);
 
-    return this.otpProvider.resendOtp(dto);
+    return this.otpService.resendOtp(dto);
   }
 }

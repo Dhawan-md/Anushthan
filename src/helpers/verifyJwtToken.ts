@@ -1,4 +1,5 @@
 import { verify, TokenExpiredError } from "jsonwebtoken";
+import { env } from "../config/env";
 import { CustomError } from "../utils/customError";
 import { FAILED_TO_VERIFY_TOKEN } from "../utils/messages";
 import {
@@ -6,10 +7,8 @@ import {
   CustomUserJwtPayload,
 } from "../types/context";
 
-const refreshSecret = process.env.REFRESH_TOKEN_SECRET!;
-const accessSecret = process.env.ACCESS_TOKEN_SECRET!;
-
 export const verifyRefreshToken = (token: string): CustomRefreshJwtPayload => {
+  const refreshSecret = env.REFRESH_TOKEN_SECRET!;
   try {
     const payload = verify(token, refreshSecret) as CustomRefreshJwtPayload;
     if (!payload) throw new CustomError(FAILED_TO_VERIFY_TOKEN);
@@ -24,6 +23,7 @@ export const verifyRefreshToken = (token: string): CustomRefreshJwtPayload => {
 };
 
 export const verifyAccessToken = (token: string): CustomUserJwtPayload => {
+  const accessSecret = env.ACCESS_TOKEN_SECRET!;
   try {
     const payload = verify(token, accessSecret) as CustomUserJwtPayload;
     if (!payload) throw new CustomError(FAILED_TO_VERIFY_TOKEN);

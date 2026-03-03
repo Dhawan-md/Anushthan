@@ -2,7 +2,7 @@ import { Arg, Authorized, Ctx, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
-import { UserLocationProvider } from "../../providers/user/UserLocationProvider";
+import { UserLocationService } from "../../services/user/UserLocationService";
 
 import { NearByPanditResponse } from "../../types/responses/PanditResponse";
 
@@ -21,8 +21,8 @@ import { verifyAccessToken } from "../../helpers/verifyJwtToken";
 @Resolver()
 export class UserQueryResolver {
   constructor(
-    @Inject(() => UserLocationProvider)
-    private userLocationProvider: UserLocationProvider
+    @Inject(() => UserLocationService)
+    private userLocationService: UserLocationService
   ) {}
 
   @Query(() => NearByPanditResponse)
@@ -40,7 +40,7 @@ export class UserQueryResolver {
       { userId, ...filters }
     );
 
-    return this.userLocationProvider.findNearbyPandits(dto);
+    return this.userLocationService.findNearbyPandits(dto);
   }
 
   @Query(() => [LocationSuggestionResponse])
@@ -48,7 +48,7 @@ export class UserQueryResolver {
   async searchLocationSuggestions(
     @Arg("query") query: string
   ): Promise<LocationSuggestion[]> {
-    const suggestions = await this.userLocationProvider.searchLocations(query);
+    const suggestions = await this.userLocationService.searchLocations(query);
     return suggestions;
   }
 
@@ -62,7 +62,7 @@ export class UserQueryResolver {
 
     if (!userId || !userRole) throw new CustomError("Unauthenticated");
     const suggestions =
-      await this.userLocationProvider.getAllAddressesForUser(userId);
+      await this.userLocationService.getAllAddressesForUser(userId);
     return suggestions;
   }
 

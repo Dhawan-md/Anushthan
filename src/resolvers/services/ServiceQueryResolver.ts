@@ -2,7 +2,7 @@ import { Arg, Authorized, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
-import { ServiceInfoProvider } from "../../providers/service/ServiceInfoProvider";
+import { ServiceInfoService } from "../../services/service/ServiceInfoService";
 
 import { MultipleServiceResponse } from "../../types/responses/ServiceResponse";
 import { GetServicesInput } from "../../types/inputTypes/service/GetServiceInput";
@@ -13,8 +13,8 @@ import { UserRole } from "../../utils/enums";
 @Resolver()
 export class ServiceQueryResolver {
   constructor(
-    @Inject(() => ServiceInfoProvider)
-    private serviceInfoProvider: ServiceInfoProvider
+    @Inject(() => ServiceInfoService)
+    private serviceInfoService: ServiceInfoService
   ) {}
 
   @Authorized(UserRole.USER)
@@ -25,6 +25,6 @@ export class ServiceQueryResolver {
   ): Promise<MultipleServiceResponse> {
     const dto = plainToInstance(GetServicesDto, data || {});
 
-    return this.serviceInfoProvider.getAllServices(dto);
+    return this.serviceInfoService.getAllServices(dto);
   }
 }

@@ -9,6 +9,7 @@ import {
 import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
 import { INVALID_TOKEN } from "../utils/messages";
+import { env } from "../config/env";
 
 export const context = ({
   req,
@@ -31,10 +32,10 @@ export const context = ({
     const token = userAuthHeader.split(" ")[1];
 
     try {
-      if (token && process.env["ACCESS_TOKEN_SECRET"]) {
+      if (token && env.ACCESS_TOKEN_SECRET) {
         const payload = verify(
           token,
-          process.env["ACCESS_TOKEN_SECRET"]
+          env.ACCESS_TOKEN_SECRET
         ) as CustomUserJwtPayload;
 
         user = payload;
@@ -49,10 +50,10 @@ export const context = ({
     const token = adminAuthHeader.split(" ")[1];
 
     try {
-      if (token && process.env["ACCESS_TOKEN_SECRET"]) {
+      if (token && env.ACCESS_TOKEN_SECRET) {
         const payload = verify(
           token,
-          process.env["ACCESS_TOKEN_SECRET"]
+          env.ACCESS_TOKEN_SECRET
         ) as CustomAdminJwtPayload;
 
         admin = payload;

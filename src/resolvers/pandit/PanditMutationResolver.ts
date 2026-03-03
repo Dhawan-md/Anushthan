@@ -2,8 +2,8 @@ import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { FileUpload } from "graphql-upload-minimal";
 import { Inject, Service } from "typedi";
 
-import { PanditAuthProvider } from "../../providers/pandit/PanditAuthProvider";
-import { PanditPasswordProvider } from "../../providers/pandit/PanditPasswordProvider";
+import { PanditAuthService } from "../../services/pandit/PanditAuthService";
+import { PanditPasswordService } from "../../services/pandit/PanditPasswordService";
 
 import { SinglePanditResponse } from "../../types/responses/PanditResponse";
 import { VerifyResetResponse } from "../../types/responses/VerifyResetResponse";
@@ -31,11 +31,11 @@ import { plainToInstance } from "class-transformer";
 @Resolver()
 export class PanditMutationResolver {
   constructor(
-    @Inject(() => PanditAuthProvider)
-    private panditAuthProvider: PanditAuthProvider,
-    @Inject(() => PanditPasswordProvider)
-    private panditPaswordProvider: PanditPasswordProvider,
-  ) {}
+    @Inject(() => PanditAuthService)
+    private panditAuthService: PanditAuthService,
+    @Inject(() => PanditPasswordService)
+    private panditPasswordService: PanditPasswordService,
+  ) { }
 
   @Mutation(() => SinglePanditResponse)
   @Authorized(UserRole.USER)
@@ -53,7 +53,7 @@ export class PanditMutationResolver {
       resolvedDocument.push(doc);
     }
 
-    return this.panditAuthProvider.registerPandit({
+    return this.panditAuthService.registerPandit({
       userId,
       password: data.password,
       documents: resolvedDocument,
@@ -66,21 +66,21 @@ export class PanditMutationResolver {
   async loginPandit(@Arg("data") data: LoginPanditInput) {
     const dto: LoginPanditDto = plainToInstance(LoginPanditDto, data);
 
-    return this.panditAuthProvider.loginPandit(dto);
+    return this.panditAuthService.loginPandit(dto);
   }
 
   @Mutation(() => SinglePanditResponse)
   async verifyPandit(@Arg("data") data: VerifyInputs) {
     const dto: VerifyPanditDto = plainToInstance(VerifyPanditDto, data);
 
-    return this.panditAuthProvider.verifyPandit(dto);
+    return this.panditAuthService.verifyPandit(dto);
   }
 
   @Mutation(() => SinglePanditResponse)
   async forgetPassword(@Arg("data") data: EmailInput) {
     const dto: ForgetPasswordDto = plainToInstance(ForgetPasswordDto, data);
 
-    return this.panditPaswordProvider.forgetPassword(dto);
+    return this.panditPasswordService.forgetPassword(dto);
   }
 
   @Mutation(() => VerifyResetResponse)
@@ -90,13 +90,13 @@ export class PanditMutationResolver {
       data
     );
 
-    return this.panditPaswordProvider.verifyResetPassword(dto);
+    return this.panditPasswordService.verifyResetPassword(dto);
   }
 
   @Mutation(() => SinglePanditResponse)
   async resetPassword(@Arg("data") data: ResetPasswordInput) {
     const dto: ResetPasswordDto = plainToInstance(ResetPasswordDto, data);
 
-    return this.panditPaswordProvider.resetPassword(dto);
+    return this.panditPasswordService.resetPassword(dto);
   }
 }

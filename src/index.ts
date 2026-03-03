@@ -1,4 +1,9 @@
 import "reflect-metadata";
+import { validateEnv, env } from "./config/env";
+
+// ⚠️ Initialize and validate environment variables before anything else
+validateEnv();
+
 
 import express, { Application } from "express";
 import cors from "cors";
@@ -14,7 +19,7 @@ import {
 } from "graphql-upload-minimal";
 import Container from "typedi";
 
-import { NotificationProvider } from "./providers/notification/notificationProvider";
+import { NotificationService } from "./services/notification/NotificationService";
 
 import { UploadScalar } from "./types/scalar/UploadScalar";
 
@@ -28,7 +33,7 @@ import { redisPublisher, redisSubscriber } from "./config/redis";
 import { loggerMiddlware } from "./middlewares/loggerMiddleware";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 
-import { razorpayWebhookHandler } from "./service/payment/razorpayWebhookHandler";
+import { razorpayWebhookHandler } from "./handlers/payment/RazorpayWebhookHandler";
 
 import { logger } from "./utils/logger";
 
@@ -88,9 +93,9 @@ const createApp = async () => {
   Container.set("redisPublisher", redisPublisher);
   Container.set("redisSubscriber", redisSubscriber);
 
-  const notificationProvider = Container.get(NotificationProvider);
+  const notificationService = Container.get(NotificationService);
 
-  await notificationProvider.subscribe("booking_notification");
+  await notificationService.subscribe("booking_notification");
 
   app.get("/test-payment/:orderId", (req, res) => {
     const { orderId } = req.params;
@@ -98,7 +103,7 @@ const createApp = async () => {
   <form>
     <script
       src="https://checkout.razorpay.com/v1/checkout.js"
-      data-key="${process.env.RAZORPAY_KEY_ID}"
+      data-key="${env.RAZORPAY_KEY_ID}"
       data-order_id="${orderId}"
       data-amount="50000"
       data-currency="INR"
@@ -150,7 +155,7 @@ const startServer = async () => {
     //   }
     // });
 
-    const PORT = process.env.PORT || 5000;
+    const PORT = env.PORT;
 
     httpServer.listen(PORT, () => {
       logger.info(`🚀 Server is running at http://localhost:${PORT}/graphql`);

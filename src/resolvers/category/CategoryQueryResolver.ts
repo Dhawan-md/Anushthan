@@ -2,7 +2,7 @@ import { Arg, Authorized, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
-import { CategoryInfoProvider } from "../../providers/category/CategoryInfoProvider";
+import { CategoryInfoService } from "../../services/category/CategoryInfoService";
 
 import { MultipleCategoryResponse } from "../../types/responses/CategoryResponse";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
@@ -14,8 +14,8 @@ import { UserRole } from "../../utils/enums";
 @Resolver()
 export class CategoryQueryResolver {
   constructor(
-    @Inject(() => CategoryInfoProvider)
-    private categoryInfoProvider: CategoryInfoProvider
+    @Inject(() => CategoryInfoService)
+    private categoryInfoService: CategoryInfoService
   ) {}
 
   @Authorized(UserRole.USER)
@@ -23,6 +23,6 @@ export class CategoryQueryResolver {
   async getAllCategories(@Arg("data") data: PaginationInput) {
     const dto = plainToInstance(PaginationDto, data);
 
-    return this.categoryInfoProvider.getAllCategories(dto);
+    return this.categoryInfoService.getAllCategories(dto);
   }
 }

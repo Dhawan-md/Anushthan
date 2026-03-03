@@ -1,9 +1,9 @@
 import { Arg, Authorized, Query, Resolver } from "type-graphql";
 import { Inject, Service } from "typedi";
 
-import { PanditInfoProvider } from "../../providers/pandit/PanditInfoProvider";
-import { UserInfoProvider } from "../../providers/user/UserInfoProvider";
-import { TimeSlotProvider } from "../../providers/admin/timeSlot/TimeSlotProvider";
+import { PanditInfoService } from "../../services/pandit/PanditInfoService";
+import { UserInfoService } from "../../services/user/UserInfoService";
+import { TimeSlotService } from "../../services/admin/timeSlot/TimeSlotService";
 
 import { MultiplePanditResponse } from "../../types/responses/PanditResponse";
 import { MultipleDocumentResponse } from "../../types/responses/DocumentResponse";
@@ -22,12 +22,12 @@ import { PaginationDto } from "../../types/dtos/Pagination";
 @Resolver()
 export class AminQueryResolver {
   constructor(
-    @Inject(() => PanditInfoProvider)
-    private readonly panditInfoProvider: PanditInfoProvider,
-    @Inject(() => UserInfoProvider)
-    private readonly userInfoProvider: UserInfoProvider,
-    @Inject(() => TimeSlotProvider)
-    private readonly timeSlotProvider: TimeSlotProvider
+    @Inject(() => PanditInfoService)
+    private readonly panditInfoService: PanditInfoService,
+    @Inject(() => UserInfoService)
+    private readonly userInfoService: UserInfoService,
+    @Inject(() => TimeSlotService)
+    private readonly timeSlotService: TimeSlotService
   ) {}
 
   @Query(() => MultiplePanditResponse)
@@ -37,7 +37,7 @@ export class AminQueryResolver {
     data?: GetAllPanditsInput
   ): Promise<MultiplePanditResponse> {
     const dto = plainToInstance(GetAllPanditsDto, data || {});
-    return this.panditInfoProvider.getAllPandits(dto);
+    return this.panditInfoService.getAllPandits(dto);
   }
 
   @Query(() => MultipleUserResponse)
@@ -47,7 +47,7 @@ export class AminQueryResolver {
     data?: PaginationInput
   ): Promise<MultipleUserResponse> {
     const dto = plainToInstance(PaginationDto, data || {});
-    return this.userInfoProvider.getAllUsers(dto);
+    return this.userInfoService.getAllUsers(dto);
   }
 
   @Query(() => MultipleDocumentResponse)
@@ -55,12 +55,12 @@ export class AminQueryResolver {
   async getDocument(
     @Arg("data") data: GetDocumentInput
   ): Promise<MultipleDocumentResponse> {
-    return this.panditInfoProvider.getDocument(data.filePathArray);
+    return this.panditInfoService.getDocument(data.filePathArray);
   }
 
   @Query(() => MultipleTimeSlotResponse)
   @Authorized([AdminRole.ADMIN, AdminRole.SUPERADMIN, UserRole.USER])
   async getAllTimeSlots(): Promise<MultipleTimeSlotResponse> {
-    return this.timeSlotProvider.getAllTimeSlots();
+    return this.timeSlotService.getAllTimeSlots();
   }
 }

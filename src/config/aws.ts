@@ -1,11 +1,11 @@
 import { S3Client } from "@aws-sdk/client-s3";
-
+import { env } from "./env";
 import { logger } from "../utils/logger";
 import { S3_INITIALIZATION_FAILED } from "../utils/messages";
 
-const AWS_REGION = process.env["AWS_REGION"] || "us-east-1";
-const AWS_ACCESS_KEY = process.env["AWS_ACCESS_KEY"];
-const AWS_SECRET_KEY = process.env["AWS_SECRET_KEY"];
+const AWS_REGION = env.AWS_REGION || "us-east-1";
+const AWS_ACCESS_KEY = env.AWS_ACCESS_KEY;
+const AWS_SECRET_KEY = env.AWS_SECRET_KEY;
 
 let s3Client: S3Client | null = null;
 
