@@ -30,7 +30,7 @@ import { UpdatePanditService } from "../../services/pandit/UpdatePanditService";
 import { CategoryInfoService } from "../../services/category/CategoryInfoService";
 import { ChangePasswordInput } from "../../types/inputTypes/pandit/ChangePasswordInput";
 import { UpdatePanditInput } from "../../types/inputTypes/pandit/UpdatePanditInput";
-import { AddServiceInput } from "../../types/inputTypes/pandit/AddServiceInput";
+import { PanditAddServiceInput } from "../../types/inputTypes/pandit/AddServiceInput";
 import { PanditInfoService } from "../../services/pandit/PanditInfoService";
 import { S3Service } from "../../infrastructure/aws/S3Service";
 import { S3BucketType } from "../../utils/enums";
@@ -165,7 +165,7 @@ export class PanditMutationResolver {
   @Mutation(() => SinglePanditResponse)
   @Authorized(UserRole.PANDIT)
   async addServiceAPI(
-    @Arg("data") data: AddServiceInput,
+    @Arg("data") data: PanditAddServiceInput,
     @Ctx() ctx: Context
   ): Promise<SinglePanditResponse> {
     const panditId = ctx.user?.panditId || ctx.user?.id;
