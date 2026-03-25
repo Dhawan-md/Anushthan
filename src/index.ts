@@ -42,6 +42,8 @@ import { AdminMutationResolver } from "./resolvers/admin/AdminMutationResolver";
 import { PanditMutationResolver } from "./resolvers/pandit/PanditMutationResolver";
 import { AminQueryResolver } from "./resolvers/admin/AdminQueryResolver";
 import { BookingMutationResolver } from "./resolvers/booking/BookingMutationResolver";
+import { BookingQueryResolver } from "./resolvers/booking/BookingQueryResolver";
+import { PanditQueryResolver } from "./resolvers/pandit/PanditQueryResolver";
 import { ServiceQueryResolver } from "./resolvers/services/ServiceQueryResolver";
 import { CategoryQueryResolver } from "./resolvers/category/CategoryQueryResolver";
 import { UserMutationResolver } from "./resolvers/User/UserMutationResolver";
@@ -59,8 +61,10 @@ const createApp = async () => {
       OtpMutationResolver,
       AdminMutationResolver,
       PanditMutationResolver,
+      PanditQueryResolver,
       AminQueryResolver,
       BookingMutationResolver,
+      BookingQueryResolver,
       ServiceQueryResolver,
       CategoryQueryResolver,
       UserQueryResolver,

@@ -13,6 +13,7 @@ import { Category } from "../entities/Category";
 import { CancelledBooking } from "../entities/CancelledBooking";
 import { UserLocation } from "../entities/UserLocation";
 import { TimeSlot } from "../entities/TimeSlot";
+import { Notification } from "../entities/Notification";
 
 import { logger } from "../utils/logger";
 import { CustomError } from "../utils/customError";
@@ -39,6 +40,7 @@ export const AppDataSource = new DataSource({
     UserLocation,
     TimeSlot,
     Cart,
+    Notification,
   ],
   synchronize: env.NODE_ENV !== "production",
 });

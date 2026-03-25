@@ -20,6 +20,7 @@ import {
   OTP_SENT,
   OTP_VERIFICATION_REQUIRED,
   RESET_PASSWORD_SUCCESS,
+  INVALID_PASSWORD,
 } from "../../utils/messages";
 import { getEmailTypeByOtpType } from "../../utils/getEmailTypeByOtp";
 import { validatePassword } from "../../utils/validatePassword";
@@ -32,6 +33,7 @@ import {
   VerifyResetPasswordDto,
 } from "../../types/dtos/Pandit";
 import { generateVerificationToken } from "../../helpers/generateJwtToken";
+import { ChangePasswordInput } from "../../types/inputTypes/pandit/ChangePasswordInput";
 
 @Service()
 export class PanditPasswordService {
@@ -144,5 +146,36 @@ export class PanditPasswordService {
     );
 
     return new SinglePanditResponse(true, RESET_PASSWORD_SUCCESS);
+  }
+
+  async changePassword(panditId: string, params: ChangePasswordInput): Promise<SinglePanditResponse> {
+    const { oldPassword, newPassword } = params;
+
+    validatePassword(newPassword);
+
+    const panditData = await this.panditInfoService.getPandit({ data: { id: panditId }});
+
+    const isMatchingOld = await isSamePassword({
+      inputPassword: oldPassword,
+      hashedPassword: panditData.password
+    });
+
+    if (!isMatchingOld) {
+      throw new CustomError(INVALID_PASSWORD);
+    }
+
+    const isMatchingNew = await isSamePassword({
+      inputPassword: newPassword,
+      hashedPassword: panditData.password
+    });
+
+    if (isMatchingNew) {
+      throw new CustomError(OLD_PASSWORD_ERROR);
+    }
+
+    panditData.password = await hashPassword(newPassword);
+    await this.updatePanditService.updatePandit(panditData, panditId);
+
+    return new SinglePanditResponse(true, "Password changed successfully");
   }
 }

@@ -1,4 +1,4 @@
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import { EntityManager, Repository } from "typeorm";
 import speakeasy from "speakeasy";
 

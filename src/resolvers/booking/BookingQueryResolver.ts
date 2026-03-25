@@ -6,7 +6,7 @@ import { BookingInfoService } from "../../services/booking/BookingInfoService";
 
 import { Context } from "../../types/context";
 import { PaginationInput } from "../../types/inputTypes/PaginationInput";
-import { MultipleBookingResponse } from "../../types/responses/BookingResponse";
+import { MultipleBookingResponse, SingleBookingResponse } from "../../types/responses/BookingResponse";
 import { MyBookingsDto } from "../../types/dtos/booking";
 
 import { CustomError } from "../../utils/customError";
@@ -37,5 +37,24 @@ export class BookingQueryResolver {
     });
 
     return this.bookingInfoService.myBookings(dto);
+  }
+
+  @Authorized()
+  @Query(() => SingleBookingResponse)
+  async bookingDetailsAPI(
+    @Arg("bookingId") bookingId: string,
+    @Ctx() ctx: Context
+  ): Promise<SingleBookingResponse> {
+    const userId = ctx.user?.id || ctx.user?.panditId;
+    if (!userId) throw new CustomError(UNAUTHORIZED);
+
+    const booking = await this.bookingInfoService.getBookingDetails({ bookingId });
+    
+    // Check if the user/pandit actually owns this booking
+    if (booking.userId !== userId && booking.panditId !== userId) {
+      throw new CustomError("You do not have permission to view this booking.");
+    }
+
+    return new SingleBookingResponse(true, "Booking details fetched successfully", booking);
   }
 }
