@@ -159,13 +159,14 @@ export class PanditAuthService {
   }
 
   async verifyPandit(params: VerifyPanditDto): Promise<SinglePanditResponse> {
-    const { phoneNumber, otpCode } = params;
+    const { phoneNumber, otpCode, deviceToken } = params;
     logger.info(
       `🔄 Verification request received for pandit with phone number: ${phoneNumber}`
     );
 
     const panditData = await this.panditInfoService.getPandit({
       data: { phoneNumber },
+      withUser: true,
     });
 
     logger.info(`🔍 Verifying OTP for user with phone number: ${phoneNumber}`);
@@ -174,6 +175,13 @@ export class PanditAuthService {
       otpCode,
       otpType: OtpType.PANDIT,
     });
+
+    if (deviceToken) {
+      await this.userInfoService.updateUserDeviceToken(
+        panditData.user.id,
+        deviceToken
+      );
+    }
 
     const accessToken = generateAccessToken({
       id: panditData.id,

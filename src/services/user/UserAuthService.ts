@@ -54,7 +54,7 @@ export class UserAuthService {
   }
 
   async registerUser(params: RegisterUserDto): Promise<SingleUserResponse> {
-    const { userEmail, name, phoneNumber, profileImage } = params;
+    const { userEmail, name, phoneNumber, profileImage, deviceToken } = params;
     logger.info(`🔄Processing register user request for : ${userEmail}`);
     validateEmail(userEmail);
 
@@ -76,6 +76,7 @@ export class UserAuthService {
           name: name,
           userEmail: userEmail.trim().toLowerCase(),
           phoneNumber: phoneNumber,
+          deviceToken: deviceToken,
           profileImage: JSON.stringify(
             (Array.isArray(uploadedImages) ? uploadedImages : [uploadedImages]).map((images) => images.filePath)
           ),
@@ -118,7 +119,7 @@ export class UserAuthService {
   }
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
-    const { phoneNumber, otpCode } = params;
+    const { phoneNumber, otpCode, deviceToken } = params;
     logger.info(`🔄 Verification request received for: ${phoneNumber}`);
 
     const userData = await this.userInfoService.getUser({
@@ -139,7 +140,10 @@ export class UserAuthService {
     const refreshToken = generateRefreshToken({ id: userData.id });
 
     await this.updateUserService.updateUser({
-      updatedUserData: { refreshToken: refreshToken.token },
+      updatedUserData: {
+        refreshToken: refreshToken.token,
+        ...(deviceToken && { deviceToken }),
+      },
       userId: userData.id,
     });
 

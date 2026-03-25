@@ -42,6 +42,10 @@ export class User {
   @Column({ nullable: true })
   refreshToken?: string;
 
+  @Field({ nullable: true })
+  @Column({ name: "device_token", nullable: true })
+  deviceToken?: string;
+
   @Field()
   @Column({
     name: "user_role",

@@ -18,4 +18,7 @@ export class RegisterUserInput {
 
   @Field(() => GraphQLUpload, { nullable: true })
   profileImage?: Promise<FileUpload>;
+
+  @Field({ nullable: true })
+  deviceToken?: string;
 }

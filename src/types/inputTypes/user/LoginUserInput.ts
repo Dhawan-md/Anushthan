@@ -6,4 +6,7 @@ export class LoginUserInput {
   @Field()
   @IsPhoneNumber('IN')
   phoneNumber: string;
+
+  @Field({ nullable: true })
+  deviceToken?: string;
 }

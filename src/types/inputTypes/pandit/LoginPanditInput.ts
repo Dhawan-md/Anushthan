@@ -9,4 +9,7 @@ export class LoginPanditInput {
 
   @Field()
   password: string;
+
+  @Field({ nullable: true })
+  deviceToken?: string;
 }

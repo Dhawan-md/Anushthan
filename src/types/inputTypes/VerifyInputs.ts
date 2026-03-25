@@ -10,4 +10,7 @@ export class VerifyInputs {
   @Field()
   @Length(4)
   otpCode: string;
+
+  @Field({ nullable: true })
+  deviceToken?: string;
 }

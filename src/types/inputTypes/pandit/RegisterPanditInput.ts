@@ -15,5 +15,8 @@ export class RegisterPanditInput {
 
   @Field(() => Int)
   experience: number;
+
+  @Field({ nullable: true })
+  deviceToken?: string;
 }
 

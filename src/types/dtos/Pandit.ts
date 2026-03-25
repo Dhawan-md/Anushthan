@@ -6,16 +6,19 @@ export class RegisterPanditDto {
   documents: FileUpload[];
   categoryIds: string[];
   experience: number;
+  deviceToken?: string;
 }
 
 export class LoginPanditDto {
   phoneNumber: string;
   password: string;
+  deviceToken?: string;
 }
 
 export class VerifyPanditDto {
   phoneNumber: string;
   otpCode: string;
+  deviceToken?: string;
 }
 
 export class ForgetPasswordDto {

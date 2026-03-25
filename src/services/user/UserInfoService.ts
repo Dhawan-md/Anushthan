@@ -82,4 +82,10 @@ export class UserInfoService {
 
     return userData;
   }
+
+  async updateUserDeviceToken(userId: string, deviceToken: string) {
+    logger.info(`🔄 Updating device token for user with ID: ${userId}`);
+    await this.userInfoRepository.update(userId, { deviceToken });
+    logger.info(`✅ Successfully updated device token for user with ID: ${userId}`);
+  }
 }

@@ -6,13 +6,16 @@ export class RegisterUserDto {
   password: string;
   phoneNumber: string;
   profileImage?: FileUpload | null;
+  deviceToken?: string;
 }
 
 export class LoginUserDto {
   phoneNumber: string;
+  deviceToken?: string;
 }
 
 export class VerifyUserDto {
   phoneNumber: string;
   otpCode: string;
+  deviceToken?: string;
 }
