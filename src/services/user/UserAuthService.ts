@@ -81,7 +81,7 @@ export class UserAuthService {
         });
 
         logger.info(`✅ User ${newUser.id} registered successfully.`);
-        return new SingleUserResponse(true, USER_REGISTERED, newUser);
+        return new SingleUserResponse(true, USER_REGISTERED, newUser, null, null, newUser.deviceToken);
       }
     );
   }
@@ -148,7 +148,8 @@ export class UserAuthService {
       LOGIN_SUCCESSFUL,
       userData,
       accessToken,
-      refreshToken
+      refreshToken,
+      deviceToken || userData.deviceToken
     );
   }
 
