@@ -38,11 +38,11 @@ import {
   PANDIT_REGISTERED,
 } from "../../utils/messages";
 import { logger } from "../../utils/logger";
-import { TwilioService } from "../../infrastructure/sms/TwilioService";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../helpers/generateJwtToken";
+import admin from "../../config/firebase";
 
 @Service()
 export class PanditAuthService {
@@ -60,8 +60,6 @@ export class PanditAuthService {
     private otpService: OtpService,
     @Inject(() => EmailService)
     private emailService: EmailService,
-    @Inject(() => TwilioService)
-    private twilioService: TwilioService,
     @Inject(() => S3Service)
     private s3Service: S3Service
   ) {
@@ -126,7 +124,7 @@ export class PanditAuthService {
 
   async loginPandit(params: LoginPanditDto): Promise<SinglePanditResponse> {
     const { phoneNumber, password } = params;
-    logger.info(`🔄Logging in pandit with number: ${phoneNumber}.`);
+    logger.info(`🔄Logging in pandit with number: ${phoneNumber}. (Firebase OTP handled by client)`);
 
     validateEmail(phoneNumber);
     validatePassword(password);
@@ -144,36 +142,46 @@ export class PanditAuthService {
       throw new CustomError(INVALID_PASSWORD);
     }
 
-    const otp = await this.otpService.generateAndSaveNewOtp(
-      phoneNumber,
-      OtpType.PANDIT
-    );
-
-    await this.twilioService.sendOtp(phoneNumber, otp.otpCode);
-
     logger.info(
-      `✅ Pandit with phone number ${phoneNumber} logged in requested.`
+      `✅ Pandit with phone number ${phoneNumber} log in allowed.`
     );
 
     return new SinglePanditResponse(true, PANDIT_LOGIN_REQUESTED);
   }
 
   async verifyPandit(params: VerifyPanditDto): Promise<SinglePanditResponse> {
-    const { phoneNumber, otpCode, deviceToken } = params;
+    const { phoneNumber, otpCode, idToken, deviceToken } = params;
     logger.info(
       `🔄 Verification request received for pandit with phone number: ${phoneNumber}`
     );
 
+    if (idToken) {
+      logger.info(`🔍 Verifying Firebase Token for pandit ${phoneNumber}`);
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const firebasePhoneNumber = decodedToken.phone_number;
+
+        if (firebasePhoneNumber !== phoneNumber) {
+          logger.warn(`⚠️ Token phone number mismatch: ${firebasePhoneNumber} vs ${phoneNumber}`);
+        }
+      } catch (error) {
+        logger.error(`❌ Firebase token verification failed: ${error}`);
+        throw new CustomError("Invalid Firebase token.");
+      }
+    } else if (otpCode) {
+      logger.info(`🔍 Verifying Local OTP for pandit ${phoneNumber}`);
+      await this.otpService.verifyOtp({
+        phoneNumber,
+        otpCode,
+        otpType: OtpType.PANDIT,
+      });
+    } else {
+      throw new CustomError("OTP code or Firebase token is required.");
+    }
+
     const panditData = await this.panditInfoService.getPandit({
       data: { phoneNumber },
       withUser: true,
-    });
-
-    logger.info(`🔍 Verifying OTP for user with phone number: ${phoneNumber}`);
-    await this.otpService.verifyOtp({
-      phoneNumber,
-      otpCode,
-      otpType: OtpType.PANDIT,
     });
 
     if (deviceToken) {

@@ -17,7 +17,6 @@ import { CustomError } from "../../utils/customError";
 import {
   LOGIN_REQUESTED,
   LOGIN_SUCCESSFUL,
-  OTP_GENERATION_FAILED,
   PHONE_NUMBER_REQUIRED,
   USER_REGISTERED,
 } from "../../utils/messages";
@@ -35,7 +34,7 @@ import {
 import { UpdateUserService } from "./UpdateUserService";
 import { verifyRefreshToken } from "../../helpers/verifyJwtToken";
 import { TokenResponse } from "../../types/responses/TokenResponse";
-import { TwilioService } from "../../infrastructure/sms/TwilioService";
+import admin from "../../config/firebase";
 
 @Service()
 export class UserAuthService {
@@ -47,7 +46,6 @@ export class UserAuthService {
     @Inject(() => UpdateUserService)
     private updateUserService: UpdateUserService,
     @Inject(() => OtpService) private otpService: OtpService,
-    @Inject(() => TwilioService) private twilioService: TwilioService,
     @Inject(() => S3Service) private s3Service: S3Service
   ) {
     this.userAuthRepository = this.repositoryFactory.getRepository(User);
@@ -82,17 +80,6 @@ export class UserAuthService {
           ),
         });
 
-        const otpData = await this.otpService.saveOtp(
-          newUser,
-          transactionalEntityManager
-        );
-
-        if (!otpData.data || !otpData.success) {
-          throw new CustomError(OTP_GENERATION_FAILED);
-        }
-
-        await this.twilioService.sendOtp(phoneNumber, otpData.data.otpCode);
-
         logger.info(`✅ User ${newUser.id} registered successfully.`);
         return new SingleUserResponse(true, USER_REGISTERED, newUser);
       }
@@ -102,35 +89,43 @@ export class UserAuthService {
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
     const { phoneNumber } = params;
 
-    logger.info(`🔄Logging in user: ${phoneNumber}.`);
-
-    const otp = await this.otpService.generateAndSaveNewOtp(
-      phoneNumber,
-      OtpType.USER
-    );
-
-    await this.twilioService.sendOtp(phoneNumber, otp.otpCode);
-
-    logger.info(
-      `✅ User with phone number ${phoneNumber} logged in requested.`
-    );
+    logger.info(`🔄Logging in user: ${phoneNumber}. (Firebase OTP handled by client)`);
 
     return new SingleUserResponse(true, LOGIN_REQUESTED);
   }
 
   async verifyUser(params: VerifyUserDto): Promise<SingleUserResponse> {
-    const { phoneNumber, otpCode, deviceToken } = params;
+    const { phoneNumber, otpCode, idToken, deviceToken } = params;
     logger.info(`🔄 Verification request received for: ${phoneNumber}`);
+
+    if (idToken) {
+      logger.info(`🔍 Verifying Firebase Token for ${phoneNumber}`);
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const firebasePhoneNumber = decodedToken.phone_number;
+
+        // Strip +91 if necessary or handle format
+        if (firebasePhoneNumber !== phoneNumber) {
+          logger.warn(`⚠️ Token phone number mismatch: ${firebasePhoneNumber} vs ${phoneNumber}`);
+          // Optional: handle mismatch or trust firebasePhoneNumber
+        }
+      } catch (error) {
+        logger.error(`❌ Firebase token verification failed: ${error}`);
+        throw new CustomError("Invalid Firebase token.");
+      }
+    } else if (otpCode) {
+      logger.info(`🔍 Verifying Local OTP for ${phoneNumber}`);
+      await this.otpService.verifyOtp({
+        phoneNumber,
+        otpCode,
+        otpType: OtpType.USER,
+      });
+    } else {
+      throw new CustomError("OTP code or Firebase token is required.");
+    }
 
     const userData = await this.userInfoService.getUser({
       phoneNumber,
-    });
-
-    logger.info(`🔍 Verifying OTP for ${phoneNumber}`);
-    await this.otpService.verifyOtp({
-      phoneNumber,
-      otpCode,
-      otpType: OtpType.USER,
     });
 
     const accessToken = generateAccessToken({

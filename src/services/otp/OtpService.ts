@@ -26,15 +26,13 @@ import {
   VALID_OTP,
 } from "../../utils/messages";
 import { ActiveStatus, OtpType } from "../../utils/enums";
-import { TwilioService } from "../../infrastructure/sms/TwilioService";
 
 @Service()
 export class OtpService {
   private otpRepository: Repository<Otp>;
 
   constructor(
-    private repositoryFactory: RepositoryFactory,
-    @Inject(() => TwilioService) private twilioService: TwilioService
+    private repositoryFactory: RepositoryFactory
   ) {
     this.otpRepository = this.repositoryFactory.getRepository(Otp);
   }
@@ -67,11 +65,10 @@ export class OtpService {
 
   async resendOtp(params: ResendOtpDto): Promise<OtpResponse> {
     const { phoneNumber, otpType = OtpType.USER } = params;
-    logger.info(`🔄 Resending ${otpType} OTP for ${phoneNumber}.`);
 
     const newOtp = await this.generateAndSaveNewOtp(phoneNumber, otpType);
 
-    await this.twilioService.sendOtp(phoneNumber, newOtp.otpCode);
+    logger.info(`🔄 Resending ${otpType} OTP for ${phoneNumber}. (Firebase OTP handled by client)`);
 
     return new OtpResponse(true, RESEND_OTP_SUCCESS, newOtp);
   }

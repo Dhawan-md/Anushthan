@@ -16,6 +16,7 @@ export class LoginUserDto {
 
 export class VerifyUserDto {
   phoneNumber: string;
-  otpCode: string;
+  otpCode?: string;
+  idToken?: string;
   deviceToken?: string;
 }

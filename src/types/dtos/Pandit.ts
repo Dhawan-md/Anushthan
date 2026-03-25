@@ -17,7 +17,8 @@ export class LoginPanditDto {
 
 export class VerifyPanditDto {
   phoneNumber: string;
-  otpCode: string;
+  otpCode?: string;
+  idToken?: string;
   deviceToken?: string;
 }
 

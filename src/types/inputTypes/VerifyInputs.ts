@@ -7,9 +7,12 @@ export class VerifyInputs {
   @IsPhoneNumber("IN")
   phoneNumber: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Length(4)
-  otpCode: string;
+  otpCode?: string;
+
+  @Field({ nullable: true })
+  idToken?: string;
 
   @Field({ nullable: true })
   deviceToken?: string;
