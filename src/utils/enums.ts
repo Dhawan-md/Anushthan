@@ -149,6 +149,7 @@ export enum RefundReason {
   DUPLICATE_PAYMENT = "DUPLICATE_PAYMENT",
   OTHER = "OTHER",
 }
+registerEnumType(RefundReason, { name: "RefundReason" });
 
 export enum PaymentType {
   COD = "COD",

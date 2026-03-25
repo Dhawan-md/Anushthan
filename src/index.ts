@@ -53,7 +53,19 @@ import { CartMutationResolver } from "./resolvers/cart/CartMutationResolver";
 const createApp = async () => {
   const app: Application = express();
   app.use(cors());
-  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 }));
+  
+  // Scope graphqlUploadExpress specifically to /graphql and add error handling
+  // to prevent 'graphql-upload-minimal' unhandled rejection crashes.
+  const uploadMiddleware = graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 2 });
+  app.use("/graphql", (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err) {
+        logger.error(`[GraphQL Upload Error] ${err.message || err}`);
+        return next(err);
+      }
+      next();
+    });
+  });
 
   const schema = await buildSchema({
     resolvers: [
