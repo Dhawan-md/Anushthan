@@ -89,7 +89,13 @@ export class UserAuthService {
   async loginUser(params: LoginUserDto): Promise<SingleUserResponse> {
     const { phoneNumber } = params;
 
-    logger.info(`🔄Logging in user: ${phoneNumber}. (Firebase OTP handled by client)`);
+    logger.info(`🔄Logging in user: ${phoneNumber}.`);
+
+    const user = await this.userInfoService.getUser({ phoneNumber });
+
+    await this.userAuthRepository.manager.transaction(async (transactionalEntityManager) => {
+      await this.otpService.saveOtp(user, transactionalEntityManager);
+    });
 
     return new SingleUserResponse(true, LOGIN_REQUESTED);
   }

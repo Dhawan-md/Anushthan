@@ -57,6 +57,10 @@ export class Otp {
   })
   otpType!: OtpType;
 
+  @Field({ nullable: true })
+  @Column({ name: "session_info", nullable: true })
+  sessionInfo?: string;
+
   @Field()
   @Column({ name: "created_at" })
   createdAt!: Date;

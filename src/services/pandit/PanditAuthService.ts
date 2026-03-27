@@ -124,13 +124,14 @@ export class PanditAuthService {
 
   async loginPandit(params: LoginPanditDto): Promise<SinglePanditResponse> {
     const { phoneNumber, password } = params;
-    logger.info(`🔄Logging in pandit with number: ${phoneNumber}. (Firebase OTP handled by client)`);
+    logger.info(`🔄Logging in pandit with number: ${phoneNumber}.`);
 
     validateEmail(phoneNumber);
     validatePassword(password);
 
     const panditData = await this.panditInfoService.getPandit({
       data: { phoneNumber },
+      withUser: true,
     });
 
     const isMatching = await isSamePassword({
@@ -142,8 +143,12 @@ export class PanditAuthService {
       throw new CustomError(INVALID_PASSWORD);
     }
 
+    await this.panditAuthRepository.manager.transaction(async (transactionalEntityManager) => {
+      await this.otpService.saveOtp(panditData.user, transactionalEntityManager);
+    });
+
     logger.info(
-      `✅ Pandit with phone number ${phoneNumber} log in allowed.`
+      `✅ Pandit with phone number ${phoneNumber} log in allowed. OTP sent.`
     );
 
     return new SinglePanditResponse(true, PANDIT_LOGIN_REQUESTED);
