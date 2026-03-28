@@ -95,7 +95,7 @@ const Footer = () => (
       </div>
       <div className="footer-bottom">
         <p>&copy; 2025 Our Pandit. All spiritual rights reserved.</p>
-        <p>Made with devotion by Karios Team</p>
+        <p>Made with devotion</p>
       </div>
     </div>
   </footer>
@@ -263,7 +263,7 @@ const PrivacyPolicy = () => (
       <div className="glass-card legal-card">
         <p className="legal-text"><strong>Effective Date: March 28, 2025</strong></p>
         
-        <p className="legal-text">Karios Dev Team ("we," "our," or "us") operates the Our Pandit platform. This Privacy Policy informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.</p>
+        <p className="legal-text">Our Team ("we," "our," or "us") operates the Our Pandit platform. This Privacy Policy informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.</p>
 
         <h3>1. Information Collection and Use</h3>
         <p className="legal-text">For a better experience while using our Service, we may require you to provide us with certain personally identifiable information:</p>
