@@ -261,14 +261,47 @@ const PrivacyPolicy = () => (
     <div className="container">
       <h1 className="hero-title legal-title">Privacy Policy</h1>
       <div className="glass-card legal-card">
+        <p className="legal-text"><strong>Effective Date: March 28, 2025</strong></p>
+        
+        <p className="legal-text">Anushthan ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and website.</p>
+
         <h3>1. Information We Collect</h3>
-        <p className="legal-text">We collect personal information such as your name, email address, phone number, and location only when you provide it to us during registration or booking.</p>
+        <p className="legal-text"><strong>Personal Data:</strong> We collect information that you voluntarily provide, including your name, email address, phone number (verified via OTP), and profile pictures.</p>
+        <p className="legal-text"><strong>Location Information:</strong> With your permission, we collect precise location data to match you with Pandits in your vicinity and facilitate service delivery.</p>
+        <p className="legal-text"><strong>Professional Data (Pandits):</strong> For priests, we collect certification documents, experience details, and identification proof for verification purposes.</p>
+
         <h3>2. How We Use Your Information</h3>
-        <p className="legal-text">Your information is used to facilitate bookings, verify identities, process payments, and improve our services. We do not sell your data to third parties.</p>
-        <h3>3. Data Security</h3>
-        <p className="legal-text">We implement industry-standard security measures to protect your personal information from unauthorized access or disclosure.</p>
-        <h3>4. Cookies</h3>
-        <p className="legal-text">Our website uses cookies to enhance user experience and analyze traffic patterns.</p>
+        <ul className="legal-text" style={{ paddingLeft: '20px', marginBottom: '24px' }}>
+          <li>To facilitate and manage your ritual bookings.</li>
+          <li>To verify identity and maintain a secure platform.</li>
+          <li>To process payments through our secure partners.</li>
+          <li>To send push notifications regarding booking statuses.</li>
+          <li>To improve our App’s functionality and user experience.</li>
+        </ul>
+
+        <h3>3. Third-Party Services</h3>
+        <p className="legal-text">We share data with trusted service providers to operate our platform:</p>
+        <ul className="legal-text" style={{ paddingLeft: '20px', marginBottom: '24px' }}>
+          <li><strong>Firebase:</strong> Used for authentication, OTP delivery, and push notifications.</li>
+          <li><strong>Twilio:</strong> Used as a fallback for SMS OTP delivery.</li>
+          <li><strong>Razorpay:</strong> Processes all financial transactions securely.</li>
+          <li><strong>AWS (Amazon Web Services):</strong> Securely stores user-uploaded documents and images.</li>
+          <li><strong>Google Maps:</strong> Provides location-based services and distance calculations.</li>
+        </ul>
+
+        <h3>4. Data Retention & Deletion</h3>
+        <p className="legal-text">We retain your data for as long as your account is active. You may request account deletion at any time through the app settings or by contacting our support team. Upon deletion, your personal data will be removed from our active databases within 30 days, except where retention is required by law.</p>
+
+        <h3>5. Security</h3>
+        <p className="legal-text">We implement industry-standard encryption (SSL/TLS) and security protocols to protect your data. However, no electronic transmission over the internet is 100% secure.</p>
+
+        <h3>6. Children's Privacy</h3>
+        <p className="legal-text">Anushthan does not knowingly collect data from children under the age of 13. Our services are intended for use by adults.</p>
+
+        <h3>7. Contact Us</h3>
+        <p className="legal-text">If you have any questions about this Privacy Policy, please contact us at:<br/>
+        <strong>Email:</strong> support@anushthan.com<br/>
+        <strong>Address:</strong> Karios Dev Team, Spiritual Tech Hub.</p>
       </div>
     </div>
   </section>
@@ -279,14 +312,35 @@ const Terms = () => (
     <div className="container">
       <h1 className="hero-title legal-title">Terms & Conditions</h1>
       <div className="glass-card legal-card">
+        <p className="legal-text"><strong>Last updated: March 28, 2025</strong></p>
+
         <h3>1. Acceptance of Terms</h3>
-        <p className="legal-text">By using Anushthan, you agree to these terms and conditions. If you do not agree, please do not use our services.</p>
-        <h3>2. Service Booking</h3>
-        <p className="legal-text">Bookings are subject to availability. Users must provide accurate information for time slots and locations.</p>
-        <h3>3. Cancellation Policy</h3>
-        <p className="legal-text">Cancellations made less than 24 hours before the service may be subject to a nominal fee.</p>
-        <h3>4. User Conduct</h3>
-        <p className="legal-text">Users and Pandits must treat each other with respect and dignity. Any form of harassment is strictly prohibited.</p>
+        <p className="legal-text">By downloading or using the Anushthan app, you agree to be bound by these terms. If you do not agree to these terms, do not use the service.</p>
+
+        <h3>2. Service Description</h3>
+        <p className="legal-text">Anushthan is a marketplace platform that connects devotees ("Users") with spiritual practitioners ("Pandits"). We facilitate the booking and payment process but are not the direct providers of the spiritual services themselves.</p>
+
+        <h3>3. User Accounts</h3>
+        <p className="legal-text">You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. Mobile verification via OTP is required for all users.</p>
+
+        <h3>4. Booking & Cancellation</h3>
+        <ul className="legal-text" style={{ paddingLeft: '20px', marginBottom: '24px' }}>
+          <li>Bookings are confirmed only after successful payment or as per the Pandit's acceptance.</li>
+          <li>Cancellations by users within 12 hours of the ritual may incur a 20% convenience fee.</li>
+          <li>If a Pandit fails to arrive, a full refund will be processed to the user's original payment method.</li>
+        </ul>
+
+        <h3>5. Payment Terms</h3>
+        <p className="legal-text">All payments are handled via Razorpay. We do not store your credit card or bank details on our servers. Prices for services are inclusive of platform fees and applicable taxes.</p>
+
+        <h3>6. Conduct and Safety</h3>
+        <p className="legal-text">Both Users and Pandits agree to treat each other with mutual respect. We reserve the right to ban users who engage in harassment, fraud, or inappropriate behavior.</p>
+
+        <h3>7. Spiritual Disclaimer</h3>
+        <p className="legal-text">While we verify the Vedic knowledge and background of Pandits on our platform, Anushthan does not guarantee specific spiritual, financial, or personal outcomes from the performance of any ritual or puja.</p>
+
+        <h3>8. Limitation of Liability</h3>
+        <p className="legal-text">To the maximum extent permitted by law, Anushthan shall not be liable for any indirect, incidental, or consequential damages arising out of your use of the platform.</p>
       </div>
     </div>
   </section>
