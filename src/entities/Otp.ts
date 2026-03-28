@@ -19,7 +19,7 @@ export class Otp {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   @OneToOne(() => User, (user) => user.otp, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;

@@ -23,7 +23,7 @@ export class Cart {
   id!: string;
 
   // 🧍 Each user has exactly one cart
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   @OneToOne(() => User, (user) => user.cart, {
     onDelete: "CASCADE",
     eager: true,

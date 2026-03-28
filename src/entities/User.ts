@@ -60,17 +60,17 @@ export class User {
   @Column({ name: "profile_image", nullable: true })
   profileImage?: string;
 
-  @Field()
+  @Field(() => Pandit, { nullable: true })
   @OneToOne(() => Pandit, (pandit) => pandit.user, { nullable: true })
   pandit?: Pandit;
 
-  @Field()
+  @Field(() => Otp, { nullable: true })
   @OneToOne(() => Otp, (otp) => otp.user)
-  otp!: Otp;
+  otp?: Otp;
 
-  @Field()
+  @Field(() => Cart, { nullable: true })
   @OneToOne(() => Cart, (cart) => cart.user)
-  cart!: Cart;
+  cart?: Cart;
 
   @Field(() => [UserLocation], { nullable: true })
   @OneToMany(() => UserLocation, (location) => location.user, {
