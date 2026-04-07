@@ -24,7 +24,6 @@ import {
 import { validatePassword } from "../../utils/validatePassword";
 import { hashPassword } from "../../utils/hashPassword";
 import { CustomError } from "../../utils/customError";
-import { validateEmail } from "../../utils/validateEmail";
 import { isSamePassword } from "../../utils/isSamePassword";
 
 import { EmailType, OtpType, S3BucketType, UserRole } from "../../utils/enums";
@@ -126,7 +125,6 @@ export class PanditAuthService {
     const { phoneNumber, password } = params;
     logger.info(`🔄Logging in pandit with number: ${phoneNumber}.`);
 
-    validateEmail(phoneNumber);
     validatePassword(password);
 
     const panditData = await this.panditInfoService.getPandit({

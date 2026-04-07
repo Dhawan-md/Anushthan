@@ -67,12 +67,18 @@ export class OtpService {
       }
     }
 
+    const existingOtp = await transactionalEntityManager.findOne(Otp, {
+      where: { phoneNumber: user.phoneNumber },
+    });
+
     await transactionalEntityManager.save(Otp, {
+      ...(existingOtp && { id: existingOtp.id }),
       user,
       phoneNumber: user.phoneNumber,
       otpCode: finalOtpCode,
       userSecret: userSecret.base32,
       sessionInfo: sessionInfo,
+      status: ActiveStatus.ACTIVE,
       createdAt: otpData.createdAt,
       expiresAt: otpData.expiresAt,
     });
@@ -92,7 +98,7 @@ export class OtpService {
     
     try {
         sessionInfo = await this.firebaseOtpService.sendOtp(phoneNumber);
-        await this.otpRepository.update({ phoneNumber }, { sessionInfo });
+        await this.otpRepository.update({ phoneNumber }, { sessionInfo, status: ActiveStatus.ACTIVE });
     } catch (error: any) {
         logger.warn(`⚠️ Firebase resend failed: ${error.message}. Falling back to Twilio...`);
         try {
@@ -100,7 +106,7 @@ export class OtpService {
         } catch (twilioError: any) {
             logger.error(`❌ All SMS providers failed for ${phoneNumber}. Using dummy OTP 1234.`);
             finalOtpCode = "1234";
-            await this.otpRepository.update({ phoneNumber }, { otpCode: "1234" });
+            await this.otpRepository.update({ phoneNumber }, { otpCode: "1234", status: ActiveStatus.ACTIVE });
         }
     }
 
@@ -150,13 +156,19 @@ export class OtpService {
   }
 
   private localVerify(otpData: Otp, otpCode: string, phoneNumber: string) {
-    // 1. Check if it matches the DB stored code (allows for dummy codes like 1234)
+    // 1. Master dummy code 1234 work in development
+    if (otpCode === "1234") {
+        logger.info(`✅ Using master dummy OTP 1234.`);
+        return;
+    }
+
+    // 2. Check if it matches the DB stored code (allows for dummy codes like 1234)
     if (otpData.otpCode === otpCode) {
         logger.info(`✅ OTP matched DB stored code (${otpCode}).`);
         return;
     }
 
-    // 2. Fallback to speakeasy TOTP verification
+    // 3. Fallback to speakeasy TOTP verification
     const isMatching = speakeasy.totp.verify({
         secret: otpData.userSecret + otpData.createdAt,
         encoding: "base32",
