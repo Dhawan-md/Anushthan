@@ -20,16 +20,21 @@ export class SinglePanditResponse extends PanditResponse<Pandit> {
   @Field(() => RefreshToken, { nullable: true })
   refreshToken?: RefreshToken | null;
 
+  @Field(() => String, { nullable: true })
+  deviceToken?: string | null;
+
   constructor(
     success: boolean,
     message: string,
     data?: Pandit | null,
     accessToken?: AccessToken | null,
-    refreshToken?: RefreshToken | null
+    refreshToken?: RefreshToken | null,
+    deviceToken?: string | null
   ) {
     super(success, message, data);
     this.accessToken = accessToken || null;
     this.refreshToken = refreshToken || null;
+    this.deviceToken = deviceToken || null;
   }
 }
 

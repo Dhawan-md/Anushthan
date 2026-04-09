@@ -174,7 +174,7 @@ export class UserAuthService {
     // Issue new tokens
     const newAccessToken = generateAccessToken({
       id: user.id,
-      userRole: UserRole.USER,
+      userRole: user.userRole,
     });
     const newRefreshToken = generateRefreshToken({ id: user.id });
 

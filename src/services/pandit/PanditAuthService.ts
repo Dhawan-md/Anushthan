@@ -5,6 +5,7 @@ import { UserInfoService } from "../user/UserInfoService";
 import { PanditInfoService } from "./PanditInfoService";
 import { OtpService } from "../otp/OtpService";
 import { CategoryInfoService } from "../category/CategoryInfoService";
+import { UpdateUserService } from "../user/UpdateUserService";
 
 import { Pandit } from "../../entities/Pandit";
 
@@ -60,7 +61,9 @@ export class PanditAuthService {
     @Inject(() => EmailService)
     private emailService: EmailService,
     @Inject(() => S3Service)
-    private s3Service: S3Service
+    private s3Service: S3Service,
+    @Inject(() => UpdateUserService)
+    private updateUserService: UpdateUserService
   ) {
     this.panditAuthRepository = this.repositoryFactory.getRepository(Pandit);
   }
@@ -108,6 +111,9 @@ export class PanditAuthService {
       password: hashedPassword,
       documents: JSON.stringify(uploadedDocuments.map((file) => file.filePath)),
     });
+
+    // Update user role to PANDIT
+    await this.userInfoService.updateUserRole(user.id, UserRole.PANDIT);
 
     await this.emailService.sendEmail(
       user.userEmail,
@@ -187,18 +193,19 @@ export class PanditAuthService {
       withUser: true,
     });
 
-    if (deviceToken) {
-      await this.userInfoService.updateUserDeviceToken(
-        panditData.user.id,
-        deviceToken
-      );
-    }
-
     const accessToken = generateAccessToken({
       id: panditData.id,
       userRole: UserRole.PANDIT,
     });
-    const refreshToken = generateRefreshToken({ id: panditData.id });
+    const refreshToken = generateRefreshToken({ id: panditData.user.id });
+
+    await this.updateUserService.updateUser({
+      updatedUserData: {
+        refreshToken: refreshToken.token,
+        ...(deviceToken && { deviceToken }),
+      },
+      userId: panditData.user.id,
+    });
 
     logger.info(
       `✅ Pandit with phone number ${phoneNumber} logged in successfully.`
@@ -208,7 +215,8 @@ export class PanditAuthService {
       LOGIN_SUCCESSFUL,
       panditData,
       accessToken,
-      refreshToken
+      refreshToken,
+      deviceToken || panditData.user.deviceToken
     );
   }
 }

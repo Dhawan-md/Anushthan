@@ -13,6 +13,7 @@ import {
   USER_ALREADY_EXISTS,
   USER_LIST,
 } from "../../utils/messages";
+import { UserRole } from "../../utils/enums";
 import { CustomError } from "../../utils/customError";
 import { PaginationDto } from "../../types/dtos/Pagination";
 
@@ -87,5 +88,11 @@ export class UserInfoService {
     logger.info(`🔄 Updating device token for user with ID: ${userId}`);
     await this.userInfoRepository.update(userId, { deviceToken });
     logger.info(`✅ Successfully updated device token for user with ID: ${userId}`);
+  }
+
+  async updateUserRole(userId: string, userRole: UserRole) {
+    logger.info(`🔄 Updating role for user with ID: ${userId} to ${userRole}`);
+    await this.userInfoRepository.update(userId, { userRole });
+    logger.info(`✅ Successfully updated role for user with ID: ${userId}`);
   }
 }

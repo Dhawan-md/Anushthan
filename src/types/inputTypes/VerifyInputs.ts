@@ -1,5 +1,5 @@
 import { InputType, Field } from "type-graphql";
-import { IsPhoneNumber, Length } from "class-validator";
+import { IsOptional, IsPhoneNumber, Length } from "class-validator";
 
 @InputType()
 export class VerifyInputs {
@@ -7,13 +7,16 @@ export class VerifyInputs {
   @IsPhoneNumber("IN")
   phoneNumber: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @Length(4)
   otpCode?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   idToken?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   deviceToken?: string;
 }
