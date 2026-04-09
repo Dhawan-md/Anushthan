@@ -141,7 +141,7 @@ const createApp = async () => {
   );
 
   // Global Express Error Handler (must be after all routes and apollo)
-  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
     logger.error(`[Express Error Handler] ${err.message || err}`);
     if (res.headersSent) return next(err);
     res.status(err.status || 500).json({
