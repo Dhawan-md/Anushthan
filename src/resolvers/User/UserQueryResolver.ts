@@ -3,8 +3,10 @@ import { Inject, Service } from "typedi";
 import { plainToInstance } from "class-transformer";
 
 import { UserLocationService } from "../../services/user/UserLocationService";
+import { UserInfoService } from "../../services/user/UserInfoService";
 
 import { NearByPanditResponse } from "../../types/responses/PanditResponse";
+import { SingleUserResponse } from "../../types/responses/UserResponse";
 
 import { Context } from "../../types/context";
 import { CustomError } from "../../utils/customError";
@@ -22,7 +24,9 @@ import { verifyAccessToken } from "../../helpers/verifyJwtToken";
 export class UserQueryResolver {
   constructor(
     @Inject(() => UserLocationService)
-    private userLocationService: UserLocationService
+    private userLocationService: UserLocationService,
+    @Inject(() => UserInfoService)
+    private userInfoService: UserInfoService
   ) {}
 
   @Query(() => NearByPanditResponse)
@@ -77,5 +81,19 @@ export class UserQueryResolver {
     } catch (err) {
       return false; // invalid or expired
     }
+  }
+
+  @Query(() => SingleUserResponse)
+  @Authorized()
+  async fetchUserDetails(@Ctx() ctx: Context): Promise<SingleUserResponse> {
+    const userId = ctx.user?.id;
+    if (!userId) throw new CustomError(UNAUTHORIZED);
+
+    const user = await this.userInfoService.getUser({ id: userId });
+    return new SingleUserResponse(
+      true,
+      "User details fetched successfully",
+      user
+    );
   }
 }
