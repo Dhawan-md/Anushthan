@@ -19,6 +19,18 @@ export class PlaceBookingInput {
   @Field(() => Float)
   totalPrice: number;
 
+  @Field(() => Float, { nullable: true })
+  subTotalPrice?: number;
+
+  @Field(() => Float, { nullable: true })
+  gstTax?: number;
+
+  @Field(() => Float, { nullable: true })
+  discount?: number;
+
+  @Field(() => Float, { nullable: true })
+  platformFee?: number;
+
   @Field(() => PaymentType)
   paymentType: PaymentType;
 

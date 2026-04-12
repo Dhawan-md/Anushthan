@@ -67,6 +67,22 @@ export class Booking {
   @Column("float", { name: "total_price" })
   totalPrice!: number;
 
+  @Field(() => Float, { nullable: true })
+  @Column("float", { name: "sub_total_price", nullable: true })
+  subTotalPrice?: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { name: "gst_tax", nullable: true })
+  gstTax?: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { nullable: true })
+  discount?: number;
+
+  @Field(() => Float, { nullable: true })
+  @Column("float", { name: "platform_fee", nullable: true })
+  platformFee?: number;
+
   @Field(() => Int)
   @Column({ name: "estimated_time" })
   estimatedTime!: number;
