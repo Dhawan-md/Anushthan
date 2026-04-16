@@ -8,8 +8,8 @@ import { INTERNAL_ERROR_OCCURRED } from "../utils/messages";
 export const globalErrorHandler: MiddlewareFn = async (_, next) => {
   try {
     return await next();
-  } catch (error) {
-    logger.error("🔥 Error caught:", error);
+  } catch (error: any) {
+    logger.error("🔥 Error caught in globalErrorHandler:", error.stack || error);
 
     if (error instanceof CustomError) {
       return new BaseResponse(false, error.message); // GraphQL doesn't support HTTP status codes

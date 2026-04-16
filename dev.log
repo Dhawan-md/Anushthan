@@ -1,0 +1,56 @@
+
+> anushthan@1.0.0 dev
+> nodemon
+
+[33m[nodemon] 3.1.9[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src/**/*[39m
+[33m[nodemon] watching extensions: ts[39m
+[32m[nodemon] starting `ts-node -r tsconfig-paths/register src/index.ts`[39m
+2026-04-16 20:12:17 [WARN]: ⚠️ Missing optional environment variables: FROM_EMAIL. Some features may be disabled.
+2026-04-16 20:12:17 [WARN]: ⚠️ Firebase credentials (anushthan-test-fcm.json) not found. Skip initialization.
+2026-04-16 20:12:18 [INFO]: [Redis] Connecting to Redis at redis://localhost:6379...
+2026-04-16 20:12:18 [INFO]: [BullMQ] Initializing queue "retryRefund"
+2026-04-16 20:12:18 [INFO]: [BullMQ] Initializing queue "paymentTimeout"
+2026-04-16 20:12:19 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:12:19 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:12:19 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:12:19 [ERROR]: [Redis] Publisher error
+2026-04-16 20:12:19 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:12:19 [ERROR]: 🔥 Database connection failed: role "postgres" does not exist
+2026-04-16 20:12:19 [ERROR]: ❌ Server failed to start: Database connection failed!
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node -r tsconfig-paths/register src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node -r tsconfig-paths/register src/index.ts`[39m
+2026-04-16 20:16:08 [WARN]: ⚠️ Missing optional environment variables: FROM_EMAIL. Some features may be disabled.
+2026-04-16 20:16:09 [WARN]: ⚠️ Firebase credentials (anushthan-test-fcm.json) not found. Skip initialization.
+2026-04-16 20:16:10 [INFO]: [Redis] Connecting to Redis at redis://localhost:6379...
+2026-04-16 20:16:12 [INFO]: [BullMQ] Initializing queue "retryRefund"
+2026-04-16 20:16:14 [INFO]: [BullMQ] Initializing queue "paymentTimeout"
+2026-04-16 20:16:14 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:16:14 [ERROR]: [Redis] Publisher error
+2026-04-16 20:16:14 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:16:14 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:16:14 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:16:14 [ERROR]: [Redis] Publisher error
+2026-04-16 20:16:14 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:16:14 [ERROR]: [Redis] Publisher error
+2026-04-16 20:16:14 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:16:14 [ERROR]: [Redis] Publisher error
+2026-04-16 20:16:14 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:16:14 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:16:14 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:16:14 [ERROR]: 🔥 Database connection failed: role "postgres" does not exist
+2026-04-16 20:16:14 [ERROR]: ❌ Server failed to start: Database connection failed!
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node -r tsconfig-paths/register src/index.ts`[39m

@@ -1,0 +1,27 @@
+2026-04-16 20:09:03 [WARN]: ⚠️ Missing optional environment variables: FROM_EMAIL. Some features may be disabled.
+2026-04-16 20:09:03 [WARN]: ⚠️ Firebase credentials (anushthan-test-fcm.json) not found. Skip initialization.
+2026-04-16 20:09:04 [INFO]: [Redis] Connecting to Redis at redis://localhost:6379...
+2026-04-16 20:09:04 [INFO]: [BullMQ] Initializing queue "retryRefund"
+2026-04-16 20:09:05 [INFO]: [BullMQ] Initializing queue "paymentTimeout"
+2026-04-16 20:09:05 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:09:05 [ERROR]: [Redis] Publisher error
+2026-04-16 20:09:05 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:09:05 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:09:05 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:09:05 [ERROR]: [Redis] Publisher error
+2026-04-16 20:09:05 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:09:05 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:09:05 [ERROR]: [Redis] Publisher error
+2026-04-16 20:09:05 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:09:05 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:09:05 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:09:05 [ERROR]: [Redis] Publisher error
+2026-04-16 20:09:05 [ERROR]: 🔥 Database connection failed: role "postgres" does not exist
+2026-04-16 20:09:05 [ERROR]: ❌ Server failed to start: Database connection failed!

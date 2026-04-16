@@ -1,0 +1,411 @@
+2026-04-16 20:30:25 [WARN]: ⚠️ Missing optional environment variables: FROM_EMAIL. Some features may be disabled.
+2026-04-16 20:30:26 [WARN]: ⚠️ Firebase credentials (anushthan-test-fcm.json) not found. Skip initialization.
+2026-04-16 20:30:27 [INFO]: [Redis] Connecting to Redis at redis://localhost:6379...
+2026-04-16 20:30:28 [INFO]: [BullMQ] Initializing queue "retryRefund"
+2026-04-16 20:30:28 [INFO]: [BullMQ] Initializing queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:29 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:30 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:30 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:30 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:30 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:30 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:30 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:30 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:30 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:30 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:30 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:30 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:31 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:31 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:31 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:31 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:31 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:31 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:31 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:31 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:31 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:32 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:32 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:32 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:32 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:32 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:32 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:32 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:32 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:32 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:32 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:33 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:33 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:33 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:33 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:33 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:34 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:34 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:34 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:34 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:34 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:34 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:34 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:34 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:34 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:34 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:35 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:35 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:35 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:35 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:35 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:36 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:36 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:36 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:36 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:36 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:37 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:37 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:37 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:37 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:37 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:39 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:39 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:39 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:39 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:39 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:40 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:40 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:40 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:40 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:40 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:41 [INFO]: ✅ Database connected successfully!
+2026-04-16 20:30:41 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:41 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:41 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:41 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:41 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:42 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:42 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:42 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:42 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:42 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:43 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:43 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:43 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:43 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:43 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:44 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:53 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:54 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:54 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:54 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:54 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:55 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:55 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:55 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:55 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:55 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:56 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:56 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:56 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:56 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:57 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:58 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:58 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:58 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:58 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:58 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:30:59 [ERROR]: [Redis] Publisher error
+2026-04-16 20:30:59 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:30:59 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:30:59 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:30:59 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:01 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:01 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:01 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:01 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:01 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:02 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:02 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:02 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:02 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:02 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:04 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:05 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:05 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:05 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:05 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:05 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:07 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:07 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:07 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:07 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:07 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:09 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:09 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:09 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:09 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:09 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:10 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:10 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:10 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:10 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:10 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:12 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:12 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:12 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:12 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:12 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:14 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:14 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:14 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:14 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:14 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:16 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:16 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:16 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:16 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:16 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:17 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:17 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:17 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:18 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:18 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:19 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:19 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:19 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:20 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:20 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:21 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:21 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:21 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:22 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:22 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:23 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:23 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:23 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:24 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:24 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:25 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:25 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:25 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:26 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:26 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:27 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:27 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:27 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:28 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:28 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:29 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:29 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:29 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:30 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:30 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:31 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:31 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:31 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:32 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:32 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:33 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:33 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:33 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:34 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:34 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:35 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:35 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:35 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:36 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:36 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:37 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:37 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:37 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:38 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:38 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:39 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:39 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:39 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:40 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:40 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:41 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:41 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:41 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:42 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:42 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:43 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:43 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:43 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:44 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:44 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:45 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:45 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:45 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:46 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:47 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:47 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:47 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:47 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:48 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:49 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:49 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:49 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:49 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:50 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:51 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:52 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:52 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:52 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:52 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:53 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:54 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:54 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:54 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:54 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:55 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:56 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:56 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:56 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:56 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:57 [ERROR]: [Redis] Publisher error
+2026-04-16 20:31:58 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:31:58 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:31:58 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:31:58 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:31:59 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:00 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:00 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:00 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:00 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:01 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:02 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:02 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:02 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:02 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:03 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:04 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:04 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:04 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:04 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:07 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:07 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:07 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:07 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:09 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:09 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:09 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:09 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:09 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:11 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:15 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:15 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:15 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:15 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:18 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:19 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:19 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:19 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:19 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:21 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:21 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:21 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:21 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:21 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:23 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:23 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:23 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:23 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:23 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:25 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:25 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:25 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:25 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:25 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:27 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:27 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:27 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:27 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:27 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:30 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:30 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:30 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:30 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:30 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:32 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:32 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:32 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:32 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:32 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:34 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:34 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:34 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:34 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:34 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:37 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:37 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:37 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:37 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:37 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:39 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:39 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:39 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:39 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:39 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:41 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:41 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:41 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:41 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:32:41 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:54 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:32:54 [ERROR]: [Redis] Publisher error
+2026-04-16 20:32:54 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:32:54 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:32:54 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:33:06 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:33:06 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:33:06 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:33:06 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:33:06 [ERROR]: [Redis] Publisher error
+2026-04-16 20:33:20 [ERROR]: [Redis] Publisher error
+2026-04-16 20:33:21 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:33:21 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:33:21 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:33:21 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:34:54 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:34:54 [ERROR]: [Redis] Publisher error
+2026-04-16 20:34:54 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:34:54 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:34:54 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:34:57 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:34:57 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:34:57 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:34:57 [ERROR]: [Redis] Subscriber error
+2026-04-16 20:34:57 [ERROR]: [Redis] Publisher error
+2026-04-16 20:35:00 [ERROR]: [Redis] Publisher error
+2026-04-16 20:35:00 [ERROR]: [Redis] Redis connection error:
+2026-04-16 20:35:00 [ERROR]: [BullMQ] Error in queue "retryRefund"
+2026-04-16 20:35:00 [ERROR]: [BullMQ] Error in queue "paymentTimeout"
+2026-04-16 20:35:00 [ERROR]: [Redis] Subscriber error

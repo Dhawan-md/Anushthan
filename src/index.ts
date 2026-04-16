@@ -111,7 +111,10 @@ const createApp = async () => {
 
   const notificationService = Container.get(NotificationService);
 
-  await notificationService.subscribe("booking_notification");
+  // Non-blocking notification subscription
+  notificationService.subscribe("booking_notification").catch(err => {
+    logger.error(`[index.ts] Failed to subscribe to notifications: ${err.message}`);
+  });
 
   app.get("/test-payment/:orderId", (req, res) => {
     const { orderId } = req.params;

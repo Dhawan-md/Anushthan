@@ -12,7 +12,7 @@ export class CustomError extends Error {
     super(errorMessage);
 
     // Preserving stack traces if available
-    if (orignalError.stack) {
+    if (orignalError && orignalError.stack) {
       this.stack = orignalError.stack;
     }
 
